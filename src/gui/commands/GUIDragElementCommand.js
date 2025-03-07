@@ -23,24 +23,20 @@ export class DragElementCommand extends GUICommand {
 
   move(x, y) {
     if (this.draggedElement) {
-      const scale = this.circuitService.zoomScale || 1; // ✅ Get current zoom level
-      const dx = (x - this.offset.x) / scale; // ✅ Apply zoom correction
-      const dy = (y - this.offset.y) / scale;
+        const dx = (x - this.offset.x);
+        const dy = (y - this.offset.y);
 
-      const firstNode = this.draggedElement.nodes[0];
-      const deltaX = dx - firstNode.x;
-      const deltaY = dy - firstNode.y;
+        const firstNode = this.draggedElement.nodes[0];
+        const deltaX = dx - firstNode.x;
+        const deltaY = dy - firstNode.y;
 
-      this.draggedElement.nodes = this.draggedElement.nodes.map(
-        (node) => new Position(node.x + deltaX, node.y + deltaY),
-      );
+        this.draggedElement.nodes = this.draggedElement.nodes.map((node) =>
+            new Position(node.x + deltaX, node.y + deltaY)
+        );
 
-      this.circuitService.emit("update", {
-        type: "moveElement",
-        element: this.draggedElement,
-      });
+        this.circuitService.emit("update", { type: "moveElement", element: this.draggedElement });
     }
-  }
+}
 
   stop() {
     this.draggedElement = null;
@@ -48,7 +44,7 @@ export class DragElementCommand extends GUICommand {
 
   // Helper method to check if a point is inside an element
   isInsideElement(x, y, element) {
-    const auraSize = 10;  //  Expand clickable area beyond element size
+    const auraSize = 10; //  Expand clickable area beyond element size
 
     if (element.nodes.length < 2) return false; //  Must have at least two nodes
 
@@ -57,10 +53,14 @@ export class DragElementCommand extends GUICommand {
     // Calculate distance of the point (x, y) from the element line
     const lineLength = Math.hypot(end.x - start.x, end.y - start.y);
     const distance =
-        Math.abs((end.y - start.y) * x - (end.x - start.x) * y + end.x * start.y - end.y * start.x) / lineLength;
+      Math.abs(
+        (end.y - start.y) * x -
+          (end.x - start.x) * y +
+          end.x * start.y -
+          end.y * start.x,
+      ) / lineLength;
 
     // Allow clicks if within `auraSize` pixels of the element
     return distance <= auraSize;
-}
-
+  }
 }
