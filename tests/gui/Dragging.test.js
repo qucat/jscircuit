@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { createMockCanvas } from "./canvasFixture.js";
 import { Circuit } from "../../src/domain/aggregates/Circuit.js";
 import { CircuitService } from "../../src/application/CircuitService.js";
-import { DragElementCommand } from "../../src/gui/commands/DragElementCommand.js";
+import { DragElementCommand } from "../../src/gui/commands/GUIDragElementCommand.js";
 import { CircuitRenderer } from "../../src/gui/renderers/CircuitRenderer.js";
 import { Position } from "../../src/domain/valueObjects/Position.js";
 import { rendererFactory  } from "../../src/config/settings.js";
