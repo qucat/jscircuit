@@ -76,21 +76,39 @@ export class DragElementCommand extends GUICommand {
    * Helper method to check if the user clicked near the "line" of an element.
    * This is the same logic you already had, expanded for clarity.
    */
-  isInsideElement(x, y, element) {
-    const auraSize = 10; // Expand clickable area beyond the exact line
+  isInsideElement(worldX, worldY, element) {
+    const auraSize = 10; // The clickable "fudge factor"
     if (element.nodes.length < 2) return false;
 
     const [start, end] = element.nodes;
     const lineLength = Math.hypot(end.x - start.x, end.y - start.y);
 
+    // If both nodes happen to be the same point, treat it like a "circle" check
+    if (lineLength === 0) {
+      return Math.hypot(worldX - start.x, worldY - start.y) <= auraSize;
+    }
+
+    // 1) Quick bounding-box check (with aura padding)
+    const minX = Math.min(start.x, end.x) - auraSize;
+    const maxX = Math.max(start.x, end.x) + auraSize;
+    const minY = Math.min(start.y, end.y) - auraSize;
+    const maxY = Math.max(start.y, end.y) + auraSize;
+
+    // If outside the bounding box, no need to compute distance
+    if (worldX < minX || worldX > maxX || worldY < minY || worldY > maxY) {
+      return false;
+    }
+
+    // 2) Compute the perpendicular distance to the infinite line
     const distance =
       Math.abs(
-        (end.y - start.y) * x -
-          (end.x - start.x) * y +
-          end.x * start.y -
-          end.y * start.x,
+        (end.y - start.y) * worldX -
+        (end.x - start.x) * worldY +
+        end.x * start.y -
+        end.y * start.x
       ) / lineLength;
 
+    // 3) Allow "inside" if within auraSize of the line
     return distance <= auraSize;
   }
 }
