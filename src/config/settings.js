@@ -9,7 +9,7 @@ import { Properties } from '../domain/valueObjects/Properties.js';
 import { GUICommandRegistry } from "../gui/commands/GUICommandRegistry.js";
 import { AddElementCommand } from "../gui/commands/AddElementCommand.js";
 import { DragElementCommand } from "../gui/commands/GUIDragElementCommand.js";
-
+import { DrawWireCommand } from "../gui/commands/DrawWireCommand.js"; // wherever it's defined
 
 // Ensure elements are registered once
 if (ElementRegistry.getTypes().length === 0) {
@@ -31,6 +31,10 @@ GUICommandRegistry.register("addElement", (circuitService, circuitRenderer, elem
 
 GUICommandRegistry.register("dragElement", (circuitService) =>
     new DragElementCommand(circuitService)
+);
+
+GUICommandRegistry.register("drawWire", (circuitService, elementRegistry) =>
+    new DrawWireCommand(circuitService, elementRegistry)
 );
 
 console.log("GUICommandRegistry after registration:", GUICommandRegistry.getTypes());

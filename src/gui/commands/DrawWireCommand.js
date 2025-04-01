@@ -3,10 +3,11 @@ import { Position } from "../../domain/valueObjects/Position.js";
 
 /**
  * DrawWireCommand:
- * - Begins on first click (start node).
- * - As user drags, draws a second node in locked horizontal or vertical direction.
- * - No direction changes once locked.
- * - Snaps to grid.
+ * - On first click, we place a start node for the wire.
+ * - As the user drags, we compute how far they've moved in x vs. y from that start node.
+ * - If the difference between |dx| and |dy| exceeds a threshold, we lock to horizontal or vertical.
+ * - If it's never exceeded, the wire remains “unlocked” and can track the mouse freely.
+ * - On mouseup, we finalize; or if there's a "cancel()" call (no real movement), remove it.
  */
 export class DrawWireCommand extends GUICommand {
   constructor(circuitService, elementRegistry) {
@@ -14,117 +15,107 @@ export class DrawWireCommand extends GUICommand {
     this.circuitService = circuitService;
     this.elementRegistry = elementRegistry;
 
-    // Canvas -> world transform
-    this.rendererOffsetX = 0;
-    this.rendererOffsetY = 0;
-    this.rendererScale = 1;
+    // The wire we’re drawing
+    this.wireElement = null;
+    this.drawing = false;
 
-    // For wire drawing
-    this.drawing = false;       // True once user places first node
-    this.wireElement = null;    // The wire we’re creating
-    this.direction = null;      // 'horizontal' or 'vertical' (locked once user moves)
-    
-    // Grid snapping
+    // We'll lock to "horizontal", "vertical", or stay null if not locked yet
+    this.direction = null;
+
+    // If the user never moves, we can remove the ephemeral wire in a cancel() method
     this.enableSnapping = true;
     this.gridSpacing = 10;
+
+    // If you want to wait for a bigger movement before locking, set this higher
+    this.THRESHOLD = 2;
   }
 
   /**
-   * If your renderer’s pan/zoom changes, call this so we can invert those transforms.
-   */
-  setViewTransform(offsetX, offsetY, scale) {
-    this.rendererOffsetX = offsetX;
-    this.rendererOffsetY = offsetY;
-    this.rendererScale = scale;
-  }
-
-  /**
-   * Called when user initially clicks on the canvas to place the start node.
+   * Called on mousedown when user first clicks an empty area.
+   * We'll place both wire nodes at the same position initially.
    */
   start(mouseX, mouseY) {
-    // 1) Convert to world coords
-    const worldX = (mouseX - this.rendererOffsetX) / this.rendererScale;
-    const worldY = (mouseY - this.rendererOffsetY) / this.rendererScale;
+    // 1) Snap or not, as desired
+    let snappedX = mouseX;
+    let snappedY = mouseY;
+    if (this.enableSnapping) {
+      snappedX = Math.round(mouseX / this.gridSpacing) * this.gridSpacing;
+      snappedY = Math.round(mouseY / this.gridSpacing) * this.gridSpacing;
+    }
 
-    // 2) Snap to grid if needed
-    const snappedX = this.enableSnapping
-      ? Math.round(worldX / this.gridSpacing) * this.gridSpacing
-      : worldX;
-    const snappedY = this.enableSnapping
-      ? Math.round(worldY / this.gridSpacing) * this.gridSpacing
-      : worldY;
-
-    // 3) Create a new wire entity with two identical nodes to start
+    // 2) Create a new wire with both nodes at the same place
     const wireFactory = this.elementRegistry.get("Wire");
     if (!wireFactory) {
       console.error("No wire factory registered.");
       return;
     }
-    
     this.wireElement = wireFactory(
-      undefined, // auto-generate ID
+      undefined,
       [new Position(snappedX, snappedY), new Position(snappedX, snappedY)],
       null,
-      {} // properties
+      {},
     );
 
-    // 4) Add it to the circuit
+    // 3) Add to circuit so it's visible
     this.circuitService.addElement(this.wireElement);
 
-    // 5) We’re now in “drawing” mode
+    // 4) Mark that we’re currently drawing
     this.drawing = true;
-    this.direction = null; // not locked yet
+    this.direction = null;
   }
 
   /**
-   * Called on mousemove to update the second node in a locked horizontal or vertical line.
+   * Called on mousemove as user drags.
    */
   move(mouseX, mouseY) {
     if (!this.drawing || !this.wireElement) return;
 
-    // 1) Convert to world coords
-    const worldX = (mouseX - this.rendererOffsetX) / this.rendererScale;
-    const worldY = (mouseY - this.rendererOffsetY) / this.rendererScale;
+    // 1) Snap to grid if enabled
+    let snappedX = mouseX;
+    let snappedY = mouseY;
+    if (this.enableSnapping) {
+      snappedX = Math.round(mouseX / this.gridSpacing) * this.gridSpacing;
+      snappedY = Math.round(mouseY / this.gridSpacing) * this.gridSpacing;
+    }
 
-    // 2) Snap to grid
-    let snappedX = this.enableSnapping
-      ? Math.round(worldX / this.gridSpacing) * this.gridSpacing
-      : worldX;
-    let snappedY = this.enableSnapping
-      ? Math.round(worldY / this.gridSpacing) * this.gridSpacing
-      : worldY;
+    // 2) Compare how far we've moved from the start node
+    const [startNode, endNode] = this.wireElement.nodes;
+    const dx = snappedX - startNode.x;
+    const dy = snappedY - startNode.y;
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
 
-    const [start, end] = this.wireElement.nodes;
-
-    // 3) If we haven’t locked direction yet, see which axis changed more
+    // 3) If no direction locked, see if we exceed the threshold
     if (!this.direction) {
-      const diffX = Math.abs(snappedX - start.x);
-      const diffY = Math.abs(snappedY - start.y);
-
-      if (diffX > diffY) {
+      if (absDx - absDy >= this.THRESHOLD) {
+        // Moved significantly more horizontally => lock horizontal
         this.direction = "horizontal";
-      } else if (diffY > diffX) {
+      } else if (absDy - absDx >= this.THRESHOLD) {
+        // Moved significantly more vertically => lock vertical
         this.direction = "vertical";
-      } else {
-        // If they’re exactly the same, we can wait or default to horizontal
-        this.direction = "horizontal"; // pick your preference
       }
+      // else remain unlocked until one axis wins
     }
 
-    // 4) Once direction is chosen, override the other coordinate with the start’s
+    // 4) Apply the lock
     if (this.direction === "horizontal") {
-      // Keep Y the same as the start node
-      snappedY = start.y;
+      // Keep y fixed to the start node
+      endNode.x = startNode.x + dx;
+      endNode.y = startNode.y;
+    } else if (this.direction === "vertical") {
+      // Keep x fixed
+      endNode.x = startNode.x;
+      endNode.y = startNode.y + dy;
     } else {
-      // Keep X the same as the start node
-      snappedX = start.x;
+      // No direction locked => let the user place the wire freely (diagonal)
+      endNode.x = startNode.x + dx;
+      endNode.y = startNode.y + dy;
     }
 
-    // 5) Update the wire’s second node
-    end.x = snappedX;
-    end.y = snappedY;
+    // If snapping is important after we fix an axis, you could re-snap endNode again
+    // but that might let you “jump” if you do it incorrectly. This is optional.
 
-    // 6) Emit update so the UI re-renders
+    // 5) Emit update so UI re-renders
     this.circuitService.emit("update", {
       type: "drawWire",
       wire: this.wireElement,
@@ -132,13 +123,24 @@ export class DrawWireCommand extends GUICommand {
   }
 
   /**
-   * Called on mouseup (or second click) to finalize the wire.
+   * Called on mouseup to finalize the wire.
    */
   stop() {
-    if (this.drawing) {
-      this.drawing = false;
-      this.direction = null;
-      this.wireElement = null;
+    this.drawing = false;
+    this.direction = null;
+    this.wireElement = null;
+  }
+
+  /**
+   * If the user never actually moved,
+   * we can remove this ephemeral wire to avoid leftover dots.
+   */
+  cancel() {
+    if (this.wireElement) {
+      this.circuitService.deleteElement(this.wireElement.id);
     }
+    this.drawing = false;
+    this.direction = null;
+    this.wireElement = null;
   }
 }

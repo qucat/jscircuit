@@ -41,6 +41,33 @@ export class GUIAdapter {
     this.commandHistory = new CommandHistory();
     this.dragCommand = null;
   }
+  /**
+   * Initializes the GUI by rendering the circuit and binding UI controls.
+   */
+  initialize() {
+    this.circuitRenderer.render();
+    this.bindUIControls();
+    this.setupCanvasInteractions();
+
+    // Listen for UI updates from CircuitService
+    this.circuitService.on("update", () => this.circuitRenderer.render());
+  }
+  
+  /**
+   * Executes a command by retrieving it from `GUICommandRegistry` and executing via `CommandHistory`.
+   * @param {string} commandName - The name of the command to execute.
+   * @param {...any} args - Arguments to pass to the command.
+   */
+  executeCommand(commandName, ...args) {
+    console.log(`Executing command: ${commandName} with args:`, args);
+
+    const command = this.guiCommandRegistry.get(commandName, ...args);
+    if (command) {
+      this.commandHistory.executeCommand(command, ...args);
+    } else {
+      console.warn(`Command "${commandName}" not found.`);
+    }
+  }
 
   /**
    * Dynamically binds UI controls to their corresponding commands.
@@ -97,74 +124,95 @@ export class GUIAdapter {
     }
   }
 
-  /**
-   * Initializes the GUI by rendering the circuit and binding UI controls.
-   */
-  initialize() {
-    this.circuitRenderer.render();
-    this.bindUIControls();
-    this.setupCanvasInteractions();
 
-    // Listen for UI updates from CircuitService
-    this.circuitService.on("update", () => this.circuitRenderer.render());
-  }
 
   /**
-   * Sets up canvas interactions for dragging elements.
+   * Sets up canvas interactions like dragging elements, selecting elements, etc.
    */
   setupCanvasInteractions() {
+    // 1) Zoom with wheel
     this.canvas.addEventListener("wheel", (event) => {
       event.preventDefault();
       this.circuitRenderer.zoom(event);
     });
 
+    // 2) Mousedown
     this.canvas.addEventListener("mousedown", (event) => {
-      const { offsetX, offsetY } = this.getTransformedMousePosition(event);
-      this.dragCommand = this.guiCommandRegistry.get("dragElement", this.circuitService);
-
-      if (this.dragCommand) {
-        this.dragCommand.start(offsetX, offsetY);
-      }
-    });
-
-    this.canvas.addEventListener("mousemove", (event) => {
-      if (this.dragCommand) {
-        const { offsetX, offsetY } = this.getTransformedMousePosition(event);
-        this.dragCommand.move(offsetX, offsetY);
-      }
-    });
-
-    this.canvas.addEventListener("mouseup", () => {
-      if (this.dragCommand) {
-        this.dragCommand.stop();
-        this.dragCommand = null;
-      }
-    });
-
-    // Enable panning with middle mouse button
-    this.canvas.addEventListener("mousedown", (event) => {
+      // Middle mouse => panning
       if (event.button === 1) {
         this.canvas.style.cursor = "grabbing";
         this.panStartX = event.clientX - this.circuitRenderer.offsetX;
         this.panStartY = event.clientY - this.circuitRenderer.offsetY;
+        return;
+      }
+
+      // Left mouse => could be drag or wire
+      if (event.button === 0) {
+        const { offsetX, offsetY } = this.getTransformedMousePosition(event);
+
+        // Check if user clicked an existing element
+        const element = this.findElementAt(offsetX, offsetY);
+        if (element) {
+          // We do dragElement
+          this.activeCommand = this.guiCommandRegistry.get("dragElement", this.circuitService);
+          if (this.activeCommand) {
+            this.activeCommand.start(offsetX, offsetY);
+          }
+        } else {
+          // We do drawWire
+          this.activeCommand = this.guiCommandRegistry.get("drawWire", this.circuitService, this.elementRegistry);
+          if (this.activeCommand) {
+            this.activeCommand.start(offsetX, offsetY);
+          }
+        }
+
+        // Reset our "did we move?" tracking
+        this.hasDragged = false;
+        this.mouseDownPos = { x: offsetX, y: offsetY };
       }
     });
 
+    // 3) Mousemove
     this.canvas.addEventListener("mousemove", (event) => {
-      if (event.buttons === 4) {
-        const newX = event.clientX - this.panStartX;
-        const newY = event.clientY - this.panStartY;
-        this.circuitRenderer.setPan(newX, newY);
+      // If we have an active command (drag or wire) => move
+      if (this.activeCommand) {
+        const { offsetX, offsetY } = this.getTransformedMousePosition(event);
+
+        // Check if user has moved enough to count as a "drag"
+        const dx = offsetX - this.mouseDownPos.x;
+        const dy = offsetY - this.mouseDownPos.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance > 2) {
+          this.hasDragged = true;
+        }
+
+        this.activeCommand.move(offsetX, offsetY);
       }
     });
 
-    this.canvas.addEventListener("mouseup", () => {
-      this.canvas.style.cursor = "default";
+    // 4) Mouseup
+    this.canvas.addEventListener("mouseup", (event) => {
+      // Stop panning
+      if (event.button === 1) {
+        this.canvas.style.cursor = "default";
+        return;
+      }
+
+      // If we had an active command
+      if (this.activeCommand) {
+        // If user never really moved, we "cancel" for wires so no leftover dot
+        if (!this.hasDragged && this.activeCommand.cancel) {
+          this.activeCommand.cancel();
+        }
+
+        this.activeCommand.stop();
+        this.activeCommand = null;
+      }
     });
   }
 
   /**
-   * Adjusts mouse position based on zoom and pan.
+   * Convert from screen coords to "world/circuit" coords
    */
   getTransformedMousePosition(event) {
     const rect = this.canvas.getBoundingClientRect();
@@ -173,4 +221,47 @@ export class GUIAdapter {
       offsetY: (event.clientY - rect.top - this.circuitRenderer.offsetY) / this.circuitRenderer.scale,
     };
   }
+
+    /**
+   * A bounding check to see if the user clicked near any element (including wires).
+   */
+    findElementAt(worldX, worldY) {
+      // We'll rely on the circuitRenderer or a helper to check each element.
+      // If you have something like circuitRenderer.isInsideElement, use that.
+      for (const element of this.circuitService.getElements()) {
+        if (this.isInsideElement(worldX, worldY, element)) {
+          return element;
+        }
+      }
+      return null;
+    }
+
+    /**
+     * Basic line or bounding-box check for an element.
+     * If it's a wire, do line-dist. If it's a two-node element, do similar, etc.
+     */
+    isInsideElement(x, y, element) {
+      if (element.nodes.length < 2) return false;
+
+      const aura = 10;
+      const [start, end] = element.nodes;
+      const dx = end.x - start.x;
+      const dy = end.y - start.y;
+      const length = Math.hypot(dx, dy);
+      if (length < 1e-6) {
+        // It's effectively a point
+        return Math.hypot(x - start.x, y - start.y) <= aura;
+      }
+      const distance = Math.abs(dy * x - dx * y + end.x * start.y - end.y * start.x) / length;
+      if (distance > aura) return false;
+
+      // Also ensure x,y is within the bounding box + aura
+      const minX = Math.min(start.x, end.x) - aura;
+      const maxX = Math.max(start.x, end.x) + aura;
+      const minY = Math.min(start.y, end.y) - aura;
+      const maxY = Math.max(start.y, end.y) + aura;
+      if (x < minX || x > maxX || y < minY || y > maxY) return false;
+
+      return true;
+    }
 }
