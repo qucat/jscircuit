@@ -49,6 +49,6 @@ describe("CircuitService Dragging Test", function () {
 
         // Verify CircuitService received update
         expect(updates.length).to.be.greaterThan(0);
-        expect(updates[0].type).to.equal("moveElement");
+        expect(updates[0].type).to.equal("dragElement");
     });
 });

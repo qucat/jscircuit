@@ -152,7 +152,7 @@ export class DragElementCommand extends GUICommand {
 
     // Emit update
     this.circuitService.emit("update", {
-      type: "moveElement",
+      type: "dragElement",
       element: this.draggedElement,
     });
   }
