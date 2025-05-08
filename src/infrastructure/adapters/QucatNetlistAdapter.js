@@ -4,12 +4,25 @@ import { Properties } from '../../domain/valueObjects/Properties.js';
 import { ElementFactory } from '../../domain/factories/ElementFactory.js';
 
 /**
- * NetlistAdapter
+ * Type mapping between short code (used in .qucat format)
+ * and full element type with expected property name.
+ */
+const typeMap = {
+    R: { fullType: 'resistor', propertyKey: 'resistance' },
+    C: { fullType: 'capacitor', propertyKey: 'capacitance' },
+    L: { fullType: 'inductor', propertyKey: 'inductance' },
+    J: { fullType: 'junction', propertyKey: 'value' },
+    G: { fullType: 'ground', propertyKey: 'value' },
+    W: { fullType: 'wire', propertyKey: 'value' }
+};
+
+/**
+ * QucatNetlistAdapter
  * 
  * Handles reading and writing circuits in a QuCAT-style netlist format:
  *   <Type>;<x1,y1>;<x2,y2>;<value>;<label>
  */
-export class NetlistAdapter {
+export class QucatNetlistAdapter {
     /**
      * Export the current circuit to a .qucat-style netlist file.
      * 
@@ -43,6 +56,11 @@ export class NetlistAdapter {
         return elements.map(el => {
             const { type, nodes, properties, label, id } = el;
 
+            // Identify which shorttype matches to type
+            const mapEntry = Object.entries(typeMap).find(([shortType, { fullType }]) => fullType === type);
+            if (!mapEntry) throw new Error(`Unknown element type: ${type}`); // throw an error if type is not found
+            const [shortType] = mapEntry; // destructure to get the short type
+
             const node1 = `${nodes[0].x},${nodes[0].y}`;
             const node2 = `${nodes[1].x},${nodes[1].y}`;
 
@@ -50,6 +68,8 @@ export class NetlistAdapter {
             const labelStr = label ?? '';
 
             let vFormatted = value;
+
+            // Format the value to a string
             if (typeof value === 'number') {
                 let decimals = 1, vString = '0';
                 while (parseFloat(vString) !== value && decimals < 15) {
@@ -58,8 +78,7 @@ export class NetlistAdapter {
                 }
                 vFormatted = vString;
             }
-
-            return `${type};${node1};${node2};${vFormatted};${labelStr}`;
+            return `${shortType};${node1};${node2};${vFormatted};${labelStr}`;
         }).join('\n');
     }
 
@@ -72,33 +91,42 @@ export class NetlistAdapter {
     static _deserializeElements(lines) {
         const elements = [];
 
+    
         for (const line of lines) {
-            const [type, pos1, pos2, valueStr, labelStr] = line.trim().split(';');
-
+            const [shortType, pos1, pos2, valueStr, labelStr] = line.trim().split(';');
+    
+            const mapEntry = typeMap[shortType];
+            if (!mapEntry) throw new Error(`Unknown element type: ${shortType}`);
+    
+            const { fullType, propertyKey } = mapEntry;
+    
             const [x1, y1] = pos1.split(',').map(Number);
             const [x2, y2] = pos2.split(',').map(Number);
-
             const nodes = [new Position(x1, y1), new Position(x2, y2)];
+    
+            // Preserve property key even if value is missing
+            const raw = valueStr?.trim();
+            const value = raw === '' || raw === undefined ? undefined : parseFloat(raw);
 
-            const propertyKey = {
-                R: 'resistance',
-                C: 'capacitance',
-                L: 'inductance',
-                J: 'value', // Adjust based on your domain
-                G: 'value',
-                W: 'value'
-            }[type] ?? 'value';
+            const label = labelStr && labelStr.trim() !== '' ? labelStr : null;
+            const id = `${shortType}_${x1}_${y1}_${x2}_${y2}`;
 
-            const value = valueStr ? parseFloat(valueStr) : 'undefined';
-            const properties = new Properties({ [propertyKey]: value });
+            const propObj = { [propertyKey]: value };
 
-            const label = labelStr ? labelStr : null;
-            const id = `${type}_${x1}_${y1}_${x2}_${y2}`;
+            let properties;
+            if (value !== undefined) {
+                properties = new Properties(propObj); // Must accept undefined
+            }
 
-            const element = ElementFactory.create(type, id, nodes, { ...properties.values, label });
+            if (propObj === undefined) {
+                // If properties is undefined, create an empty Properties instance
+                properties = new Properties();
+            }
+
+            const element = ElementFactory.create(fullType, id, nodes, properties, label);
             elements.push(element);
         }
-
+    
         return elements;
     }
 }
