@@ -148,9 +148,9 @@ describe('Element Service Tests', () => {
             const element = new MockElement('E1', nodes, null, properties);
     
             // Update the property to undefined
-            ElementService.updateProperties(element, { resistance: "undefined" });
+            ElementService.updateProperties(element, { resistance: undefined });
     
-            expect(element.properties.values.resistance).to.equal("undefined");
+            expect(element.properties.values.resistance).to.equal(undefined);
         });
     
         it('should allow defining properties as a variable parameter for the simulation engine', () => {
