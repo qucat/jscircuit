@@ -5,11 +5,15 @@ import { CircuitService } from "../../src/application/CircuitService.js";
 import { DragElementCommand } from "../../src/gui/commands/GUIDragElementCommand.js";
 import { CircuitRenderer } from "../../src/gui/renderers/CircuitRenderer.js";
 import { Position } from "../../src/domain/valueObjects/Position.js";
-import { rendererFactory } from "../../src/config/settings.js";
+import { rendererFactory } from "../../src/config/settings.js"
+import { WireSplitService } from "../../src/application/WireSplitService.js";
+import { ElementRegistry } from "../../src/domain/factories/ElementRegistry.js";
+
 
 describe("CircuitService Dragging Tests", function () {
   let canvas;
   let circuitService;
+  let wireSplitService;
   let testResistor;
   let testWire;
 
@@ -20,6 +24,8 @@ describe("CircuitService Dragging Tests", function () {
     // Fresh circuit + service each test
     const circuit = new Circuit();
     circuitService = new CircuitService(circuit);
+    wireSplitService = new WireSplitService(circuitService, ElementRegistry);
+
 
     // A two-node resistor (does not allow node-level dragging)
     testResistor = {
@@ -41,7 +47,6 @@ describe("CircuitService Dragging Tests", function () {
   function setupListener(label) {
     const updates = [];
     circuitService.on("update", (event) => {
-      console.log(`[${label} Update]`, event);
       updates.push(event);
     });
     return updates;
@@ -49,7 +54,7 @@ describe("CircuitService Dragging Tests", function () {
 
   it("should update CircuitService when dragging entire resistor shape", function () {
     const updates = setupListener("ResistorDrag");
-    const command = new DragElementCommand(circuitService);
+    const command = new DragElementCommand(circuitService, wireSplitService);
 
     // Click exactly on the resistor node (50,50), but because it's a resistor,
     // we expect an entire-shape drag, not node-level
@@ -87,7 +92,7 @@ describe("CircuitService Dragging Tests", function () {
     const updates = [];
     circuitService.on("update", e => updates.push(e));
   
-    const cmd = new DragElementCommand(circuitService);
+    const cmd = new DragElementCommand(circuitService, wireSplitService);
   
     // ── 1. mousedown exactly on the first node
     cmd.start(200, 200);
@@ -116,7 +121,7 @@ describe("CircuitService Dragging Tests", function () {
     testWire.nodes = [new Position(300, 300), new Position(300, 340)]; // vertical wire
 
     const updates = setupListener("WireDragVertical");
-    const command = new DragElementCommand(circuitService);
+    const command = new DragElementCommand(circuitService, wireSplitService);
 
     // Mousedown on first node (300,300)
     command.start(300, 300);
@@ -137,7 +142,7 @@ describe("CircuitService Dragging Tests", function () {
 
   it("should drag the entire wire if not clicking near a node (line body)", function () {
     const updates = setupListener("EntireWireDrag");
-    const command = new DragElementCommand(circuitService);
+    const command = new DragElementCommand(circuitService, wireSplitService);
 
     // Our test wire is from (200,200)->(240,200). 
     // Click somewhere in the middle, say (220,200), not near a node
@@ -163,7 +168,7 @@ describe("CircuitService Dragging Tests", function () {
   it("should still update circuitService for normal shape drag (resistor) in the new approach", function () {
     // This is basically the test you had originally, showing normal shape drag
     const updates = setupListener("New");
-    const command = new DragElementCommand(circuitService);
+    const command = new DragElementCommand(circuitService, wireSplitService);
 
     // Simulate dragging the resistor from (50,50)->(200,200)
     command.start(50, 50);
@@ -177,4 +182,39 @@ describe("CircuitService Dragging Tests", function () {
     expect(testResistor.nodes[0].x).to.equal(200);
     expect(testResistor.nodes[0].y).to.equal(200);
   });
+
+  it("should split a dragged wire when its body touches a node", function () {
+    // Setup:
+    const splitPoint = new Position(220, 200);
+    const anchorWire = {
+      id: "W_anchor",
+      type: "wire",
+      nodes: [new Position(180, 200), new Position(260, 200)],
+    };
+
+    circuitService.addElement(anchorWire);
+
+    const draggedWire = {
+      id: "W_drag",
+      type: "wire",
+      nodes: [new Position(100, 100), new Position(120, 100)],
+    };
+
+    circuitService.addElement(draggedWire);
+
+    const command = new DragElementCommand(circuitService, wireSplitService);
+
+    // Simulate dragging the wire body so it touches splitPoint
+    command.start(110, 100);  // somewhere on wire
+    command.move(220, 200);   // move the body onto the node
+    command.stop();
+
+    const updatedElements = circuitService.getElements().filter(e => e.type === "wire");
+
+    // Expect that the anchor wire was split into two
+    expect(updatedElements.length).to.be.greaterThan(2);
+    const ids = updatedElements.map(w => w.id);
+    expect(ids.includes("W_anchor")).to.be.false; // original should be deleted
+  });
+
 });

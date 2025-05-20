@@ -1,8 +1,21 @@
-// GUIDragElementCommand.js
 import { GUICommand } from "./GUICommand.js";
 import { Position } from "../../domain/valueObjects/Position.js";
 
+/**
+ * @class DragElementCommand
+ * @extends GUICommand
+ * @description
+ * Handles GUI logic for dragging circuit elements, either fully (shape dragging)
+ * or partially (dragging a specific node of a wire).
+ * Integrates with WireSplitService to handle cases where a wire touches
+ * a node or vice versa.
+ */
 export class DragElementCommand extends GUICommand {
+  /**
+   * @constructor
+   * @param {CircuitService} circuitService - The service managing circuit logic.
+   * @param {WireSplitService} wireSplitService - Handles wire-body and node-based splits.
+   */
   constructor(circuitService, wireSplitService) {
     super();
     this.circuitService = circuitService;
@@ -30,23 +43,20 @@ export class DragElementCommand extends GUICommand {
   }
 
   /**
-   * Called on mousedown to see if we clicked on:
-   * 1) A wire node => single-node drag, locked horizontally/vertically.
-   * 2) A wire body => drag entire wire.
-   * 3) Another element => drag entire shape only (no node-level dragging).
+   * Initiates a drag operation, determining whether the user clicked on a node or shape body.
+   * @param {number} mouseX - X coordinate of mouse.
+   * @param {number} mouseY - Y coordinate of mouse.
    */
   start(mouseX, mouseY) {
     for (const element of this.circuitService.getElements()) {
-      // If it's a wire, see if user clicked near a node
+      // Case 1: Check if user clicked on a wire node
       if (element.type === "wire") {
         const nodeIndex = this.findClosestNodeIndex(element, mouseX, mouseY);
         if (nodeIndex >= 0) {
-          // We do single-node dragging
           this.draggedElement = element;
           this.draggingNodeIndex = nodeIndex;
-          this.dragAxis = null; // not locked yet
+          this.dragAxis = null;
 
-          // Record offset and the node's original pos
           const node = element.nodes[nodeIndex];
           this.offset.x = mouseX - node.x;
           this.offset.y = mouseY - node.y;
@@ -56,14 +66,12 @@ export class DragElementCommand extends GUICommand {
         }
       }
 
-      // If we either have a wire but user clicked not near a node,
-      // or a non-wire element => see if we clicked the line or shape
+      // Case 2: User clicked on a shape (or wire body)
       if (this.isInsideElement(mouseX, mouseY, element)) {
         this.draggedElement = element;
-        this.draggingNodeIndex = null; // entire shape
+        this.draggingNodeIndex = null;
         this.dragAxis = null;
 
-        // If there's at least one node, measure offset from the first
         if (Array.isArray(element.nodes) && element.nodes.length > 0) {
           const [startNode] = element.nodes;
           this.offset.x = mouseX - startNode.x;
@@ -75,24 +83,18 @@ export class DragElementCommand extends GUICommand {
   }
 
   /**
-   * Called on mousemove to either drag a single node (wire) or the entire element.
+   * Handles mousemove events to drag the element or node.
+   * @param {number} mouseX - X coordinate of mouse.
+   * @param {number} mouseY - Y coordinate of mouse.
    */
   move(mouseX, mouseY) {
     if (!this.draggedElement) return;
+    if (!Array.isArray(this.draggedElement.nodes) || this.draggedElement.nodes.length === 0) return;
 
-    // Ensure we have a valid array of nodes
-    if (
-      !Array.isArray(this.draggedElement.nodes) ||
-      this.draggedElement.nodes.length === 0
-    ) {
-      return;
-    }
-
-    // 1) If we're dragging a single node (wire only)
+    // Branch 1: Dragging a wire node
     if (this.draggingNodeIndex !== null) {
       const node = this.draggedElement.nodes[this.draggingNodeIndex];
 
-      // Snap
       let intendedX = mouseX - this.offset.x;
       let intendedY = mouseY - this.offset.y;
       if (this.enableSnapping) {
@@ -100,40 +102,23 @@ export class DragElementCommand extends GUICommand {
         intendedY = Math.round(intendedY / this.gridSpacing) * this.gridSpacing;
       }
 
-      // If we haven't identified the wire orientation yet, do so now.
-      //   We identify the wire orientation by comparing the two nodes of the wire.
-      //   1) 'node' being dragged,
-      //   2) 'otherNode'
+      // Lock axis if dragging a 2-node wire
       if (!this.dragAxis && this.draggedElement.nodes.length === 2) {
-        // Identify which node is NOT being dragged
-        const otherNodeIndex = this.draggingNodeIndex === 0 ? 1 : 0;
-        const otherNode = this.draggedElement.nodes[otherNodeIndex];
-
-        // See if the wire is "more horizontal" or "more vertical" initially
-        // by comparing x-distance vs. y-distance
-        const wireDx = otherNode.x - node.x;
-        const wireDy = otherNode.y - node.y;
-
-        if (Math.abs(wireDx) >= Math.abs(wireDy)) {
-          this.dragAxis = "horizontal";
-        } else {
-          this.dragAxis = "vertical";
-        }
+        const otherIndex = this.draggingNodeIndex === 0 ? 1 : 0;
+        const otherNode = this.draggedElement.nodes[otherIndex];
+        const dx = otherNode.x - node.x;
+        const dy = otherNode.y - node.y;
+        this.dragAxis = Math.abs(dx) >= Math.abs(dy) ? "horizontal" : "vertical";
       }
 
-      // If we already determined an axis (or just did above), lock movement
-      if (this.dragAxis === "horizontal") {
-        intendedY = node.y; // Keep Y fixed to the wire’s current Y
-      } else if (this.dragAxis === "vertical") {
-        intendedX = node.x; // Keep X fixed to the wire’s current X
-      }
+      if (this.dragAxis === "horizontal") intendedY = node.y;
+      if (this.dragAxis === "vertical") intendedX = node.x;
 
-      // Update the node
       node.x = intendedX;
       node.y = intendedY;
-
     }
-    // 2) Otherwise, we're dragging the entire shape
+
+    // Branch 2: Dragging the entire element
     else {
       const firstNode = this.draggedElement.nodes[0];
       let intendedX = mouseX - this.offset.x;
@@ -147,36 +132,73 @@ export class DragElementCommand extends GUICommand {
       const deltaX = intendedX - firstNode.x;
       const deltaY = intendedY - firstNode.y;
 
-      // Shift all nodes
       this.draggedElement.nodes = this.draggedElement.nodes.map(
-        (n) => new Position(n.x + deltaX, n.y + deltaY),
+        (n) => new Position(n.x + deltaX, n.y + deltaY)
       );
     }
 
-    // Emit update
     this.circuitService.emit("update", {
       type: "dragElement",
       element: this.draggedElement,
     });
   }
 
+  /**
+   * Called on mouseup to finalize drag and check for any split conditions.
+   * Includes:
+   * - splitting a different wire body if a node touches it
+   * - splitting the dragged wire if its body touches another node
+   */
   stop() {
-    if (this.draggedElement?.nodes?.length) {
-      for (const node of this.draggedElement.nodes) {
-        const pos = new Position(node.x, node.y);
-        const result = this.wireSplitService.trySplitAtNode(pos);
-        console.log("   → Split result:", result);
+    if (
+      this.draggedElement?.type === "wire" &&
+      Array.isArray(this.draggedElement.nodes) &&
+      this.draggedElement.nodes.length === 2
+    ) {
+      const [start, end] = this.draggedElement.nodes;
+
+      for (const element of this.circuitService.getElements()) {
+        if (element.id === this.draggedElement.id) continue;
+
+        for (const node of element.nodes) {
+          // Case: dragged wire body touches another node
+          console.log(
+            `Checking if dragged wire body touches node ${node.x}, ${node.y}`
+          );
+          const didSplit = this.wireSplitService.splitWireAtPointIfTouching(
+            this.draggedElement,
+            node
+          );
+          if (didSplit) {
+            this._resetState();
+            return;
+          }
+
+          // Case: dragged node touches another wire's body
+          this.wireSplitService.trySplitAtNode(node);
+        }
       }
     }
 
+    this._resetState();
+  }
+
+  /**
+   * Resets internal drag state variables after a drag completes.
+   * @private
+   */
+  _resetState() {
     this.draggedElement = null;
     this.draggingNodeIndex = null;
     this.dragAxis = null;
   }
 
-
   /**
-   * If the user is dragging a wire, we see if they clicked near a node.
+   * Finds the closest wire node to the click position.
+   * @param {Element} element - The element to test (must be a wire).
+   * @param {number} mouseX
+   * @param {number} mouseY
+   * @returns {number} Index of the closest node or -1 if not within range.
    */
   findClosestNodeIndex(element, mouseX, mouseY) {
     if (!Array.isArray(element.nodes)) return -1;
@@ -192,50 +214,43 @@ export class DragElementCommand extends GUICommand {
         closestIndex = i;
       }
     }
+
     return minDist <= auraSize ? closestIndex : -1;
   }
 
   /**
-   * Helper method to check if the user clicked near the "line" of an element.
-   * This is the same logic you already had, expanded for clarity.
+   * Determines if a mouse click occurred on the body of an element.
+   * Uses bounding box and perpendicular distance tests.
+   * @param {number} worldX
+   * @param {number} worldY
+   * @param {Element} element
+   * @returns {boolean}
    */
   isInsideElement(worldX, worldY, element) {
-    const auraSize = 10; // The clickable "fudge factor"
-
-    // If nodes is missing or fewer than 2, skip line distance checks
-    if (!Array.isArray(element.nodes) || element.nodes.length < 2) {
-      return false;
-    }
+    const auraSize = 10;
+    if (!Array.isArray(element.nodes) || element.nodes.length < 2) return false;
 
     const [start, end] = element.nodes;
     const lineLength = Math.hypot(end.x - start.x, end.y - start.y);
 
-    // If both nodes happen to be the same point, treat it like a "circle" check
     if (lineLength === 0) {
       return Math.hypot(worldX - start.x, worldY - start.y) <= auraSize;
     }
 
-    // 1) Quick bounding-box check (with aura padding)
     const minX = Math.min(start.x, end.x) - auraSize;
     const maxX = Math.max(start.x, end.x) + auraSize;
     const minY = Math.min(start.y, end.y) - auraSize;
     const maxY = Math.max(start.y, end.y) + auraSize;
+    if (worldX < minX || worldX > maxX || worldY < minY || worldY > maxY) return false;
 
-    // If outside the bounding box, no need to compute distance
-    if (worldX < minX || worldX > maxX || worldY < minY || worldY > maxY) {
-      return false;
-    }
-
-    // 2) Compute the perpendicular distance to the infinite line
     const distance =
       Math.abs(
         (end.y - start.y) * worldX -
-          (end.x - start.x) * worldY +
-          end.x * start.y -
-          end.y * start.x,
+        (end.x - start.x) * worldY +
+        end.x * start.y -
+        end.y * start.x
       ) / lineLength;
 
-    // 3) Allow "inside" if within auraSize of the line
     return distance <= auraSize;
   }
 }
