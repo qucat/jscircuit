@@ -155,16 +155,35 @@ export class DragElementCommand extends GUICommand {
       Array.isArray(this.draggedElement.nodes) &&
       this.draggedElement.nodes.length === 2
     ) {
+
       const [start, end] = this.draggedElement.nodes;
+
+      // Case: a wire node was dragged (not full shape)
+      if (this.draggingNodeIndex !== null) {
+        const movedNode = this.draggedElement.nodes[this.draggingNodeIndex];
+        const didSplit = this.wireSplitService.trySplitAtNode(movedNode);
+        if (didSplit) {
+          this._resetState();
+          return;
+        }
+      }
+
+      // Case: user dragged the whole wire and one of its nodes intersects a wire
+      if (this.draggingNodeIndex === null) {
+        for (const node of this.draggedElement.nodes) {
+          const didSplit = this.wireSplitService.trySplitAtNode(node);
+          if (didSplit) {
+            this._resetState();
+            return;
+          }
+        }
+      }
 
       for (const element of this.circuitService.getElements()) {
         if (element.id === this.draggedElement.id) continue;
 
         for (const node of element.nodes) {
           // Case: dragged wire body touches another node
-          console.log(
-            `Checking if dragged wire body touches node ${node.x}, ${node.y}`
-          );
           const didSplit = this.wireSplitService.splitWireAtPointIfTouching(
             this.draggedElement,
             node

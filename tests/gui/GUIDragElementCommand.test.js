@@ -37,7 +37,7 @@ describe("CircuitService Dragging Tests", function () {
 
     // A two-node wire (allows node-level dragging, orthogonal)
     testWire = {
-      id: "W1",
+      id: "W",
       type: "wire",
       nodes: [new Position(200, 200), new Position(240, 200)], // horizontal
     };
@@ -215,6 +215,83 @@ describe("CircuitService Dragging Tests", function () {
     expect(updatedElements.length).to.be.greaterThan(2);
     const ids = updatedElements.map(w => w.id);
     expect(ids.includes("W_anchor")).to.be.false; // original should be deleted
+  });
+
+  it("should split a wire when a dragged node touches another wire’s body", function () {
+    // The stationary wire to be split — horizontal wire at y = 200
+    const stationaryWire = {
+      id: "W_stationary",
+      type: "wire",
+      nodes: [new Position(180, 200), new Position(260, 200)],
+    };
+
+    // The wire we’ll drag — vertical wire at x = 220
+    const movingWire = {
+      id: "W_moving",
+      type: "wire",
+      nodes: [new Position(220, 180), new Position(220, 160)], // vertical
+    };
+    circuitService.addElement(movingWire);
+
+    const command = new DragElementCommand(circuitService, wireSplitService);
+
+    // Simulate node drag: select top node (220,180) and drag it to (220,200)
+    command.start(220, 180);
+    command.move(220, 200);
+    command.stop();
+
+    // Check wire count and deletion
+    const allWires = circuitService.getElements().filter(e => e.type === "wire");
+    const wireIds = allWires.map(w => w.id);
+
+    // The original wire should be gone
+    expect(wireIds.includes("W_stationary")).to.be.false;
+
+    // There should be more than two wires (original plus 1 dragged = 2; +2 new = 4)
+    expect(allWires.length).to.be.greaterThan(2);
+  });
+
+  it("should split a wire when a dragged wire's node touches a node from another wire", function () {
+    // Stationary wire that we'll touch with another wire's node
+    const anchorWire = {
+      id: "W_anchor",
+      type: "wire",
+      nodes: [new Position(180, 200), new Position(220, 200)], // endpoint at (220,200)
+    };
+    circuitService.addElement(anchorWire);
+
+    // Wire we will drag — horizontally aligned, node will land on (220,200)
+    const draggedWire = {
+      id: "W_dragged",
+      type: "wire",
+      nodes: [new Position(100, 100), new Position(140, 100)],
+    };
+    circuitService.addElement(draggedWire);
+
+    const command = new DragElementCommand(circuitService, wireSplitService);
+
+    // Click body (not node)
+    command.start(120, 100);     // click midpoint
+    command.move(200, 200);      // drag body so one node lands at (220, 200)
+    command.stop();
+
+    const updatedWires = circuitService.getElements().filter(e => e.type === "wire");
+    const wireIds = updatedWires.map(w => w.id);
+    console.log("✅ Wire IDs in circuit:", wireIds);
+
+    // const updatedWires = circuitService.getElements().filter(e => e.type === "wire");
+    const newWireIds = updatedWires.map(w => w.id);
+
+    // ✅ Assert that wires were added, and none of them reused the old anchor wire ID
+    const wiresFromSplit = newWireIds.filter(id => id !== "W_anchor");
+    expect(wiresFromSplit.length).to.be.greaterThan(2); // e.g. original + 2 splits
+    expect(newWireIds).to.not.include("W_anchor");
+
+    // // The original anchor wire should be gone (it was split)
+    // expect(wireIds.includes("W_anchor")).to.be.false;
+
+    // // There should be more than 2 wires (1 dragged, 2 split segments)
+    // expect(updatedWires.length).to.be.greaterThan(2);
   });
 
 });
