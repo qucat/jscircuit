@@ -1,20 +1,49 @@
-import '../../src/config/settings.js';
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { createMockCanvas } from './canvasFixture.js';
-import { setupJsdom } from '../setup/jsdomSetup.js';
-import { GUIAdapter } from '../../src/gui/adapters/GUIAdapter.js';
+// import '../../src/config/settings.js';
+import { setupCommands, ElementRegistry, GUICommandRegistry, rendererFactory } from '../../src/config/settings.js';
 import { Circuit } from '../../src/domain/aggregates/Circuit.js';
 import { CircuitService } from '../../src/application/CircuitService.js';
-import { RendererFactory } from '../../src/gui/renderers/RendererFactory.js';
-import { ElementRegistry, rendererFactory, GUICommandRegistry } from '../../src/config/settings.js';
+import { GUIAdapter } from '../../src/gui/adapters/GUIAdapter.js';
+import { createMockCanvas } from './canvasFixture.js';
+import { setupJsdom } from '../setup/jsdomSetup.js';
 
+describe('GUIAdapter Tests', () => {
+    let canvas;
+    let guiAdapter;
+    let circuitService;
+
+    beforeEach(async () => {
+        setupJsdom();
+
+        // Add buttons to the test DOM
+        ['addResistor', 'addWire', 'addMockElement'].forEach((id) => {
+            const button = document.createElement('button');
+            button.id = id;
+            document.body.appendChild(button);
+        });
+
+        canvas = createMockCanvas();
+        const circuit = new Circuit();
+        circuitService = new CircuitService(circuit, ElementRegistry);
+
+        guiAdapter = new GUIAdapter(canvas, circuitService, ElementRegistry, rendererFactory, GUICommandRegistry);
+
+        // Await the command registration here
+        await setupCommands(circuitService, guiAdapter.circuitRenderer);
+    });
+
+    afterEach(() => {
+        document.body.innerHTML = '';
+        sinon.restore();
+    });
+});
 
 describe('GUIAdapter Tests', () => {
     let canvas;
     let guiAdapter;
 
-    beforeEach(() => {
+    beforeEach(async () => {
         setupJsdom();
     
         // Add required buttons to the DOM
@@ -30,6 +59,9 @@ describe('GUIAdapter Tests', () => {
         const circuit = new Circuit();
         const circuitService = new CircuitService(circuit, ElementRegistry);
         guiAdapter = new GUIAdapter(canvas, circuitService, ElementRegistry, rendererFactory, GUICommandRegistry);
+
+        // Await the command registration here
+        await setupCommands(circuitService, guiAdapter.circuitRenderer);
     });
     
     it('should initialize without errors', () => {
@@ -71,6 +103,10 @@ describe('GUIAdapter Tests', () => {
 
         // Simulates a real DOM clicc
         resistorButton.click();
+
+        // Verify that the circuitService we are using is the same as the one in GUIAdapter
+        const command = GUICommandRegistry.get("addElement", guiAdapter.circuitService);
+        expect(command.circuitService === guiAdapter.circuitService).to.be.true;
 
         // Verify addElement was called once
         expect(addElementSpy.calledOnce).to.be.true;
