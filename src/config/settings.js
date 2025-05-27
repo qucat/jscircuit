@@ -10,6 +10,12 @@ import { Properties } from '../domain/valueObjects/Properties.js';
 
 import { GUICommandRegistry } from "../gui/commands/GUICommandRegistry.js";
 
+// Import commands
+import { AddElementCommand } from "../gui/commands/AddElementCommand.js";
+import { DrawWireCommand } from "../gui/commands/DrawWireCommand.js";
+import { DragElementCommand } from "../gui/commands/GUIDragElementCommand.js";
+import { WireSplitService } from "../application/WireSplitService.js";
+
 // Register elements once
 if (ElementRegistry.getTypes().length === 0) {
     ElementRegistry.register('Resistor', (id = generateId('R'), nodes, label = null, properties = {}) =>
@@ -33,10 +39,10 @@ export { ElementRegistry, rendererFactory, GUICommandRegistry };
 // This is needed to avoid circular dependencies
 // and to ensure commands are set up after the GUIAdapter is initialized.
 export async function setupCommands(circuitService, circuitRenderer) {
-    const { AddElementCommand } = await import("../gui/commands/AddElementCommand.js");
-    const { DrawWireCommand } = await import("../gui/commands/DrawWireCommand.js");
-    const { DragElementCommand } = await import("../gui/commands/GUIDragElementCommand.js");
-    const { WireSplitService } = await import("../application/WireSplitService.js");
+    // const { AddElementCommand } = await import("../gui/commands/AddElementCommand.js");
+    // const { DrawWireCommand } = await import("../gui/commands/DrawWireCommand.js");
+    // const { DragElementCommand } = await import("../gui/commands/GUIDragElementCommand.js");
+    // const { WireSplitService } = await import("../application/WireSplitService.js");
 
     const wireSplitService = new WireSplitService(circuitService, ElementRegistry);
 

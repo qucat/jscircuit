@@ -17,7 +17,7 @@ const circuitService = new CircuitService(circuit, ElementRegistry);
 const canvas = document.getElementById("circuitCanvas");
 const guiAdapter = new GUIAdapter(canvas, circuitService, ElementRegistry, rendererFactory, GUICommandRegistry);
 
-// ✅ Wait for commands to be set up
+// Wait for commands to be set up
 setupCommands(circuitService, guiAdapter.circuitRenderer).then(() => {
   guiAdapter.initialize();
 });

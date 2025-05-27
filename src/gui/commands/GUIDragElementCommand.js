@@ -82,66 +82,82 @@ export class DragElementCommand extends GUICommand {
     }
   }
 
-  /**
-   * Handles mousemove events to drag the element or node.
-   * @param {number} mouseX - X coordinate of mouse.
-   * @param {number} mouseY - Y coordinate of mouse.
-   */
-  move(mouseX, mouseY) {
-    if (!this.draggedElement) return;
-    if (!Array.isArray(this.draggedElement.nodes) || this.draggedElement.nodes.length === 0) return;
+/**
+ * Handles mousemove events to drag the element or node.
+ * @param {number} mouseX - X coordinate of mouse.
+ * @param {number} mouseY - Y coordinate of mouse.
+ */
+move(mouseX, mouseY) {
+  if (!this.draggedElement) return;
+  if (!Array.isArray(this.draggedElement.nodes) || this.draggedElement.nodes.length === 0) return;
 
-    // Branch 1: Dragging a wire node
-    if (this.draggingNodeIndex !== null) {
-      const node = this.draggedElement.nodes[this.draggingNodeIndex];
-
-      let intendedX = mouseX - this.offset.x;
-      let intendedY = mouseY - this.offset.y;
-      if (this.enableSnapping) {
-        intendedX = Math.round(intendedX / this.gridSpacing) * this.gridSpacing;
-        intendedY = Math.round(intendedY / this.gridSpacing) * this.gridSpacing;
+  // Branch 1: Dragging a wire node
+  if (this.draggingNodeIndex !== null) {
+    // Step 1: check if this node is shared across multiple elements
+    const originalNode = this.draggedElement.nodes[this.draggingNodeIndex];
+    for (const el of this.circuitService.getElements()) {
+      if (el.id !== this.draggedElement.id && el.nodes.includes(originalNode)) {
+        // If it's shared, clone it so dragging doesn't affect other elements
+        const cloned = new Position(originalNode.x, originalNode.y);
+        this.draggedElement.nodes[this.draggingNodeIndex] = cloned;
+        break;
       }
-
-      // Lock axis if dragging a 2-node wire
-      if (!this.dragAxis && this.draggedElement.nodes.length === 2) {
-        const otherIndex = this.draggingNodeIndex === 0 ? 1 : 0;
-        const otherNode = this.draggedElement.nodes[otherIndex];
-        const dx = otherNode.x - node.x;
-        const dy = otherNode.y - node.y;
-        this.dragAxis = Math.abs(dx) >= Math.abs(dy) ? "horizontal" : "vertical";
-      }
-
-      if (this.dragAxis === "horizontal") intendedY = node.y;
-      if (this.dragAxis === "vertical") intendedX = node.x;
-
-      node.x = intendedX;
-      node.y = intendedY;
     }
 
-    // Branch 2: Dragging the entire element
-    else {
-      const firstNode = this.draggedElement.nodes[0];
-      let intendedX = mouseX - this.offset.x;
-      let intendedY = mouseY - this.offset.y;
+    // Step 2: re-fetch the possibly cloned node
+    const node = this.draggedElement.nodes[this.draggingNodeIndex];
 
-      if (this.enableSnapping) {
-        intendedX = Math.round(intendedX / this.gridSpacing) * this.gridSpacing;
-        intendedY = Math.round(intendedY / this.gridSpacing) * this.gridSpacing;
-      }
-
-      const deltaX = intendedX - firstNode.x;
-      const deltaY = intendedY - firstNode.y;
-
-      this.draggedElement.nodes = this.draggedElement.nodes.map(
-        (n) => new Position(n.x + deltaX, n.y + deltaY)
-      );
+    // Step 3: apply snapping if enabled
+    let intendedX = mouseX - this.offset.x;
+    let intendedY = mouseY - this.offset.y;
+    if (this.enableSnapping) {
+      intendedX = Math.round(intendedX / this.gridSpacing) * this.gridSpacing;
+      intendedY = Math.round(intendedY / this.gridSpacing) * this.gridSpacing;
     }
 
-    this.circuitService.emit("update", {
-      type: "dragElement",
-      element: this.draggedElement,
-    });
+    // Step 4: lock axis if dragging a 2-node wire
+    if (!this.dragAxis && this.draggedElement.nodes.length === 2) {
+      const otherIndex = this.draggingNodeIndex === 0 ? 1 : 0;
+      const otherNode = this.draggedElement.nodes[otherIndex];
+      const dx = otherNode.x - node.x;
+      const dy = otherNode.y - node.y;
+      this.dragAxis = Math.abs(dx) >= Math.abs(dy) ? "horizontal" : "vertical";
+    }
+
+    if (this.dragAxis === "horizontal") intendedY = node.y;
+    if (this.dragAxis === "vertical") intendedX = node.x;
+
+    // Step 5: apply movement
+    node.x = intendedX;
+    node.y = intendedY;
   }
+
+  // Branch 2: Dragging the entire shape
+  else {
+    const firstNode = this.draggedElement.nodes[0];
+    let intendedX = mouseX - this.offset.x;
+    let intendedY = mouseY - this.offset.y;
+
+    if (this.enableSnapping) {
+      intendedX = Math.round(intendedX / this.gridSpacing) * this.gridSpacing;
+      intendedY = Math.round(intendedY / this.gridSpacing) * this.gridSpacing;
+    }
+
+    const deltaX = intendedX - firstNode.x;
+    const deltaY = intendedY - firstNode.y;
+
+    this.draggedElement.nodes = this.draggedElement.nodes.map(
+      (n) => new Position(n.x + deltaX, n.y + deltaY)
+    );
+  }
+
+  // Emit update event so the UI re-renders
+  this.circuitService.emit("update", {
+    type: "dragElement",
+    element: this.draggedElement,
+  });
+}
+
 
   /**
    * Called on mouseup to finalize drag and check for any split conditions.
