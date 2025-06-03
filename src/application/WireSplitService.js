@@ -104,17 +104,9 @@ export class WireSplitService {
    * @param {Position} splitPoint - The node where the wire is split.
    */
   _splitWire(wire, splitPoint) {
-    console.log(
-      `Splitting wire ${wire.id} at point (${splitPoint.x}, ${splitPoint.y})`
-    );
-
 
     // Delete the original wire before creating new ones to avoid ID conflicts.
     this.circuitService.deleteElement(wire.id);
-
-    console.log(
-      `Splitting wire ${wire.id} at point (${splitPoint.x}, ${splitPoint.y})`
-    );
 
     const wireFactory = this.elementRegistry.get("Wire");
 

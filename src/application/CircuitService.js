@@ -106,7 +106,6 @@ export class CircuitService extends EventEmitter {
     deleteElement(elementId) {
         const element = this.circuit.elements.find(el => el.id === elementId);
         if (!element) {
-            console.warn(`Element with ID "${elementId}" not found.`);
             return;
         }
 

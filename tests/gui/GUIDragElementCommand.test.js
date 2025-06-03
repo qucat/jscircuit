@@ -303,7 +303,6 @@ describe("CircuitService Dragging Tests", function () {
 
     const originalWires = circuitService.getElements().filter(e => e.type === "wire");
     let wireIds = originalWires.map(w => w.id);
-    console.log(" Wire IDs in circuit:", wireIds);
 
     expect(wireIds.includes("W_test")).to.be.true;
 
@@ -314,7 +313,6 @@ describe("CircuitService Dragging Tests", function () {
 
     const updatedWires = circuitService.getElements().filter(e => e.type === "wire");
     wireIds = updatedWires.map(w => w.id);
-    console.log(" Wire IDs in circuit:", wireIds);
 
     // const updatedWires = circuitService.getElements().filter(e => e.type === "wire");
     const newWireIds = updatedWires.map(w => w.id);
