@@ -204,11 +204,8 @@ export class CircuitService extends EventEmitter {
         id: el.id,
         type: el.type,
         nodes: el.nodes.map((pos) => ({ x: pos.x, y: pos.y })),
-        properties: el.properties.values,
-      })),
-      connections: Array.from(this.circuit.connections.entries()).map(
-        ([key, connected]) => [key, connected.map((e) => e.id)],
-      ),
+        properties: { ...el.properties.values }, //  flatten properties
+      }))
     });
   }
 
@@ -219,34 +216,37 @@ export class CircuitService extends EventEmitter {
    */
   importState(snapshot) {
     function capitalize(str) {
-        return str.charAt(0).toUpperCase() + str.slice(1);
+      return str.charAt(0).toUpperCase() + str.slice(1);
     }
 
     const data = JSON.parse(snapshot);
 
-    // Reset circuit
+    // Reset circuit state
     this.circuit.elements = [];
-    this.circuit.connections.clear();
 
     // Reconstruct elements
     const elementsById = {};
     for (const elData of data.elements) {
-      console.log("Inspecting registry for element type:", elData.type);
-      console.log(ElementRegistry);
+
       const factory = this.elementRegistry.get(capitalize(elData.type));
       if (!factory) throw new Error(`No factory for type ${elData.type}`);
+
       const nodes = elData.nodes.map((n) => new Position(n.x, n.y));
-      const properties = new Properties(elData.properties ?? {});
-      const el = factory(elData.id, nodes, null, properties);
+
+      //  Safely flatten nested "values" if present
+      const rawProps = elData.properties ?? {};
+      const cleanProps =
+        rawProps &&
+        typeof rawProps.values === "object" &&
+        rawProps.values !== null
+          ? rawProps.values
+          : rawProps;
+
+      const properties = new Properties(cleanProps);
+
+      const el = factory(elData.id, nodes, elData.label ?? null, properties);
       elementsById[el.id] = el;
       this.circuit.elements.push(el);
-    }
-
-    // Reconstruct connections
-    for (const [id, connectedIds] of data.connections) {
-      const fromEl = elementsById[id];
-      const connected = connectedIds.map((cid) => elementsById[cid]);
-      this.circuit.connections.set(id, connected);
     }
 
     this.emit("update", { type: "restoredFromSnapshot" });

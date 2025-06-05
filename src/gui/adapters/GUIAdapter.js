@@ -71,9 +71,6 @@ export class GUIAdapter {
    * Dynamically binds UI controls to their corresponding commands.
    */
   bindUIControls() {
-    console.log("Binding UI controls in GUIAdapter...");
-    console.log("Commands available:", this.guiCommandRegistry.getTypes());
-
     this.elementRegistry.getTypes().forEach((elementType) => {
       const buttonName = `add${elementType}`;
       console.log(`Searching for button: ${buttonName}`);

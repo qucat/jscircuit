@@ -18,9 +18,10 @@ import { WireSplitService } from "../application/WireSplitService.js";
 
 // Register elements once
 if (ElementRegistry.getTypes().length === 0) {
-    ElementRegistry.register('Resistor', (id = generateId('R'), nodes, label = null, properties = {}) =>
-        new Resistor(id, nodes, label, new Properties(properties))
-    );
+    ElementRegistry.register('Resistor', (id = generateId('R'), nodes, label = null, properties = {}) => {
+        const defaultProps = { resistance: 1.0 };
+        return new Resistor(id, nodes, label, new Properties( defaultProps ));
+    });
 
     ElementRegistry.register('Wire', (id = generateId('W'), nodes, label = null, properties = {}) =>
         new Wire(id, nodes, label, new Properties(properties))
