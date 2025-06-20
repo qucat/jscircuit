@@ -23,8 +23,8 @@ if (ElementRegistry.getTypes().length === 0) {
         return new Resistor(id, nodes, label, new Properties( defaultProps ));
     });
 
-    ElementRegistry.register('Wire', (id = generateId('W'), nodes, label = null, properties = {}) =>
-        new Wire(id, nodes, label, new Properties(properties))
+    ElementRegistry.register('Wire', (id = generateId('W'), nodes) =>
+        new Wire(id, nodes)
     );
 }
 
