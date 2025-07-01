@@ -14,7 +14,7 @@ import { CommandHistory } from "../commands/CommandHistory.js";
  *
  * **Responsibilities**:
  * 1. **Initialization**:
- *    - Renders the circuit and **binds UI controls dynamically**.
+ *    - Renders the circuit and **binds UI htmlelment controls/buttons dynamically**.
  * 2. **Command Execution**:
  *    - Retrieves commands from `GUICommandRegistry` and executes them.
  * 3. **Undo/Redo Support**:
@@ -26,7 +26,7 @@ import { CommandHistory } from "../commands/CommandHistory.js";
  */
 export class GUIAdapter {
   /**
-   * @param {HTMLElement} controls - The controls container element for adding components.
+   * @param {HTMLElement} controls - The controls/buttons div container element for adding components.
    * @param {HTMLCanvasElement} canvas - The canvas element for rendering the circuit.
    * @param {CircuitService} circuitService - The service managing circuit logic.
    * @param {Object} elementRegistry - The registry of circuit elements.
