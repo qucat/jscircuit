@@ -1,6 +1,5 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
-// import '../../src/config/settings.js';
 import { setupCommands, ElementRegistry, GUICommandRegistry, rendererFactory } from '../../src/config/settings.js';
 import { Circuit } from '../../src/domain/aggregates/Circuit.js';
 import { CircuitService } from '../../src/application/CircuitService.js';
