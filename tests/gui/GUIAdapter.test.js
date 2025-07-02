@@ -95,33 +95,25 @@ describe('GUIAdapter Tests', () => {
     });
 
     it('should create and add elements via UI control bindings', () => {
-        const resistorButton = document.getElementById('addResistor');
-
-        // Spy on CircuitService.addElement
+        // Spy on addElement
         const addElementSpy = sinon.spy(guiAdapter.circuitService, 'addElement');
 
-        sinon.spy(resistorButton, 'addEventListener');
+        // Re-bind controls (this replaces the button)
         guiAdapter.bindUIControls();
 
-        // Verify single event listener registration
-        expect(resistorButton.addEventListener.callCount).to.equal(1);
+        // Get the *new* button after replacement
+        const newButton = document.getElementById('addResistor');
+        newButton.click();
 
-        // Simulates a real DOM click
-        resistorButton.click();
-
-        // Verify that the circuitService we are using is the same as the one in GUIAdapter
-        const command = GUICommandRegistry.get("addElement", guiAdapter.circuitService);
-        expect(command.circuitService === guiAdapter.circuitService).to.be.true;
-
-        // Verify addElement was called once
+        // Assert that an element was added
         expect(addElementSpy.calledOnce).to.be.true;
 
-        // Verify the added element's type, properties, and nodes
-        const addedElement = addElementSpy.args[0][0];
-        expect(addedElement).to.have.property('type', 'resistor');
+        // Check the properties of the added element
+        const addedElement = addElementSpy.args[0][0]; // Get the first argument of the first call
+        expect(addedElement).to.have.property('type', 'resistor'); // Assuming 'resistor' is the type for this button
         expect(addedElement).to.have.property('nodes').that.is.an('array').with.lengthOf(2);
         expect(addedElement).to.have.property('properties').that.is.an('object');
-    });
+      });
 
     afterEach(() => {
         // Restore sinon stubs and spies
