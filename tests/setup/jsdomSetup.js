@@ -39,20 +39,30 @@ import { JSDOM } from 'jsdom';
  */
 export function setupJsdom() {
     const { window } = new JSDOM('<!doctype html><html><body></body></html>');
+
     global.window = window;
     global.document = window.document;
 
-    // Modify the existing navigator object instead of overwriting it
-    Object.defineProperty(window, 'navigator', {
-        value: { userAgent: 'node.js' },
-        writable: false,
-        configurable: true,
-    });
+    // Patch the userAgent safely, even if it's readonly
+    if (!window.navigator.userAgent || window.navigator.userAgent !== 'node.js') {
+        try {
+            Object.defineProperty(window.navigator, 'userAgent', {
+                value: 'node.js',
+                configurable: true,
+            });
+        } catch (e) {
+            // Fallback if it fails due to being non-configurable
+            console.warn('Failed to override navigator.userAgent:', e.message);
+        }
+    }
 
-    // Optionally attach window.navigator to global
-    Object.defineProperty(global, 'navigator', {
-        get() {
-            return window.navigator;
-        },
-    });
+    // Bind window.navigator to global (as a getter, readonly)
+    if (!('navigator' in global)) {
+        Object.defineProperty(global, 'navigator', {
+            get() {
+                return window.navigator;
+            },
+            configurable: true,
+        });
+    }
 }
