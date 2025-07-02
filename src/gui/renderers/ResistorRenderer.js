@@ -1,12 +1,11 @@
 import { ElementRenderer } from "./ElementRenderer.js";
 import { Position } from "../../domain/valueObjects/Position.js";
-import { GetImage } from "./GetImage.js";
 
 export class ResistorRenderer extends ElementRenderer {
   constructor(context) {
     super(context);
     this.image = new Image();
-    this.image.src = GetImage("R.png");
+    this.image.src = new URL("../../../assets/R.png", import.meta.url).href;
     this.imageLoaded = false;
 
     this.image.onload = () => {

@@ -6,10 +6,9 @@ export default {
     input: "src/gui/main.js", // Entry point
     output: {
         file: "dist/bundle.js", // Output bundled file
-        format: "esm", // Browser-compatible output
+        format: "iife", // Browser-compatible output
         name: "CircuitDesigner", // Global variable name
-        sourcemap: true,
-        inlineDynamicImports: true, // Inline dynamic imports to avoid issues with code splitting
+        sourcemap: true
     },
     preserveEntrySignatures: false, //  Prevent facade chunk warning and code splitting issues
     plugins: [
