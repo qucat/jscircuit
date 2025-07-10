@@ -114,47 +114,40 @@ export class CircuitRenderer {
         this.context.restore();
     }
 
-/**
-* Draws a grid composed of gray vertical and horizontal lines.
-* The grid spacing is configurable (this.gridSpacing).
-*/
-drawGrid() {
-    const ctx = this.context;
-    // Use the renderer's grid settings:
-    const spacing = this.gridSpacing;
-    ctx.strokeStyle = this.gridColor;
-    ctx.lineWidth = this.gridLineWidth;
+    /**
+    * Draws a grid composed of gray vertical and horizontal lines.
+    * The grid spacing is configurable (this.gridSpacing).
+    */
+    drawGrid() {
+        const ctx = this.context;
+        const spacing = this.gridSpacing;
+        const dotRadius = 0.8; // Radius of each grid dot
+        ctx.fillStyle = this.gridColor;
 
-    // The context is already transformed (translated & scaled)
-    // Determine the visible logical area:
-    const logicalWidth = this.canvas.width / this.scale;
-    const logicalHeight = this.canvas.height / this.scale;
+        // The context is already transformed (translated & scaled)
+        // Determine the visible logical area:
+        const logicalWidth = this.canvas.width / this.scale;
+        const logicalHeight = this.canvas.height / this.scale;
 
-    // Determine start positions in logical coordinates:
-    // Since we have already translated the context, the origin (0,0) is shifted by offsetX and offsetY.
-    // But the visible logical area is simply from -offsetX/scale to (canvas.width-offsetX)/scale.
-    // However, it is simpler to compute the starting grid line using current pan and scale.
-    // We'll compute the top-left logical coordinate:
-    const startX = -this.offsetX / this.scale;
-    const startY = -this.offsetY / this.scale;
+        // Determine start positions in logical coordinates:
+        // Since we have already translated the context, the origin (0,0) is shifted by offsetX and offsetY.
+        const startX = -this.offsetX / this.scale;
+        const startY = -this.offsetY / this.scale;
 
-    // Determine the first vertical line to draw:
-    let firstVerticalLine = Math.floor(startX / spacing) * spacing;
-    // Draw vertical lines covering the visible area:
-    ctx.beginPath();
-    for (let x = firstVerticalLine; x <= startX + logicalWidth; x += spacing) {
-      ctx.moveTo(x, startY);
-      ctx.lineTo(x, startY + logicalHeight);
+        // Find the first visible vertical grid line:
+        const firstX = Math.floor(startX / spacing) * spacing;
+        // Find the first visible horizontal grid line:
+        const firstY = Math.floor(startY / spacing) * spacing;
+
+        // Iterate over visible grid points and draw dots
+        for (let x = firstX; x <= startX + logicalWidth; x += spacing) {
+            for (let y = firstY; y <= startY + logicalHeight; y += spacing) {
+                ctx.beginPath();
+                ctx.arc(x, y, dotRadius, 0, Math.PI * 2); // Draw a circle at each grid point
+                ctx.fill(); // Fill the dot with the current fillStyle
+            }
+        }
     }
-
-    // Determine the first horizontal line:
-    let firstHorizontalLine = Math.floor(startY / spacing) * spacing;
-    for (let y = firstHorizontalLine; y <= startY + logicalHeight; y += spacing) {
-      ctx.moveTo(startX, y);
-      ctx.lineTo(startX + logicalWidth, y);
-    }
-    ctx.stroke();
-  }
 
 
     /**
