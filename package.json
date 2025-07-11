@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "description": "A project for generating and testing circuits",
     "main": "main.js",
+    "type": "module",
     "scripts": {
         "test": "mocha 'tests/**/*.test.js'"
     },

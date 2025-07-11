@@ -1,11 +1,15 @@
-const { expect } = require('chai');
-const CircuitService = require('../src/application/CircuitService'); // Adjust the path as necessary
-const FilePersistenceAdapter = require('../src/infrastructure/adapters/FilePersistenceAdapter'); // Adjust the path as necessary
-const Circuit = require('../src/domain/aggregates/Circuit'); // Adjust the path as necessary
+import { expect } from 'chai';
+import { CircuitService } from '../src/application/CircuitService.js';
+import { FilePersistenceAdapter } from '../src/infrastructure/adapters/FilePersistenceAdapter.js';
+import { Circuit } from '../src/domain/aggregates/Circuit.js';
 
 describe('CircuitService', () => {
     it('should describe the circuit correctly', () => {
-        const circuitService = new CircuitService();
+        const circuit = new Circuit("test-circuit");
+        const circuitService = new CircuitService(circuit);
+        circuitService.addResistor("R1", { x: 10, y: 20 }, 100);
+        circuitService.addCapacitor("C1", { x: 30, y: 40 }, 0.01);
+        
         const description = circuitService.describeCircuit();
         expect(description).to.include("R1");
         expect(description).to.include("C1");
