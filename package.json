@@ -4,7 +4,7 @@
     "description": "A project for generating and testing circuits",
     "main": "src/gui/main.js",
     "scripts": {
-        "test": "mocha --require tests/setup.js 'tests/**/*.test.js'",
+        "test": "cp src/gui/renderers/GetImage.js src/gui/renderers/origGetImage.js && cp tests/testGetImage.js src/gui/renderers/GetImage.js && mocha --require tests/setup.js 'tests/**/*.test.js' && mv src/gui/renderers/origGetImage.js src/gui/renderers/GetImage.js",
         "bundle": "esbuild src/gui/main.js --minify --format=esm --bundle --outdir=dist/static --asset-names=assets/[name] --loader:.png=dataurl",
         "copy": "cp -r assets dist/assets && cp src/gui/gui.html dist/",
         "build": "npm run bundle && npm run copy",
