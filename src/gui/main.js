@@ -1,24 +1,20 @@
-import { Circuit } from "../domain/aggregates/Circuit.js";
-import { CircuitService } from "../application/CircuitService.js";
-import { GUIAdapter } from "./adapters/GUIAdapter.js";
+import { CircuitUIFactory } from './components/CircuitUIFactory.js';
+import { CircuitAppManager } from './components/CircuitAppManager.js';
 
-import {
-  ElementRegistry,
-  rendererFactory,
-  GUICommandRegistry,
-  setupCommands
-} from "../config/settings.js";
+// Wait for DOM to be ready
+document.addEventListener('DOMContentLoaded', () => {
+    // Apply standard styles
+    CircuitUIFactory.applyStandardStyles();
 
-// Init services
-const circuit = new Circuit();
-const circuitService = new CircuitService(circuit, ElementRegistry);
+    // Set document title
+    document.title = "Circuit Designer";
 
-// Controls and canvas
-const controls = document.querySelector(".controls");
-const canvas = document.getElementById("circuitCanvas");
-const guiAdapter = new GUIAdapter(controls, canvas, circuitService, ElementRegistry, rendererFactory, GUICommandRegistry);
+    // Create the complete circuit interface in the body
+    const ui = CircuitUIFactory.createCircuitInterface(document.body, {
+        title: "Circuit Designer"
+    });
 
-// Wait for commands to be set up
-setupCommands(circuitService, guiAdapter.circuitRenderer).then(() => {
-  guiAdapter.initialize();
+    // Initialize the circuit application
+    const appManager = new CircuitAppManager();
+    appManager.initialize(ui.controls, ui.canvas);
 });
