@@ -5,5 +5,3 @@ global.Image = class {
       this.src = '';
     }
 };
-
-// Export global.image
