@@ -4,65 +4,99 @@ menus:
       - id: file.open
         label: Open
         shortcut: Ctrl+O
+        action: { kind: todo, note: "importState dialog" }
+
       - id: file.save
         label: Save
         shortcut: Ctrl+S
+        action: { kind: todo, note: "exportState to file" }
+
       - type: separator
+
       - id: file.exit
         label: Exit
         shortcut: Ctrl+Q
+        action: { kind: todo, note: "close app" }
 
   - label: Edit
     items:
       - id: edit.undo
         label: Undo
         shortcut: Ctrl+Z
+        action: { kind: history, op: undo }
+
       - id: edit.redo
         label: Redo
         shortcut: Ctrl+Y
+        action: { kind: history, op: redo }
+
       - type: separator
+
       - id: edit.cut
         label: Cut
         shortcut: Ctrl+X
         disabled: true
+        action: { kind: disabled }
+
       - id: edit.copy
         label: Copy
         shortcut: Ctrl+C
         disabled: true
+        action: { kind: disabled }
+
       - id: edit.paste
         label: Paste
         shortcut: Ctrl+V
         disabled: true
+        action: { kind: disabled }
+
       - type: separator
+
       - id: edit.selectAll
         label: Select all
         shortcut: Ctrl+A
+        action: { kind: command, name: selectAll }
+
       - type: separator
+
       - id: edit.delete
         label: Delete
         shortcut: Del
+        action: { kind: command, name: deleteSelection }
+
       - id: edit.rotate
         label: Rotate
         shortcut: Drag+Arrows
         disabled: true
+        action: { kind: disabled }
+
       - id: edit.deleteAll
         label: Delete all
+        action: { kind: command, name: deleteAll }
 
   - label: Insert
     items:
       - id: insert.resistor
         label: Resistor
+        action: { kind: command, name: addElement, args: ["Resistor"] }
+
       - id: insert.wire
         label: Wire
+        action: { kind: command, name: addElement, args: ["Wire"] }
 
   - label: View
     items:
       - id: view.zoomIn
         label: Zoom in
         shortcut: Ctrl+scroll
+        action: { kind: renderer, op: zoomStep, args: [-1] }
+
       - id: view.zoomOut
         label: Zoom out
         shortcut: Ctrl+scroll
+        action: { kind: renderer, op: zoomStep, args: [1] }
+
       - id: view.recenter
         label: Re-center
         shortcut: Ctrl+R
+        action: { kind: renderer, op: recenter }
