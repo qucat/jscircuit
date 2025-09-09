@@ -76,9 +76,30 @@ menus:
 
   - label: Insert
     items:
+      - id: insert.wire
+        label: Wire
+        action: { kind: command, name: addElement, args: ["Wire"] }
+
+      - id: insert.junction
+        label: Junction
+        action: { kind: todo, note: "close app" }
+
+      - id: insert.inductor
+        label: Inductor
+        action: { kind: todo, note: "close app" }
+
+      - id: insert.capacitor
+        label: Capacitor
+        action: { kind: todo, note: "close app" }
+
       - id: insert.resistor
         label: Resistor
         action: { kind: command, name: addElement, args: ["Resistor"] }
+
+      - id: insert.ground
+        label: Ground
+        action: { kind: todo, note: "close app" }
+
 
       - id: insert.wire
         label: Wire

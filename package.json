@@ -8,7 +8,7 @@
         "bundle": "esbuild src/gui/main.js --minify --format=esm --bundle --outdir=dist/static --asset-names=assets/[name] --loader:.png=dataurl",
         "copy": "cp -r assets dist/assets && cp src/gui/gui.html dist/",
         "menu:build": "node scripts/build-menu-config.mjs",
-        "build": "npm run bundle && npm run copy && npm run menu:build",
+        "build": "npm run menu:build && npm run bundle && npm run copy && npm run menu:build",
         "serve": "npm run build && http-server -c-1"
     },
     "type": "module",
