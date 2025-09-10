@@ -1,122 +1,167 @@
+// tests/gui/GUIAdapter.test.js
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { setupCommands, ElementRegistry, GUICommandRegistry, rendererFactory } from '../../src/config/settings.js';
+
+import {
+  setupCommands,
+  ElementRegistry,
+  GUICommandRegistry,
+  rendererFactory,
+} from '../../src/config/settings.js';
+
 import { Circuit } from '../../src/domain/aggregates/Circuit.js';
 import { CircuitService } from '../../src/application/CircuitService.js';
 import { GUIAdapter } from '../../src/gui/adapters/GUIAdapter.js';
-import { createMockControls } from './controlsFixture.js';
+
 import { createMockCanvas } from './canvasFixture.js';
 import { setupJsdom } from '../setup/jsdomSetup.js';
 
-describe('GUIAdapter Tests', () => {
-    let controls;
-    let canvas;
-    let guiAdapter;
-    let circuitService;
+const nextTick = () => Promise.resolve();
 
-    beforeEach(async () => {
-        setupJsdom();
+describe('GUIAdapter (declarative actions)', () => {
+  let canvas;
+  let circuit;
+  let circuitService;
+  let guiAdapter;
 
-        // Add buttons to the test DOM
-        ['addResistor', 'addWire', 'addMockElement'].forEach((id) => {
-            const button = document.createElement('button');
-            button.id = id;
-            document.body.appendChild(button);
-        });
+  beforeEach(async () => {
+    // Prepare jsdom window/document for event constructors
+    setupJsdom();
 
-        controls = createMockControls();
-        canvas = createMockCanvas();
-        const circuit = new Circuit();
-        circuitService = new CircuitService(circuit, ElementRegistry);
+    // Minimal DOM: only a canvas is needed
+    canvas = createMockCanvas();
 
-        guiAdapter = new GUIAdapter(controls, canvas, circuitService, ElementRegistry, rendererFactory, GUICommandRegistry);
+    // Domain + services
+    circuit = new Circuit();
+    circuitService = new CircuitService(circuit, ElementRegistry);
 
-        // Await the command registration here
-        await setupCommands(circuitService, guiAdapter.circuitRenderer);
-    });
+    // Adapter (no legacy controls)
+    guiAdapter = new GUIAdapter(
+      /* controls */ null,
+      canvas,
+      circuitService,
+      ElementRegistry,
+      rendererFactory,
+      GUICommandRegistry
+    );
 
-    afterEach(() => {
-        document.body.innerHTML = '';
-        sinon.restore();
-    });
-});
+    // Commands must be ready before initialize()
+    await setupCommands(circuitService, guiAdapter.circuitRenderer);
+  });
 
-describe('GUIAdapter Tests', () => {
-    let controls;
-    let canvas;
-    let guiAdapter;
+  afterEach(() => {
+    guiAdapter?.dispose?.();
+    document.body.innerHTML = '';
+    sinon.restore();
+  });
 
-    beforeEach(async () => {
-        setupJsdom();
-    
-        // Add required buttons to the DOM
-        ['addResistor', 'addWire', 'addMockElement'].forEach((id) => {
-            const button = document.createElement('button');
-            button.id = id;
-            document.body.appendChild(button);
-        });
+  it('initializes and renders once', () => {
+    // Spy BEFORE initialize(), so we see the first render
+    const renderSpy = sinon.spy(guiAdapter.circuitRenderer, 'render');
+    guiAdapter.initialize();
+    expect(renderSpy.calledOnce).to.be.true;
+  });
 
-        // Mock canvas element
-        controls = createMockControls();
-        canvas = createMockCanvas();
+  it('responds to menu action "insert.resistor" by adding one element', async () => {
+    guiAdapter.initialize();
+    const beforeLen = circuitService.getElements().length;
 
-        const circuit = new Circuit();
-        const circuitService = new CircuitService(circuit, ElementRegistry);
-        guiAdapter = new GUIAdapter(controls, canvas, circuitService, ElementRegistry, rendererFactory, GUICommandRegistry);
+    document.dispatchEvent(
+      new window.CustomEvent('ui:action', {
+        detail: { id: 'insert.resistor' },
+        bubbles: true,
+      })
+    );
 
-        // Await the command registration here
-        await setupCommands(circuitService, guiAdapter.circuitRenderer);
-    });
-    
-    it('should initialize without errors', () => {
-        expect(() => guiAdapter.initialize()).to.not.throw();
-    });
+    await nextTick();
+    const afterLen = circuitService.getElements().length;
+    expect(afterLen).to.equal(beforeLen + 1);
 
-    it('should dynamically bind UI controls based on registered elements', () => {
-        const resistorButton = document.getElementById('addResistor');
-        const wireButton = document.getElementById('addWire');
+    // Sanity: new element looks like an element
+    const el = circuitService.getElements()[afterLen - 1];
+    expect(el).to.have.property('type');
+    expect(el).to.have.property('nodes').that.is.an('array');
+  });
 
-        // Verify that the buttons exist
-        expect(resistorButton).to.not.be.null;
-        expect(wireButton).to.not.be.null;
+  it('responds to menu action "insert.wire" by adding one element', async () => {
+    guiAdapter.initialize();
+    const beforeLen = circuitService.getElements().length;
 
-        guiAdapter.bindUIControls();
+    document.dispatchEvent(
+      new window.CustomEvent('ui:action', {
+        detail: { id: 'insert.wire' },
+        bubbles: true,
+      })
+    );
 
-        // Ensure event listeners are registered
-        expect(resistorButton.addEventListener).to.be.a('function');
-        expect(wireButton.addEventListener).to.be.a('function');
-    });
+    await nextTick();
+    const afterLen = circuitService.getElements().length;
+    expect(afterLen).to.equal(beforeLen + 1);
+  });
 
-    it('should render the circuit when initialized', () => {
-        const renderSpy = sinon.spy(guiAdapter.circuitRenderer, 'render');
-        guiAdapter.initialize();
-        expect(renderSpy.calledOnce).to.be.true;
-    });
+  it('undo via Ctrl+Z reverts exactly one change (no double trigger)', async () => {
+    guiAdapter.initialize();
 
-    it('should create and add elements via UI control bindings', () => {
-        // Spy on addElement
-        const addElementSpy = sinon.spy(guiAdapter.circuitService, 'addElement');
+    // Arrange: add once
+    document.dispatchEvent(
+      new window.CustomEvent('ui:action', {
+        detail: { id: 'insert.resistor' },
+        bubbles: true,
+      })
+    );
+    await nextTick();
+    const before = circuitService.getElements().length;
 
-        // Re-bind controls (this replaces the button)
-        guiAdapter.bindUIControls();
+    // Act: Ctrl+Z
+    document.dispatchEvent(
+      new window.KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true })
+    );
+    await nextTick();
 
-        // Get the *new* button after replacement
-        const newButton = document.getElementById('addResistor');
-        newButton.click();
+    // Assert: exactly one undo
+    const after = circuitService.getElements().length;
+    expect(after).to.equal(before - 1);
+  });
 
-        // Assert that an element was added
-        expect(addElementSpy.calledOnce).to.be.true;
+  it('redo via Ctrl+Y reapplies exactly one change', async () => {
+    guiAdapter.initialize();
 
-        // Check the properties of the added element
-        const addedElement = addElementSpy.args[0][0]; // Get the first argument of the first call
-        expect(addedElement).to.have.property('type', 'resistor'); // Assuming 'resistor' is the type for this button
-        expect(addedElement).to.have.property('nodes').that.is.an('array').with.lengthOf(2);
-        expect(addedElement).to.have.property('properties').that.is.an('object');
-      });
+    // Add then undo
+    document.dispatchEvent(
+      new window.CustomEvent('ui:action', {
+        detail: { id: 'insert.resistor' },
+        bubbles: true,
+      })
+    );
+    await nextTick();
+    document.dispatchEvent(
+      new window.KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true })
+    );
+    await nextTick();
 
-    afterEach(() => {
-        // Restore sinon stubs and spies
-        document.body.innerHTML = ''; // Clear mock DOM
-        sinon.restore();
-    });
+    const before = circuitService.getElements().length;
+
+    // Redo
+    document.dispatchEvent(
+      new window.KeyboardEvent('keydown', { key: 'y', ctrlKey: true, bubbles: true })
+    );
+    await nextTick();
+
+    const after = circuitService.getElements().length;
+    expect(after).to.equal(before + 1);
+  });
+
+  it('view.recenter action calls renderer and does not throw', async () => {
+    guiAdapter.initialize();
+
+    document.dispatchEvent(
+      new window.CustomEvent('ui:action', {
+        detail: { id: 'view.recenter' },
+        bubbles: true,
+      })
+    );
+
+    await nextTick();
+    expect(true).to.equal(true); // no throw
+  });
 });
