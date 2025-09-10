@@ -39,12 +39,7 @@ export { ElementRegistry, rendererFactory, GUICommandRegistry };
 // Export a function to register commands later
 // This is needed to avoid circular dependencies
 // and to ensure commands are set up after the GUIAdapter is initialized.
-export async function setupCommands(circuitService, circuitRenderer) {
-    // const { AddElementCommand } = await import("../gui/commands/AddElementCommand.js");
-    // const { DrawWireCommand } = await import("../gui/commands/DrawWireCommand.js");
-    // const { DragElementCommand } = await import("../gui/commands/GUIDragElementCommand.js");
-    // const { WireSplitService } = await import("../application/WireSplitService.js");
-
+export function setupCommands(circuitService, circuitRenderer) {
     const wireSplitService = new WireSplitService(circuitService, ElementRegistry);
 
     if (!GUICommandRegistry.getTypes().includes("addElement")) {
@@ -64,4 +59,32 @@ export async function setupCommands(circuitService, circuitRenderer) {
             new DragElementCommand(circuitService, wireSplitService)
         );
     }
+
+    // Add missing commands that are referenced in the menu config
+    if (!GUICommandRegistry.getTypes().includes("selectAll")) {
+        GUICommandRegistry.register("selectAll", () => ({
+            execute: () => console.log("Select All not implemented yet"),
+            undo: () => console.log("Select All undo not implemented yet")
+        }));
+    }
+
+    if (!GUICommandRegistry.getTypes().includes("deleteSelection")) {
+        GUICommandRegistry.register("deleteSelection", () => ({
+            execute: () => console.log("Delete Selection not implemented yet"),
+            undo: () => console.log("Delete Selection undo not implemented yet")
+        }));
+    }
+
+    if (!GUICommandRegistry.getTypes().includes("deleteAll")) {
+        GUICommandRegistry.register("deleteAll", () => ({
+            execute: () => {
+                console.log("Delete All executing");
+                circuitService.circuit.elements = [];
+                circuitService.emit("update");
+            },
+            undo: () => console.log("Delete All undo not implemented yet")
+        }));
+    }
+
+    console.log("Commands registered:", GUICommandRegistry.getTypes());
 }

@@ -83,6 +83,7 @@ export class GUIAdapter {
     /** @private */ this._onMenuAction = null;
     /** @private */ this._onKeydown = null;
     /** @private */ this._onWheel = null;
+    /** @private */ this._onImageLoaded = null;
   }
 
   /**
@@ -99,6 +100,7 @@ export class GUIAdapter {
     this.bindMenu();
     this.bindShortcuts(KEYMAP);
     this.bindWheelZoom();
+    this.bindImageLoadEvents();
 
     // Pointer interactions on canvas
     this.setupCanvasInteractions();
@@ -114,6 +116,7 @@ export class GUIAdapter {
     if (this._onMenuAction) document.removeEventListener("ui:action", this._onMenuAction);
     if (this._onKeydown) document.removeEventListener("keydown", this._onKeydown);
     if (this._onWheel) this.canvas.removeEventListener("wheel", this._onWheel);
+    if (this._onImageLoaded) document.removeEventListener("renderer:imageLoaded", this._onImageLoaded);
   }
 
   /* ---------------------------------------------------------------------- */
@@ -160,6 +163,17 @@ export class GUIAdapter {
       this.circuitRenderer.render();
     };
     this.canvas.addEventListener("wheel", this._onWheel, { passive: false });
+  }
+
+  /**
+   * Bind renderer image load events to trigger re-renders when images finish loading.
+   */
+  bindImageLoadEvents() {
+    this._onImageLoaded = (event) => {
+      // Re-render when any renderer image loads
+      this.circuitRenderer.render();
+    };
+    document.addEventListener("renderer:imageLoaded", this._onImageLoaded);
   }
 
   /* ---------------------------------------------------------------------- */

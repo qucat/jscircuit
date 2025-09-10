@@ -101,10 +101,6 @@ menus:
         action: { kind: todo, note: "close app" }
 
 
-      - id: insert.wire
-        label: Wire
-        action: { kind: command, name: addElement, args: ["Wire"] }
-
   - label: View
     items:
       - id: view.zoomIn

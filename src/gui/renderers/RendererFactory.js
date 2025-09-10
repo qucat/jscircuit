@@ -26,4 +26,12 @@ export class RendererFactory {
         }
         return new Renderer(context);
     }
+
+    /**
+     * Returns all registered renderer types for debugging.
+     * @returns {string[]} - Array of registered type names.
+     */
+    getRegisteredTypes() {
+        return [...this.registry.keys()];
+    }
 }

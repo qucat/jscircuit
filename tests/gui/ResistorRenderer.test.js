@@ -12,8 +12,9 @@ describe("ResistorRenderer", () => {
     assert.strictEqual(renderer.SCALED_HEIGHT, 20);
   });
 
-  it("calls image.onload and sets imageLoaded to true", () => {
+  it("calls image.onload and sets imageLoaded to true", async () => {
     const renderer = new ResistorRenderer({});
+    await renderer.initImageIfNeeded(); // Initialize the image first
     renderer.image.onload(); // simulate image load
     assert.strictEqual(renderer.imageLoaded, true);
   });

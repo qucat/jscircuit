@@ -61,8 +61,7 @@ const guiAdapter = new GUIAdapter(
 await initMenu();
 
 /* ---------- Commands, first render, reveal, THEN start resize observer ---------- */
-setupCommands(circuitService, guiAdapter.circuitRenderer).then(() => {
-  guiAdapter.initialize();                  // this will call first render
-  stage.classList.add('ready');             // fade in only after crisp render
-  setupHiDPICanvas(canvas, () => guiAdapter.circuitRenderer.render());
-});
+setupCommands(circuitService, guiAdapter.circuitRenderer);
+guiAdapter.initialize();                  // this will call first render
+stage.classList.add('ready');             // fade in only after crisp render
+setupHiDPICanvas(canvas, () => guiAdapter.circuitRenderer.render());
