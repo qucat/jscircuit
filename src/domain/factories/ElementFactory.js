@@ -29,6 +29,6 @@ export class ElementFactory {
         // Generate ID if not provided
         const safeId = id ?? generateId(type[0].toUpperCase());
 
-        return factoryFunction(safeId, nodes, properties, label);
+        return factoryFunction(safeId, nodes, label, properties);
     }
 }

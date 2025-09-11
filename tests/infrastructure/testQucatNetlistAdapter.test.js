@@ -18,13 +18,13 @@ describe('QucatNetlistAdapter roundtrip test with CircuitService', () => {
     // Uses lowercase keys to match adapter typeMap expectations
     before(() => {
         if (!ElementRegistry.get('resistor')) {
-            ElementRegistry.register('resistor', (id, nodes, properties, label = null) =>
-                new Resistor(id, nodes, label, properties instanceof Properties ? properties : new Properties(properties))
+            ElementRegistry.register('resistor', (id, nodes, label = null, properties = new Properties({})) =>
+                new Resistor(id, nodes, label, properties instanceof Properties ? properties : new Properties(properties || {}))
             );
         }
         if (!ElementRegistry.get('wire')) {
-            ElementRegistry.register('wire', (id, nodes, properties, label = null) =>
-                new Wire(id, nodes, label, properties instanceof Properties ? properties : new Properties(properties))
+            ElementRegistry.register('wire', (id, nodes, label = null, properties = new Properties({})) =>
+                new Wire(id, nodes, label, properties instanceof Properties ? properties : new Properties(properties || {}))
             );
         }
     });

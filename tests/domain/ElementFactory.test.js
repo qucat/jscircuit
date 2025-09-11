@@ -3,10 +3,11 @@ import { ElementFactory } from "../../src/domain/factories/ElementFactory.js";
 import { ElementRegistry } from "../../src/domain/factories/ElementRegistry.js";
 import { MockElement } from "./MockElement.js";
 import { Position } from "../../src/domain/valueObjects/Position.js";
+import { Properties } from "../../src/domain/valueObjects/Properties.js";
 
 describe("ElementFactory Tests", () => {
-    ElementRegistry.register("MockElement", (id, nodes, properties) =>
-        new MockElement(id, nodes, properties)
+    ElementRegistry.register("MockElement", (id, nodes, label = null, properties = new Properties({})) =>
+        new MockElement(id, nodes, label, properties)
     );
 
     beforeEach(() => {
@@ -23,7 +24,7 @@ describe("ElementFactory Tests", () => {
         const element = ElementFactory.create("MockElement", "E1", [
             new Position(10, 20),
             new Position(30, 40),
-        ], null, {});
+        ], new Properties({}), null);
 
         expect(element).to.be.an.instanceOf(MockElement);
         expect(element.id).to.equal("E1");
