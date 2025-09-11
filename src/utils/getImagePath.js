@@ -11,6 +11,8 @@
  * getImagePath("resistor", "hover", { mock: true }) // → /assets/R_hover.png (tests)
  */
 
+import { ElementRegistry } from '../domain/factories/ElementRegistry.js';
+
 /**
  * Detects if we're running in Node.js environment
  */
@@ -21,6 +23,7 @@ function isNode() {
 /**
  * Resolves image path based on circuit element type and optional UI variant.
  * Automatically detects environment and uses appropriate loading strategy.
+ * Gets the image prefix from ElementRegistry to avoid hardcoded mappings.
  *
  * @param {string} type - Element type (e.g., "resistor", "capacitor").
  * @param {string} [variant="default"] - UI variant (e.g., "hover", "selected").
@@ -33,8 +36,26 @@ export async function getImagePath(type, variant = "default", { mock = false } =
     throw new Error("Invalid or unknown type");
   }
 
-  // Construct filename based on type and variant
-  const base = type.charAt(0).toUpperCase();
+  // Build mapping from ElementRegistry types to image prefixes
+  const registeredTypes = ElementRegistry.getTypes();
+  const typeMap = {};
+  
+  // Create mapping based on registered types
+  registeredTypes.forEach(registeredType => {
+    // Use a simple convention: first character uppercase for most types
+    // Special cases can be handled as needed
+    let prefix;
+    switch (registeredType.toLowerCase()) {
+      case 'inductor':
+        prefix = 'L'; // Inductor uses L, not I
+        break;
+      default:
+        prefix = registeredType.charAt(0).toUpperCase();
+    }
+    typeMap[registeredType.toLowerCase()] = prefix;
+  });
+  
+  const base = typeMap[type.toLowerCase()] || type.charAt(0).toUpperCase();
   const suffix = variant === "default" ? "" : `_${variant}`;
   const filename = `${base}${suffix}.png`;
 
