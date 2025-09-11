@@ -156,13 +156,8 @@ export class GUIAdapter {
    * Leaves normal scrolling alone if Ctrl is not pressed.
    */
   bindWheelZoom() {
-    this._onWheel = (event) => {
-      if (!event.ctrlKey) return;
-      event.preventDefault();
-      this._exec(event);
-      this.circuitRenderer.render();
-    };
-    this.canvas.addEventListener("wheel", this._onWheel, { passive: false });
+    // Let CircuitRenderer handle wheel events directly - it has its own zoom method
+    // No need to bind wheel events here as CircuitRenderer.initEventListeners() handles them
   }
 
   /**
@@ -254,6 +249,11 @@ export class GUIAdapter {
 
       case "todo": {
         console.warn("[GUIAdapter] TODO:", spec.note ?? "(no note)");
+        break;
+      }
+
+      case "disabled": {
+        // No-op for disabled menu items
         break;
       }
 
