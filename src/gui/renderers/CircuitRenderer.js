@@ -48,6 +48,9 @@ export class CircuitRenderer {
         this.isPanning = false;
         this.startPanPosition = { x: 0, y: 0 };
 
+        // Track which specific element is currently hovered
+        this.hoveredElement = null;
+
         // Bind event handlers to maintain correct "this" reference
         this.zoom = this.zoom.bind(this);
         this.startPan = this.startPan.bind(this);
@@ -114,7 +117,15 @@ export class CircuitRenderer {
             }
 
             const renderer = this.renderers.get(element.type);
-            renderer.renderElement(element);
+            const isHovered = this.hoveredElement === element;
+            
+            // Pass hover state to the renderer
+            if (renderer.renderElementWithHover) {
+                renderer.renderElementWithHover(element, isHovered);
+            } else {
+                // Fallback for renderers that don't support hover
+                renderer.renderElement(element);
+            }
         });
 
         this.context.restore();
@@ -231,42 +242,37 @@ export class CircuitRenderer {
      * Check which elements should be hovered based on mouse position
      */
     checkElementHovers(mouseX, mouseY) {
-        let hoveredElement = null;
+        let newHoveredElement = null;
         
         // Check all circuit elements for hover
         const elements = this.circuitService.getElements();
         if (elements) {
             for (const element of elements) {
                 const renderer = this.renderers.get(element.type);
-                if (renderer && renderer.isPointInBounds) {
-                    const [start, end] = element.nodes;
-                    const midX = (start.x + end.x) / 2;
-                    const midY = (start.y + end.y) / 2;
+                if (renderer) {
+                    let isHovered = false;
                     
-                    if (renderer.isPointInBounds(mouseX, mouseY, midX, midY)) {
-                        hoveredElement = element;
+                    // Special handling for wires which need different hover detection
+                    if (element.type === 'wire' && renderer.checkHover) {
+                        isHovered = renderer.checkHover(element, mouseX, mouseY);
+                    } else if (renderer.isPointInBounds) {
+                        const [start, end] = element.nodes;
+                        const midX = (start.x + end.x) / 2;
+                        const midY = (start.y + end.y) / 2;
+                        isHovered = renderer.isPointInBounds(mouseX, mouseY, midX, midY);
+                    }
+                    
+                    if (isHovered) {
+                        newHoveredElement = element;
                         break; // Only hover one element at a time
                     }
                 }
             }
         }
 
-        // Update hover states
-        let needsRerender = false;
-        const elements2 = this.circuitService.getElements();
-        if (elements2) {
-            for (const element of elements2) {
-                const renderer = this.renderers.get(element.type);
-                if (renderer && renderer.setHoverState) {
-                    const shouldHover = element === hoveredElement;
-                    if (renderer.setHoverState(shouldHover)) {
-                        needsRerender = true;
-                    }
-                }
-            }
-        }
-
-        if (needsRerender) {
+        // Update hover state and re-render if changed
+        if (this.hoveredElement !== newHoveredElement) {
+            this.hoveredElement = newHoveredElement;
             this.render();
         }
     }
@@ -275,20 +281,8 @@ export class CircuitRenderer {
      * Clear all hover states
      */
     clearAllHovers() {
-        let needsRerender = false;
-        const elements = this.circuitService.getElements();
-        if (elements) {
-            for (const element of elements) {
-                const renderer = this.renderers.get(element.type);
-                if (renderer && renderer.setHoverState) {
-                    if (renderer.setHoverState(false)) {
-                        needsRerender = true;
-                    }
-                }
-            }
-        }
-
-        if (needsRerender) {
+        if (this.hoveredElement) {
+            this.hoveredElement = null;
             this.render();
         }
     }

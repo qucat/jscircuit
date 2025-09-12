@@ -143,6 +143,17 @@ export class ResistorRenderer extends ElementRenderer {
     }
   }
 
+  /**
+   * Render a resistor element with hover state
+   * @param {Object} resistor - The resistor element to render
+   * @param {boolean} isHovered - Whether the element is being hovered
+   */
+  renderElementWithHover(resistor, isHovered) {
+    // Set hover state and render
+    this.isHovered = isHovered;
+    this.renderElement(resistor);
+  }
+
   registerClickHandler(canvas, command) {
     canvas.addEventListener(
       "mouseup",
@@ -205,28 +216,6 @@ export class ResistorRenderer extends ElementRenderer {
       mouseX <= elementMidX + halfWidth &&
       mouseY >= elementMidY - halfHeight &&
       mouseY <= elementMidY + halfHeight
-    );
-  }
-
-  // Method to set hover state (can be called externally)
-  setHoverState(isHovered) {
-    if (this.isHovered !== isHovered) {
-      this.isHovered = isHovered;
-      return true; // Indicates state changed, re-render needed
-    }
-    return false;
-  }
-
-  // Check if a point is within the resistor bounds
-  isPointInBounds(x, y, midX, midY) {
-    const halfWidth = this.SCALED_WIDTH / 2;
-    const halfHeight = this.SCALED_HEIGHT / 2;
-    
-    return (
-      x >= midX - halfWidth &&
-      x <= midX + halfWidth &&
-      y >= midY - halfHeight &&
-      y <= midY + halfHeight
     );
   }
 }
