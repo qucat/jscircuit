@@ -78,32 +78,32 @@ menus:
     items:
       - id: insert.wire
         label: Wire
-        shortcut: <W>
+        shortcut: W
         action: { kind: command, name: addElement, args: ["Wire"] }
 
       - id: insert.junction
         label: Junction
-        shortcut: <J>
+        shortcut: J
         action: { kind: command, name: addElement, args: ["Junction"] }
 
       - id: insert.inductor
         label: Inductor
-        shortcut: <L>
+        shortcut: L
         action: { kind: command, name: addElement, args: ["Inductor"] }
 
       - id: insert.capacitor
         label: Capacitor
-        shortcut: <C>
+        shortcut: C
         action: { kind: command, name: addElement, args: ["Capacitor"] }
 
       - id: insert.resistor
         label: Resistor
-        shortcut: <R>
+        shortcut: R
         action: { kind: command, name: addElement, args: ["Resistor"] }
 
       - id: insert.ground
         label: Ground
-        shortcut: <G>
+        shortcut: G
         action: { kind: command, name: addElement, args: ["Ground"] }
 
 
