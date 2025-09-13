@@ -27,6 +27,9 @@ export function createMockCanvas() {
         }),
         addEventListener: sinon.spy(),
         removeEventListener: sinon.spy(),
+        style: {
+            cursor: 'default'
+        },
 
     };
 }

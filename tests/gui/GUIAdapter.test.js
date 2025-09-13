@@ -83,7 +83,7 @@ describe('GUIAdapter (declarative actions)', () => {
     expect(el).to.have.property('nodes').that.is.an('array');
   });
 
-  it('responds to menu action "insert.wire" by adding one element', async () => {
+  it('responds to menu action "insert.wire" by activating wire drawing mode', async () => {
     guiAdapter.initialize();
     const beforeLen = circuitService.getElements().length;
 
@@ -96,7 +96,9 @@ describe('GUIAdapter (declarative actions)', () => {
 
     await nextTick();
     const afterLen = circuitService.getElements().length;
-    expect(afterLen).to.equal(beforeLen + 1);
+    // Wire drawing mode should be activated but no element added yet
+    expect(afterLen).to.equal(beforeLen);
+    expect(guiAdapter.wireDrawingMode).to.be.true;
   });
 
   it('undo via Ctrl+Z reverts exactly one change (no double trigger)', async () => {

@@ -380,7 +380,7 @@ export class GUIAdapter {
             this.elementRegistry,
           );
         } else {
-          // Clicking on empty space without wire mode starts selection box
+          // Clicking on empty space starts selection box
           this.startSelectionBox(offsetX, offsetY);
           this.activeCommand = null;
         }
@@ -666,7 +666,9 @@ export class GUIAdapter {
    * @private
    */
   setCrosshairCursor() {
-    this.canvas.style.cursor = 'crosshair';
+    if (this.canvas && this.canvas.style) {
+      this.canvas.style.cursor = 'crosshair';
+    }
   }
 
   /**
@@ -674,7 +676,9 @@ export class GUIAdapter {
    * @private
    */
   resetCursor() {
-    this.canvas.style.cursor = 'default';
+    if (this.canvas && this.canvas.style) {
+      this.canvas.style.cursor = 'default';
+    }
     this.wireDrawingMode = false;
   }
 }
