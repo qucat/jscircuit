@@ -53,7 +53,10 @@ export class CircuitRenderer {
         // Track which specific element is currently hovered
         this.hoveredElement = null;
         
-        // Track which element is currently selected
+        // Track which elements are currently selected (support multiple selection)
+        this.selectedElements = new Set();
+        
+        // Keep backwards compatibility with single selection
         this.selectedElement = null;
 
         // Bind event handlers to maintain correct "this" reference
@@ -123,7 +126,7 @@ export class CircuitRenderer {
 
             const renderer = this.renderers.get(element.type);
             const isHovered = this.hoveredElement === element;
-            const isSelected = this.selectedElement === element;
+            const isSelected = this.selectedElements.has(element) || this.selectedElement === element;
             
             // Pass hover and selection states to the renderer
             if (renderer.renderElementWithStates) {
@@ -137,6 +140,9 @@ export class CircuitRenderer {
         });
 
         this.context.restore();
+        
+        // Render selection box overlay (after transformations are restored)
+        this.renderSelectionBox();
     }
 
     /**
@@ -329,6 +335,60 @@ export class CircuitRenderer {
      */
     clearSelection() {
         this.setSelectedElement(null);
+        this.selectedElements.clear();
+    }
+
+    /**
+     * Add element to multiple selection
+     * @param {Object} element - The element to add to selection
+     */
+    addToSelection(element) {
+        if (element) {
+            this.selectedElements.add(element);
+            this.render();
+        }
+    }
+
+    /**
+     * Remove element from multiple selection
+     * @param {Object} element - The element to remove from selection
+     */
+    removeFromSelection(element) {
+        if (this.selectedElements.has(element)) {
+            this.selectedElements.delete(element);
+            this.render();
+        }
+    }
+
+    /**
+     * Set multiple selected elements
+     * @param {Array|Set} elements - The elements to select
+     */
+    setSelectedElements(elements) {
+        this.selectedElements.clear();
+        if (Array.isArray(elements)) {
+            elements.forEach(element => this.selectedElements.add(element));
+        } else if (elements instanceof Set) {
+            this.selectedElements = new Set(elements);
+        }
+        this.render();
+    }
+
+    /**
+     * Get all currently selected elements
+     * @returns {Array} Array of selected elements
+     */
+    getSelectedElements() {
+        return Array.from(this.selectedElements);
+    }
+
+    /**
+     * Check if an element is selected
+     * @param {Object} element - The element to check
+     * @returns {boolean} True if the element is selected
+     */
+    isElementSelected(element) {
+        return this.selectedElements.has(element) || this.selectedElement === element;
     }
 
 
@@ -348,5 +408,48 @@ export class CircuitRenderer {
             y >= start.y &&
             y <= start.y + size
         );
+    }
+
+    /**
+     * Set selection box data for rendering
+     * @param {Object|null} selectionBox - Selection box with startX, startY, endX, endY or null
+     */
+    setSelectionBox(selectionBox) {
+        this.selectionBox = selectionBox;
+    }
+
+    /**
+     * Render selection box overlay (in screen coordinates)
+     * @private
+     */
+    renderSelectionBox() {
+        if (!this.selectionBox) return;
+
+        const { startX, startY, endX, endY } = this.selectionBox;
+        
+        // Convert world coordinates to screen coordinates
+        const screenStartX = startX * this.scale + this.offsetX;
+        const screenStartY = startY * this.scale + this.offsetY;
+        const screenEndX = endX * this.scale + this.offsetX;
+        const screenEndY = endY * this.scale + this.offsetY;
+
+        const ctx = this.context;
+        ctx.save();
+        
+        // Draw dashed rectangle
+        ctx.strokeStyle = '#007ACC';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5, 5]);
+        
+        const width = screenEndX - screenStartX;
+        const height = screenEndY - screenStartY;
+        
+        ctx.strokeRect(screenStartX, screenStartY, width, height);
+        
+        // Optional: Add semi-transparent fill
+        ctx.fillStyle = 'rgba(0, 122, 204, 0.1)';
+        ctx.fillRect(screenStartX, screenStartY, width, height);
+        
+        ctx.restore();
     }
 }

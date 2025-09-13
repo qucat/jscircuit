@@ -23,6 +23,7 @@ import { AddElementCommand } from "../gui/commands/AddElementCommand.js";
 import { DrawWireCommand } from "../gui/commands/DrawWireCommand.js";
 import { DragElementCommand } from "../gui/commands/GUIDragElementCommand.js";
 import { SelectElementCommand } from "../gui/commands/SelectElementCommand.js";
+import { MultiSelectElementCommand } from "../gui/commands/MultiSelectElementCommand.js";
 import { WireSplitService } from "../application/WireSplitService.js";
 
 // Register elements once
@@ -100,6 +101,12 @@ export function setupCommands(circuitService, circuitRenderer) {
     if (!GUICommandRegistry.getTypes().includes("selectElement")) {
         GUICommandRegistry.register("selectElement", () =>
             new SelectElementCommand(circuitService, circuitRenderer)
+        );
+    }
+
+    if (!GUICommandRegistry.getTypes().includes("multiSelectElement")) {
+        GUICommandRegistry.register("multiSelectElement", () =>
+            new MultiSelectElementCommand(circuitService, circuitRenderer)
         );
     }
 

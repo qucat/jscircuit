@@ -81,6 +81,10 @@ export class GUIAdapter {
     this.wireDrawingMode = false; // Wire drawing mode state
     /** @private */
     this.placingElement = null;
+    /** @private */
+    this.selectionBox = null; // Selection box state: { startX, startY, endX, endY }
+    /** @private */
+    this.isSelecting = false; // True when drawing selection box
 
     // Listener refs for clean disposal
     /** @private */ this._onMenuAction = null;
@@ -376,7 +380,8 @@ export class GUIAdapter {
             this.elementRegistry,
           );
         } else {
-          // Clicking on empty space without wire mode does nothing
+          // Clicking on empty space without wire mode starts selection box
+          this.startSelectionBox(offsetX, offsetY);
           this.activeCommand = null;
         }
 
@@ -414,6 +419,12 @@ export class GUIAdapter {
         return;
       }
 
+      // Update selection box if selecting
+      if (this.isSelecting) {
+        this.updateSelectionBox(offsetX, offsetY);
+        return;
+      }
+
       // Regular move for active command
       if (this.activeCommand) {
         const dx = offsetX - this.mouseDownPos.x;
@@ -429,6 +440,12 @@ export class GUIAdapter {
     this.canvas.addEventListener("mouseup", (event) => {
       if (event.button === 1) {
         this.canvas.style.cursor = "default";
+        return;
+      }
+
+      // Finalize selection box if selecting
+      if (this.isSelecting) {
+        this.finalizeSelection();
         return;
       }
 
@@ -545,6 +562,103 @@ export class GUIAdapter {
       if (JSON.stringify(a.nodes) !== JSON.stringify(b.nodes)) return true;
     }
     return false;
+  }
+
+  /**
+   * Start selection box drawing
+   * @param {number} x World X coordinate
+   * @param {number} y World Y coordinate
+   * @private
+   */
+  startSelectionBox(x, y) {
+    this.isSelecting = true;
+    this.selectionBox = {
+      startX: x,
+      startY: y,
+      endX: x,
+      endY: y
+    };
+    console.log("[GUIAdapter] Started selection box at", x, y);
+  }
+
+  /**
+   * Update selection box during drag
+   * @param {number} x World X coordinate
+   * @param {number} y World Y coordinate
+   * @private
+   */
+  updateSelectionBox(x, y) {
+    if (!this.selectionBox) return;
+    
+    this.selectionBox.endX = x;
+    this.selectionBox.endY = y;
+    
+    // Pass selection box to renderer
+    this.circuitRenderer.setSelectionBox(this.selectionBox);
+    
+    // Trigger re-render to show selection box
+    this.circuitRenderer.render();
+  }
+
+  /**
+   * Finalize selection and select elements within box
+   * @private
+   */
+  finalizeSelection() {
+    if (!this.selectionBox) return;
+
+    const { startX, startY, endX, endY } = this.selectionBox;
+    
+    // Normalize box coordinates
+    const left = Math.min(startX, endX);
+    const right = Math.max(startX, endX);
+    const top = Math.min(startY, endY);
+    const bottom = Math.max(startY, endY);
+
+    // Find elements within selection box
+    const selectedElements = this.circuitService.getElements().filter(element => {
+      return this.isElementInBox(element, left, top, right, bottom);
+    });
+
+    // Select all elements using multi-select command
+    if (selectedElements.length > 0) {
+      const multiSelectCommand = this.guiCommandRegistry.get("multiSelectElement");
+      if (multiSelectCommand) {
+        multiSelectCommand.execute(selectedElements);
+      }
+    }
+
+    console.log("[GUIAdapter] Found", selectedElements.length, "elements in selection box");
+
+    // Clean up selection state
+    this.isSelecting = false;
+    this.selectionBox = null;
+    
+    // Clear selection box from renderer
+    this.circuitRenderer.setSelectionBox(null);
+    
+    // Re-render to clear selection box and show selected elements
+    this.circuitRenderer.render();
+  }
+
+  /**
+   * Check if an element is within the selection box
+   * @param {Object} element Circuit element
+   * @param {number} left Left boundary
+   * @param {number} top Top boundary  
+   * @param {number} right Right boundary
+   * @param {number} bottom Bottom boundary
+   * @returns {boolean}
+   * @private
+   */
+  isElementInBox(element, left, top, right, bottom) {
+    if (!element.nodes || element.nodes.length === 0) return false;
+
+    // Check if any node of the element is within the box
+    return element.nodes.some(node => {
+      return node.x >= left && node.x <= right && 
+             node.y >= top && node.y <= bottom;
+    });
   }
 
   /**
