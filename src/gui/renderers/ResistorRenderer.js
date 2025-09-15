@@ -12,19 +12,31 @@ export class ResistorRenderer extends ImageRenderer {
         }
 
         const [start, end] = resistor.nodes;
-        // Compute midpoint between snapped nodes
+        // Compute midpoint between nodes
         const midX = (start.x + end.x) / 2;
         const midY = (start.y + end.y) / 2;
 
-        // Draw terminals (using the base method from ElementRenderer)
+        // Calculate the angle of the resistor based on the node positions
+        const angle = Math.atan2(end.y - start.y, end.x - start.x);
+
+        // Draw terminals first
         this.renderTerminal(start);
         this.renderTerminal(end);
+
+        // Apply rotation based on the actual node orientation
+        this.context.save();
+        this.context.translate(midX, midY);
+        this.context.rotate(angle);
+        this.context.translate(-midX, -midY);
 
         // Draw the resistor representation using the image renderer
         if (!this.drawImage(midX, midY)) {
             // Fallback: draw a simple rectangle representation
             this.renderFallback(resistor, midX, midY);
         }
+
+        // Restore rotation
+        this.context.restore();
 
         // Draw connecting lines from terminals to resistor body
         this.renderConnections(start, end, midX, midY);
@@ -56,15 +68,30 @@ export class ResistorRenderer extends ImageRenderer {
         this.context.strokeStyle = '#000000';
         this.context.lineWidth = 1;
 
-        // Draw line from start to resistor body
+        // Calculate the angle and connection points based on the actual node positions
+        const angle = Math.atan2(end.y - start.y, end.x - start.x);
+        const halfWidth = this.SCALED_WIDTH / 2;
+        
+        // Calculate connection points on the resistor body edges
+        const connectionStart = {
+            x: midX - Math.cos(angle) * halfWidth,
+            y: midY - Math.sin(angle) * halfWidth
+        };
+        
+        const connectionEnd = {
+            x: midX + Math.cos(angle) * halfWidth,
+            y: midY + Math.sin(angle) * halfWidth
+        };
+
+        // Draw line from start node to resistor body
         this.context.beginPath();
         this.context.moveTo(start.x, start.y);
-        this.context.lineTo(midX - this.SCALED_WIDTH/2, midY);
+        this.context.lineTo(connectionStart.x, connectionStart.y);
         this.context.stroke();
 
-        // Draw line from resistor body to end
+        // Draw line from resistor body to end node
         this.context.beginPath();
-        this.context.moveTo(midX + this.SCALED_WIDTH/2, midY);
+        this.context.moveTo(connectionEnd.x, connectionEnd.y);
         this.context.lineTo(end.x, end.y);
         this.context.stroke();
 

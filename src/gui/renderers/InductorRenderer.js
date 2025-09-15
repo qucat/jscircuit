@@ -14,13 +14,27 @@ export class InductorRenderer extends ImageRenderer {
         const midX = (start.x + end.x) / 2;
         const midY = (start.y + end.y) / 2;
 
+        // Calculate the angle of the inductor based on the node positions
+        const angle = Math.atan2(end.y - start.y, end.x - start.x);
+
+        // Draw terminals first
         this.renderTerminal(start);
         this.renderTerminal(end);
+
+        // Apply rotation based on the actual node orientation
+        this.context.save();
+        this.context.translate(midX, midY);
+        this.context.rotate(angle);
+        this.context.translate(-midX, -midY);
 
         if (!this.drawImage(midX, midY)) {
             this.renderFallback(inductor, midX, midY);
         }
 
+        // Restore rotation
+        this.context.restore();
+
+        // Draw connections
         this.renderConnections(start, end, midX, midY);
 
         if (inductor.label && inductor.label.text) {
@@ -51,13 +65,30 @@ export class InductorRenderer extends ImageRenderer {
         this.context.strokeStyle = '#000000';
         this.context.lineWidth = 1;
 
+        // Calculate the angle and connection points based on the actual node positions
+        const angle = Math.atan2(end.y - start.y, end.x - start.x);
+        const halfWidth = 30; // Connection distance from center
+        
+        // Calculate connection points on the inductor body edges
+        const connectionStart = {
+            x: midX - Math.cos(angle) * halfWidth,
+            y: midY - Math.sin(angle) * halfWidth
+        };
+        
+        const connectionEnd = {
+            x: midX + Math.cos(angle) * halfWidth,
+            y: midY + Math.sin(angle) * halfWidth
+        };
+
+        // Draw line from start node to inductor body
         this.context.beginPath();
         this.context.moveTo(start.x, start.y);
-        this.context.lineTo(midX - 30, midY);
+        this.context.lineTo(connectionStart.x, connectionStart.y);
         this.context.stroke();
 
+        // Draw line from inductor body to end node
         this.context.beginPath();
-        this.context.moveTo(midX + 30, midY);
+        this.context.moveTo(connectionEnd.x, connectionEnd.y);
         this.context.lineTo(end.x, end.y);
         this.context.stroke();
 

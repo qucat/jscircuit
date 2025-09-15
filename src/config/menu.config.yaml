@@ -66,8 +66,8 @@ menus:
 
       - id: edit.rotate
         label: Rotate
-        shortcut: Drag+Arrows
-        disabled: true
+        shortcut: Ctrl+Arrows
+        disabled: false
         action: { kind: disabled }
 
       - id: edit.deleteAll

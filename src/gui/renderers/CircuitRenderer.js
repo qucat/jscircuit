@@ -143,6 +143,9 @@ export class CircuitRenderer {
         
         // Render selection box overlay (after transformations are restored)
         this.renderSelectionBox();
+        
+        // Render bounding box for multiple selected elements (disabled for now)
+        // this.renderSelectionBoundingBox();
     }
 
     /**
@@ -379,7 +382,12 @@ export class CircuitRenderer {
      * @returns {Array} Array of selected elements
      */
     getSelectedElements() {
-        return Array.from(this.selectedElements);
+        const result = Array.from(this.selectedElements);
+        // Include single selected element if it exists and isn't already in the Set
+        if (this.selectedElement && !this.selectedElements.has(this.selectedElement)) {
+            result.push(this.selectedElement);
+        }
+        return result;
     }
 
     /**
@@ -449,6 +457,83 @@ export class CircuitRenderer {
         // Optional: Add semi-transparent fill
         ctx.fillStyle = 'rgba(0, 122, 204, 0.1)';
         ctx.fillRect(screenStartX, screenStartY, width, height);
+        
+        ctx.restore();
+    }
+
+    /**
+     * Render bounding box around selected elements with rotation center
+     * @private
+     */
+    renderSelectionBoundingBox() {
+        const selectedElements = this.getSelectedElements();
+        
+        if (selectedElements.length < 1) return;
+
+        // Calculate bounding box in world coordinates
+        let minX = Infinity;
+        let minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+
+        selectedElements.forEach(element => {
+            element.nodes.forEach(node => {
+                minX = Math.min(minX, node.x);
+                minY = Math.min(minY, node.y);
+                maxX = Math.max(maxX, node.x);
+                maxY = Math.max(maxY, node.y);
+            });
+        });
+
+        // Convert to screen coordinates
+        const screenMinX = minX * this.scale + this.offsetX;
+        const screenMinY = minY * this.scale + this.offsetY;
+        const screenMaxX = maxX * this.scale + this.offsetX;
+        const screenMaxY = maxY * this.scale + this.offsetY;
+
+        // Calculate center in screen coordinates
+        const centerX = (screenMinX + screenMaxX) / 2;
+        const centerY = (screenMinY + screenMaxY) / 2;
+
+        const ctx = this.context;
+        ctx.save();
+        
+        // Draw bounding box
+        ctx.strokeStyle = '#FF6B35'; // Orange color for rotation bounding box
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 4]);
+        
+        const width = screenMaxX - screenMinX;
+        const height = screenMaxY - screenMinY;
+        
+        // Add some padding to the bounding box
+        const padding = 10;
+        ctx.strokeRect(
+            screenMinX - padding, 
+            screenMinY - padding, 
+            width + 2 * padding, 
+            height + 2 * padding
+        );
+        
+        // Draw rotation center indicator
+        ctx.setLineDash([]); // Solid line for center
+        ctx.strokeStyle = '#FF6B35';
+        ctx.fillStyle = '#FF6B35';
+        ctx.lineWidth = 2;
+        
+        // Cross at center
+        const crossSize = 8;
+        ctx.beginPath();
+        ctx.moveTo(centerX - crossSize, centerY);
+        ctx.lineTo(centerX + crossSize, centerY);
+        ctx.moveTo(centerX, centerY - crossSize);
+        ctx.lineTo(centerX, centerY + crossSize);
+        ctx.stroke();
+        
+        // Small circle at center
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
+        ctx.fill();
         
         ctx.restore();
     }

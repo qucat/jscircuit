@@ -14,13 +14,27 @@ export class CapacitorRenderer extends ImageRenderer {
         const midX = (start.x + end.x) / 2;
         const midY = (start.y + end.y) / 2;
 
+        // Calculate the angle of the capacitor based on the node positions
+        const angle = Math.atan2(end.y - start.y, end.x - start.x);
+
+        // Draw terminals first
         this.renderTerminal(start);
         this.renderTerminal(end);
+
+        // Apply rotation based on the actual node orientation
+        this.context.save();
+        this.context.translate(midX, midY);
+        this.context.rotate(angle);
+        this.context.translate(-midX, -midY);
 
         if (!this.drawImage(midX, midY)) {
             this.renderFallback(capacitor, midX, midY);
         }
 
+        // Restore rotation
+        this.context.restore();
+
+        // Draw connections
         this.renderConnections(start, end, midX, midY);
 
         if (capacitor.label && capacitor.label.text) {
@@ -28,30 +42,28 @@ export class CapacitorRenderer extends ImageRenderer {
         }
     }
 
-    renderFallback(capacitor, midX, midY) {
+    renderFallback(capacitor, midX, midY, rotation = 0) {
         this.context.save();
+        this.context.translate(midX, midY);
+        if (rotation !== 0) {
+            this.context.rotate(rotation);
+        }
+        
         this.context.strokeStyle = '#000000';
         this.context.lineWidth = 2;
 
-        const [start, end] = capacitor.nodes;
-        const dx = end.x - start.x;
-        const dy = end.y - start.y;
-        const length = Math.sqrt(dx * dx + dy * dy);
-        
-        if (length > 0) {
-            const perpX = -dy / length * 10;
-            const perpY = dx / length * 10;
+        // Draw capacitor plates (two parallel lines)
+        const plateOffset = 10;
 
-            this.context.beginPath();
-            this.context.moveTo(midX - 5 + perpX, midY - 5 + perpY);
-            this.context.lineTo(midX - 5 - perpX, midY - 5 - perpY);
-            this.context.stroke();
+        this.context.beginPath();
+        this.context.moveTo(-5, -plateOffset);
+        this.context.lineTo(-5, plateOffset);
+        this.context.stroke();
 
-            this.context.beginPath();
-            this.context.moveTo(midX + 5 + perpX, midY + 5 + perpY);
-            this.context.lineTo(midX + 5 - perpX, midY + 5 - perpY);
-            this.context.stroke();
-        }
+        this.context.beginPath();
+        this.context.moveTo(5, -plateOffset);
+        this.context.lineTo(5, plateOffset);
+        this.context.stroke();
 
         this.context.restore();
     }
@@ -61,13 +73,30 @@ export class CapacitorRenderer extends ImageRenderer {
         this.context.strokeStyle = '#000000';
         this.context.lineWidth = 1;
 
+        // Calculate the angle and connection points based on the actual node positions
+        const angle = Math.atan2(end.y - start.y, end.x - start.x);
+        const halfWidth = 20; // Connection distance from center
+        
+        // Calculate connection points on the capacitor body edges
+        const connectionStart = {
+            x: midX - Math.cos(angle) * halfWidth,
+            y: midY - Math.sin(angle) * halfWidth
+        };
+        
+        const connectionEnd = {
+            x: midX + Math.cos(angle) * halfWidth,
+            y: midY + Math.sin(angle) * halfWidth
+        };
+
+        // Draw line from start node to capacitor body
         this.context.beginPath();
         this.context.moveTo(start.x, start.y);
-        this.context.lineTo(midX - 20, midY);
+        this.context.lineTo(connectionStart.x, connectionStart.y);
         this.context.stroke();
 
+        // Draw line from capacitor body to end node
         this.context.beginPath();
-        this.context.moveTo(midX + 20, midY);
+        this.context.moveTo(connectionEnd.x, connectionEnd.y);
         this.context.lineTo(end.x, end.y);
         this.context.stroke();
 

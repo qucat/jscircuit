@@ -251,4 +251,123 @@ export class CircuitService extends EventEmitter {
 
     this.emit("update", { type: "restoredFromSnapshot" });
   }
+
+  /**
+   * Rotates a group of elements around the center of their bounding box.
+   * 
+   * @param {string[]} elementIds - Array of element IDs to rotate.
+   * @param {number} rotationAngleDegrees - The rotation angle in degrees (90, 180, 270, etc.).
+   */
+  rotateElements(elementIds, rotationAngleDegrees) {
+    if (!elementIds || elementIds.length === 0) {
+      console.warn("No elements provided for rotation");
+      return;
+    }
+
+    const elements = elementIds.map(id => 
+      this.circuit.elements.find(el => el.id === id)
+    ).filter(el => el !== undefined);
+
+    if (elements.length === 0) {
+      console.warn("No valid elements found for rotation");
+      return;
+    }
+
+    // Calculate the bounding box of all selected elements
+    const boundingBox = this.calculateBoundingBox(elements);
+    
+    // Calculate the center of the bounding box
+    const centerX = (boundingBox.minX + boundingBox.maxX) / 2;
+    const centerY = (boundingBox.minY + boundingBox.maxY) / 2;
+    
+    // Convert rotation angle to radians
+    const rotationAngle = (rotationAngleDegrees * Math.PI) / 180;
+    
+    // Rotate all nodes of all elements around the bounding box center
+    elements.forEach(element => {
+      element.nodes.forEach(node => {
+        // Translate node to origin (relative to bounding box center)
+        const relativeX = node.x - centerX;
+        const relativeY = node.y - centerY;
+        
+        // Apply rotation matrix
+        const cos = Math.cos(rotationAngle);
+        const sin = Math.sin(rotationAngle);
+        
+        const rotatedX = relativeX * cos - relativeY * sin;
+        const rotatedY = relativeX * sin + relativeY * cos;
+        
+        // Translate back to absolute coordinates
+        node.x = centerX + rotatedX;
+        node.y = centerY + rotatedY;
+      });
+
+      // Update the element's orientation property (for elements that track orientation)
+      const currentOrientation = element.properties.values.orientation || 0;
+      const newOrientation = (currentOrientation + rotationAngleDegrees) % 360;
+      element.properties.updateProperty('orientation', newOrientation);
+    });
+    
+    // Emit update to trigger immediate re-render
+    this.emit("update", { type: "rotateElements", elementIds, rotationAngleDegrees, centerX, centerY });
+  }
+
+  /**
+   * Calculates the bounding box for a group of elements.
+   * 
+   * @param {Element[]} elements - Array of elements to calculate bounding box for.
+   * @returns {Object} Bounding box with minX, minY, maxX, maxY properties.
+   */
+  calculateBoundingBox(elements) {
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    elements.forEach(element => {
+      element.nodes.forEach(node => {
+        minX = Math.min(minX, node.x);
+        minY = Math.min(minY, node.y);
+        maxX = Math.max(maxX, node.x);
+        maxY = Math.max(maxY, node.y);
+      });
+    });
+
+    return { minX, minY, maxX, maxY };
+  }
+
+  /**
+   * Rotates an element to a new orientation.
+   * 
+   * @param {string} elementId - The unique identifier of the element to rotate.
+   * @param {number} newOrientation - The new orientation (0, 90, 180, or 270 degrees).
+   */
+  rotateElement(elementId, newOrientation) {
+    // Use the new group rotation method for single elements
+    const currentOrientation = this.circuit.elements.find(el => el.id === elementId)?.properties.values.orientation || 0;
+    const rotationAngle = newOrientation - currentOrientation;
+    this.rotateElements([elementId], rotationAngle);
+  }
+
+  /**
+   * Moves an element to a new position.
+   * 
+   * @param {string} elementId - The unique identifier of the element to move.
+   * @param {Position} newPosition - The new position for the reference terminal.
+   */
+  moveElement(elementId, newPosition) {
+    const element = this.circuit.elements.find(el => el.id === elementId);
+    if (!element) {
+      console.warn(`Element with ID ${elementId} not found for move`);
+      return;
+    }
+
+    // Import ElementService dynamically to avoid circular dependencies
+    import('./ElementService.js').then(({ ElementService }) => {
+      ElementService.move(element, newPosition);
+      this.emit("update", { type: "moveElement", elementId, newPosition });
+    }).catch(error => {
+      console.error("Error importing ElementService for move:", error);
+    });
+  }
 }

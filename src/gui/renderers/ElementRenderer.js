@@ -58,6 +58,43 @@ export class ElementRenderer {
   }
 
   /**
+   * Get the rotation angle in radians from element properties.
+   * @param {Object} element - The element with properties.
+   * @returns {number} Rotation angle in radians.
+   */
+  getElementRotation(element) {
+    const orientationDegrees = element.properties?.values?.orientation || 0;
+    return (orientationDegrees * Math.PI) / 180;
+  }
+
+  /**
+   * Apply element rotation to the canvas context.
+   * This should be called before drawing, and must be paired with restoreRotation().
+   * @param {Object} element - The element with rotation properties.
+   * @param {number} centerX - Center X coordinate for rotation.
+   * @param {number} centerY - Center Y coordinate for rotation.
+   */
+  applyRotation(element, centerX, centerY) {
+    const rotation = this.getElementRotation(element);
+    if (rotation !== 0) {
+      this.context.save();
+      this.context.translate(centerX, centerY);
+      this.context.rotate(rotation);
+      this.context.translate(-centerX, -centerY);
+      return true; // Indicates rotation was applied
+    }
+    return false; // No rotation applied
+  }
+
+  /**
+   * Restore canvas context after rotation.
+   * Only call this if applyRotation() returned true.
+   */
+  restoreRotation() {
+    this.context.restore();
+  }
+
+  /**
    * Abstract method for rendering an element.
    * @param {Object} element - The element to render.
    */

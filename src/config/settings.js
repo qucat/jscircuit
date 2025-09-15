@@ -29,8 +29,12 @@ import { WireSplitService } from "../application/WireSplitService.js";
 // Register elements once
 if (ElementRegistry.getTypes().length === 0) {
     ElementRegistry.register('Resistor', (id = generateId('R'), nodes, label = null, properties = new Properties({})) => {
-        const defaultProps = { resistance: 1.0 };
+        const defaultProps = { resistance: 1.0, orientation: 0 };
         const finalProps = properties instanceof Properties ? properties : new Properties(defaultProps);
+        // Ensure orientation is set
+        if (finalProps.values.orientation === undefined) {
+            finalProps.values.orientation = 0;
+        }
         return new Resistor(id, nodes, label, finalProps);
     });
 
@@ -40,24 +44,40 @@ if (ElementRegistry.getTypes().length === 0) {
     });
 
     ElementRegistry.register('Capacitor', (id = generateId('C'), nodes, label = null, properties = new Properties({})) => {
-        const defaultProps = { capacitance: 1e-12 }; // 1 pF default
+        const defaultProps = { capacitance: 1e-12, orientation: 0 }; // 1 pF default
         const finalProps = properties instanceof Properties ? properties : new Properties(defaultProps);
+        // Ensure orientation is set
+        if (finalProps.values.orientation === undefined) {
+            finalProps.values.orientation = 0;
+        }
         return new Capacitor(id, nodes, label, finalProps);
     });
 
     ElementRegistry.register('Inductor', (id = generateId('L'), nodes, label = null, properties = new Properties({})) => {
-        const defaultProps = { inductance: 1e-9 }; // 1 nH default
+        const defaultProps = { inductance: 1e-9, orientation: 0 }; // 1 nH default
         const finalProps = properties instanceof Properties ? properties : new Properties(defaultProps);
+        // Ensure orientation is set
+        if (finalProps.values.orientation === undefined) {
+            finalProps.values.orientation = 0;
+        }
         return new Inductor(id, nodes, label, finalProps);
     });
 
     ElementRegistry.register('Junction', (id = generateId('J'), nodes, label = null, properties = new Properties({})) => {
-        const finalProps = properties instanceof Properties ? properties : new Properties({});
+        const finalProps = properties instanceof Properties ? properties : new Properties({ orientation: 0 });
+        // Ensure orientation is set
+        if (finalProps.values.orientation === undefined) {
+            finalProps.values.orientation = 0;
+        }
         return new Junction(id, nodes, label, finalProps);
     });
 
     ElementRegistry.register('Ground', (id = generateId('G'), nodes, label = null, properties = new Properties({})) => {
-        const finalProps = properties instanceof Properties ? properties : new Properties({});
+        const finalProps = properties instanceof Properties ? properties : new Properties({ orientation: 0 });
+        // Ensure orientation is set
+        if (finalProps.values.orientation === undefined) {
+            finalProps.values.orientation = 0;
+        }
         return new Ground(id, nodes, label, finalProps);
     });
 }
@@ -133,6 +153,115 @@ export function setupCommands(circuitService, circuitRenderer) {
                 circuitService.emit("update");
             },
             undo: () => console.log("Delete All undo not implemented yet")
+        }));
+    }
+
+        // Register rotation commands
+    if (!GUICommandRegistry.getTypes().includes("rotateRight")) {
+        GUICommandRegistry.register("rotateRight", (circuitService, circuitRenderer, elementRegistry) => ({
+            execute: () => {
+                const before = circuitService.exportState();
+                const selectedElements = circuitRenderer.getSelectedElements();
+                
+                if (!selectedElements || selectedElements.length === 0) {
+                    console.log("[rotateRight] No elements selected");
+                    return { undo: () => {} }; // No-op if nothing selected
+                }
+                
+                // Get element IDs for group rotation
+                const elementIds = selectedElements.map(element => element.id);
+                
+                // Rotate 90 degrees clockwise (to the right)
+                circuitService.rotateElements(elementIds, 90);
+                
+                console.log(`[rotateRight] Rotated ${selectedElements.length} elements 90° clockwise around bounding box center`);
+                
+                return {
+                    undo: () => circuitService.importState(before)
+                };
+            },
+            undo: () => console.log("Rotate Right undo")
+        }));
+    }
+
+    if (!GUICommandRegistry.getTypes().includes("rotateUp")) {
+        GUICommandRegistry.register("rotateUp", (circuitService, circuitRenderer, elementRegistry) => ({
+            execute: () => {
+                const before = circuitService.exportState();
+                const selectedElements = circuitRenderer.getSelectedElements();
+                
+                if (!selectedElements || selectedElements.length === 0) {
+                    console.log("[rotateUp] No elements selected");
+                    return { undo: () => {} }; // No-op if nothing selected
+                }
+                
+                // Get element IDs for group rotation
+                const elementIds = selectedElements.map(element => element.id);
+                
+                // Rotate 180 degrees (flip upside down)
+                circuitService.rotateElements(elementIds, 180);
+                
+                console.log(`[rotateUp] Rotated ${selectedElements.length} elements 180° around bounding box center`);
+                
+                return {
+                    undo: () => circuitService.importState(before)
+                };
+            },
+            undo: () => console.log("Rotate Up undo")
+        }));
+    }
+
+    if (!GUICommandRegistry.getTypes().includes("rotateLeft")) {
+        GUICommandRegistry.register("rotateLeft", (circuitService, circuitRenderer, elementRegistry) => ({
+            execute: () => {
+                const before = circuitService.exportState();
+                const selectedElements = circuitRenderer.getSelectedElements();
+                
+                if (!selectedElements || selectedElements.length === 0) {
+                    console.log("[rotateLeft] No elements selected");
+                    return { undo: () => {} }; // No-op if nothing selected
+                }
+                
+                // Get element IDs for group rotation
+                const elementIds = selectedElements.map(element => element.id);
+                
+                // Rotate 90 degrees counter-clockwise (to the left)
+                circuitService.rotateElements(elementIds, -90);
+                
+                console.log(`[rotateLeft] Rotated ${selectedElements.length} elements 90° counter-clockwise around bounding box center`);
+                
+                return {
+                    undo: () => circuitService.importState(before)
+                };
+            },
+            undo: () => console.log("Rotate Left undo")
+        }));
+    }
+
+    if (!GUICommandRegistry.getTypes().includes("rotateDown")) {
+        GUICommandRegistry.register("rotateDown", (circuitService, circuitRenderer, elementRegistry) => ({
+            execute: () => {
+                const before = circuitService.exportState();
+                const selectedElements = circuitRenderer.getSelectedElements();
+                
+                if (!selectedElements || selectedElements.length === 0) {
+                    console.log("[rotateDown] No elements selected");
+                    return { undo: () => {} }; // No-op if nothing selected
+                }
+                
+                // Get element IDs for group rotation
+                const elementIds = selectedElements.map(element => element.id);
+                
+                // Rotate 180 degrees (same as "up" - flip)
+                circuitService.rotateElements(elementIds, 180);
+                
+                console.log(`[rotateDown] Rotated ${selectedElements.length} elements 180° around bounding box center`);
+                
+                return {
+                    undo: () => circuitService.importState(before)
+                };
+            },
+            undo: () => console.log("Rotate Down undo")
         }));
     }
 }
