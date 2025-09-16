@@ -64,11 +64,25 @@ menus:
         shortcut: Del
         action: { kind: command, name: deleteSelection }
 
-      - id: edit.rotate
-        label: Rotate
-        shortcut: Ctrl+Arrows
-        disabled: false
-        action: { kind: disabled }
+      - id: edit.rotateRight
+        label: Rotate →
+        shortcut: Ctrl+Right
+        action: { kind: command, name: rotateRight }
+
+      - id: edit.rotateLeft
+        label: Rotate ←
+        shortcut: Ctrl+Left
+        action: { kind: command, name: rotateLeft }
+
+      - id: edit.rotateUp
+        label: Rotate ↑
+        shortcut: Ctrl+Up
+        action: { kind: command, name: rotateUp }
+
+      - id: edit.rotateDown
+        label: Rotate ↓
+        shortcut: Ctrl+Down
+        action: { kind: command, name: rotateDown }
 
       - id: edit.deleteAll
         label: Delete all

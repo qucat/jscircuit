@@ -144,9 +144,26 @@ export class GUIAdapter {
    * @param {!Object<string,string>} keymap Map of "Ctrl+X" → "action.id"
    */
   bindShortcuts(keymap) {
-    const signature = (e) =>
-      (e.ctrlKey || e.metaKey ? "Ctrl+" : "") +
-      (e.key.length === 1 ? e.key.toUpperCase() : e.key);
+    const signature = (e) => {
+      const ctrl = e.ctrlKey || e.metaKey ? "Ctrl+" : "";
+      let key = e.key;
+      
+      // Map arrow keys to text names to match menu config
+      const arrowMap = {
+        'ArrowRight': 'Right',
+        'ArrowLeft': 'Left', 
+        'ArrowUp': 'Up',
+        'ArrowDown': 'Down'
+      };
+      
+      if (arrowMap[key]) {
+        key = arrowMap[key];
+      } else if (key.length === 1) {
+        key = key.toUpperCase();
+      }
+      
+      return ctrl + key;
+    };
 
     this._onKeydown = (e) => {
       // Handle Escape key to cancel wire drawing mode
@@ -157,7 +174,8 @@ export class GUIAdapter {
         return;
       }
 
-      const id = keymap[signature(e)];
+      const sig = signature(e);
+      const id = keymap[sig];
       if (!id) return;
       e.preventDefault();
       this.handleAction(id);
