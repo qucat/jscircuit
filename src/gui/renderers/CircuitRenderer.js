@@ -197,7 +197,16 @@ export class CircuitRenderer {
         const zoomDirection = event.deltaY > 0 ? 1 / scaleFactor : scaleFactor;
 
         const newScale = this.scale * zoomDirection;
-        if (newScale < 0.5 || newScale > 3.0) return; // Set zoom limits
+        
+        // Check zoom limits and show feedback
+        if (newScale < 0.5) {
+            this.showZoomMessage("Minimum zoom level reached (50%)");
+            return;
+        }
+        if (newScale > 3.0) {
+            this.showZoomMessage("Maximum zoom level reached (300%)");
+            return;
+        }
 
         // Adjust pan offsets to maintain zoom focus on cursor position
         this.offsetX = mouseX - ((mouseX - this.offsetX) * zoomDirection);
@@ -205,6 +214,51 @@ export class CircuitRenderer {
         this.scale = newScale;
 
         this.render(); // Redraw circuit with new zoom level
+        
+        // Emit pan event for scroll bar synchronization
+        this.circuitService.emit("pan", {
+            offsetX: this.offsetX,
+            offsetY: this.offsetY
+        });
+    }
+
+    /**
+     * Show a temporary message in the top-left corner of the canvas
+     * @param {string} message - The message to display
+     */
+    showZoomMessage(message) {
+        // Create or get existing message element
+        let messageElement = document.getElementById('zoom-message');
+        if (!messageElement) {
+            messageElement = document.createElement('div');
+            messageElement.id = 'zoom-message';
+            messageElement.style.cssText = `
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 8px 12px;
+                border-radius: 4px;
+                font-family: Arial, sans-serif;
+                font-size: 12px;
+                z-index: 1000;
+                pointer-events: none;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            `;
+            this.canvas.parentElement.appendChild(messageElement);
+        }
+
+        // Update message and show it
+        messageElement.textContent = message;
+        messageElement.style.opacity = '1';
+
+        // Hide after 2 seconds
+        clearTimeout(this.messageTimeout);
+        this.messageTimeout = setTimeout(() => {
+            messageElement.style.opacity = '0';
+        }, 2000);
     }
 
     /**
@@ -229,6 +283,12 @@ export class CircuitRenderer {
         this.offsetX = event.clientX - this.startPan.x;
         this.offsetY = event.clientY - this.startPan.y;
         this.render();
+        
+        // Emit pan event for scroll bar synchronization
+        this.circuitService.emit("pan", {
+            offsetX: this.offsetX,
+            offsetY: this.offsetY
+        });
     }
 
     /**

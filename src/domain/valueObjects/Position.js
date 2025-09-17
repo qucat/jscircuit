@@ -5,14 +5,10 @@
 export class Position {
     /**
      * Creates an instance of Position.
-     * @param {number} x - The x-coordinate, must be non-negative.
-     * @param {number} y - The y-coordinate, must be non-negative.
-     * @throws {Error} If either x or y is negative.
+     * @param {number} x - The x-coordinate.
+     * @param {number} y - The y-coordinate.
      */
     constructor(x, y) {
-        if (x < 0 || y < 0) {
-            throw new Error("Position coordinates must be non-negative.");
-        }
         this.x = x;
         this.y = y;
     }
