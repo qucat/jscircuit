@@ -8,7 +8,7 @@
  * or to view-only renderer operations. State changes emit "update" → Renderer re-renders.
  *
  * Data flow:
- *   UI events → GUIAdapter.handleAction(id) → (Command|History|Renderer) → CircuitService emits "update" → CircuitRenderer.render()
+ *   UI events → GUIAdapter.handleAction(id) → (Command|History|Renderer) → CircuitService emits "update" → CircuitRenderer
  */
 
 import { CircuitRenderer } from "../renderers/CircuitRenderer.js";
@@ -526,17 +526,52 @@ export class GUIAdapter {
   }
 
   /**
-   * Find first element near the given world coordinate.
+   * Find the most appropriate element at given world coordinates.
+   * Prioritizes elements with nodes close to the click point, and non-wire elements over wires.
    * @param {number} worldX
    * @param {number} worldY
    * @returns {?Object} element or null
    */
   findElementAt(worldX, worldY) {
-    return (
-      this.circuitService
-        .getElements()
-        .find((el) => this.isInsideElement(worldX, worldY, el)) || null
-    );
+    const elements = this.circuitService.getElements();
+    const nodeProximityThreshold = 15; // Distance to prioritize node-based selection
+
+    let bestElement = null;
+    let bestScore = -1;
+
+    for (const element of elements) {
+      if (!this.isInsideElement(worldX, worldY, element)) continue;
+
+      // Calculate selection score based on proximity to nodes and element type
+      let score = 0;
+
+      // Check if click is close to any node of this element
+      let closestNodeDistance = Infinity;
+      if (Array.isArray(element.nodes)) {
+        for (const node of element.nodes) {
+          const distance = Math.hypot(worldX - node.x, worldY - node.y);
+          closestNodeDistance = Math.min(closestNodeDistance, distance);
+        }
+      }
+
+      // Higher score for elements with nodes close to click point
+      if (closestNodeDistance <= nodeProximityThreshold) {
+        score += 100 - closestNodeDistance; // Closer nodes get higher scores
+      }
+
+      // Prioritize non-wire elements over wires
+      if (element.type !== 'wire') {
+        score += 50;
+      }
+
+      // Update best element if this one has a higher score
+      if (score > bestScore) {
+        bestScore = score;
+        bestElement = element;
+      }
+    }
+
+    return bestElement;
   }
 
   /**
