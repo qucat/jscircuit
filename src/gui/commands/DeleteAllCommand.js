@@ -14,6 +14,7 @@ export class DeleteAllCommand extends GUICommand {
     this.circuitService = circuitService;
     this.circuitRenderer = circuitRenderer;
     this.deletedElements = [];
+    this.hasBeenExecuted = false; // Track if command was ever executed
   }
 
   /**
@@ -35,6 +36,9 @@ export class DeleteAllCommand extends GUICommand {
       element: JSON.parse(JSON.stringify(element)),
       id: element.id
     }));
+    
+    // Mark that this command has been executed
+    this.hasBeenExecuted = true;
     
     // Delete all elements from the circuit
     allElements.forEach(element => {
@@ -58,14 +62,14 @@ export class DeleteAllCommand extends GUICommand {
     
     console.log(`[DeleteAllCommand] Restoring all ${this.deletedElements.length} deleted element(s)`);
     
-    // Restore each deleted element
+    // Restore each deleted element (but only add if it doesn't already exist)
     this.deletedElements.forEach(({ element }) => {
-      this.circuitService.addElement(element);
+      // Check if element already exists before adding
+      const existingElement = this.circuitService.getElementByID(element.id);
+      if (!existingElement) {
+        this.circuitService.addElement(element);
+      }
     });
-    
-    // Clear the deleted elements array after successful restoration
-    // This prevents multiple undo calls from trying to add the same elements again
-    this.deletedElements = [];
     
     console.log("[DeleteAllCommand] All elements restored successfully");
   }
@@ -75,6 +79,7 @@ export class DeleteAllCommand extends GUICommand {
    * @returns {boolean}
    */
   canUndo() {
-    return this.deletedElements && this.deletedElements.length > 0;
+    // Return true if the command was ever executed, regardless of current state
+    return this.hasBeenExecuted;
   }
 }

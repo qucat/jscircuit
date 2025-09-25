@@ -3,6 +3,10 @@
  * Provides dynamic property editing based on element type with validation and label management.
  */
 
+import { CircuitService } from '../../application/CircuitService.js';
+import { UpdateElementPropertiesCommand } from '../commands/UpdateElementPropertiesCommand.js';
+import { CommandHistory } from '../commands/CommandHistory.js';
+
 /**
  * PropertyPanel class for displaying and editing element properties
  * Follows the established GUI component patterns in the architecture
@@ -92,67 +96,144 @@ export class PropertyPanel {
      * @private
      */
     generateContentForElement(element) {
-        const elementType = element.constructor.name;
+        // Use element.type instead of constructor.name to avoid minification issues
+        const elementType = element.type || element.constructor.name;
         const properties = element.getProperties();
-        const currentLabel = element.label || '';
+        const currentLabel = element.label ? element.label.value || element.label : '';
+        
+        console.log(`[PropertyPanel] Element type: "${elementType}", constructor: "${element.constructor.name}"`);
+        console.log(`[PropertyPanel] Element properties:`, properties.values);
+        
+        // Simple hardcoded configurations for each element type
+        const elementConfigs = {
+            // Use both constructor names and type property names
+            Junction: {
+                title: 'Junction Properties',
+                description: 'Configure Josephson junction parameters',
+                helpText: 'Note: Josephson junctions act as nonlinear inductors in superconducting circuits.',
+                fields: [
+                    { key: 'critical_current', label: 'Critical Current', unit: 'A', placeholder: 'Enter critical current' },
+                    { key: 'capacitance', label: 'Capacitance', unit: 'F', placeholder: 'Enter capacitance' },
+                ]
+            },
+            junction: {  // lowercase version
+                title: 'Junction Properties',
+                description: 'Configure Josephson junction parameters',
+                helpText: 'Note: Josephson junctions act as nonlinear inductors in superconducting circuits.',
+                fields: [
+                    { key: 'critical_current', label: 'Critical Current', unit: 'A', placeholder: 'Enter critical current' },
+                    { key: 'capacitance', label: 'Capacitance', unit: 'F', placeholder: 'Enter capacitance' },
+                ]
+            },
+            Resistor: {
+                title: 'Resistor Properties',
+                description: 'Configure resistance value',
+                helpText: 'Specify resistance in Ohms (Ω)',
+                fields: [
+                    { key: 'resistance', label: 'Resistance', unit: 'Ω', placeholder: 'Enter resistance value' }
+                ]
+            },
+            resistor: {  // lowercase version
+                title: 'Resistor Properties',
+                description: 'Configure resistance value', 
+                helpText: 'Specify resistance in Ohms (Ω)',
+                fields: [
+                    { key: 'resistance', label: 'Resistance', unit: 'Ω', placeholder: 'Enter resistance value' }
+                ]
+            },
+            Capacitor: {
+                title: 'Capacitor Properties', 
+                description: 'Configure capacitance value',
+                helpText: 'Specify capacitance in Farads (F)',
+                fields: [
+                    { key: 'capacitance', label: 'Capacitance', unit: 'F', placeholder: 'Enter capacitance value' }
+                ]
+            },
+            capacitor: {  // lowercase version
+                title: 'Capacitor Properties', 
+                description: 'Configure capacitance value',
+                helpText: 'Specify capacitance in Farads (F)',
+                fields: [
+                    { key: 'capacitance', label: 'Capacitance', unit: 'F', placeholder: 'Enter capacitance value' }
+                ]
+            },
+            Inductor: {
+                title: 'Inductor Properties',
+                description: 'Configure inductance value', 
+                helpText: 'Specify inductance in Henry (H)',
+                fields: [
+                    { key: 'inductance', label: 'Inductance', unit: 'H', placeholder: 'Enter inductance value' }
+                ]
+            },
+            inductor: {  // lowercase version
+                title: 'Inductor Properties',
+                description: 'Configure inductance value', 
+                helpText: 'Specify inductance in Henry (H)',
+                fields: [
+                    { key: 'inductance', label: 'Inductance', unit: 'H', placeholder: 'Enter inductance value' }
+                ]
+            },
+            Wire: {
+                title: 'Wire Properties',
+                description: 'Ideal conducting wire',
+                helpText: 'Wires have no configurable electrical parameters',
+                fields: []
+            },
+            wire: {  // lowercase version
+                title: 'Wire Properties',
+                description: 'Ideal conducting wire',
+                helpText: 'Wires have no configurable electrical parameters',
+                fields: []
+            },
+            Ground: {
+                title: 'Ground Properties',
+                description: 'Reference point (0V)',
+                helpText: 'Ground has no configurable electrical parameters', 
+                fields: []
+            },
+            ground: {  // lowercase version
+                title: 'Ground Properties',
+                description: 'Reference point (0V)',
+                helpText: 'Ground has no configurable electrical parameters', 
+                fields: []
+            }
+        };
 
-        let title = '';
-        let propertyFields = '';
-
-        switch (elementType) {
-            case 'Junction':
-                title = 'Specify label and/or Josephson inductance (in units of Henry)';
-                const subtitle = 'Note that L = (hbar/2/e)**2/[Josephson Energy in Joules]';
-                propertyFields = `
-                    <div class="property-field">
-                        <label for="inductance">Inductance</label>
-                        <input type="number" id="inductance" name="inductance" 
-                               value="${properties.values.inductance || ''}" 
-                               step="any" placeholder="Enter inductance value">
-                    </div>
-                `;
-                break;
-                
-            case 'Resistor':
-                title = 'Specify label and/or resistance (in units of Ohms)';
-                propertyFields = `
-                    <div class="property-field">
-                        <label for="resistance">Resistance</label>
-                        <input type="number" id="resistance" name="resistance" 
-                               value="${properties.values.resistance || ''}" 
-                               step="any" placeholder="Enter resistance value">
-                    </div>
-                `;
-                break;
-                
-            case 'Capacitor':
-                title = 'Specify label and/or capacitance (in units of Farads)';
-                propertyFields = `
-                    <div class="property-field">
-                        <label for="capacitance">Capacitance</label>
-                        <input type="number" id="capacitance" name="capacitance" 
-                               value="${properties.values.capacitance || ''}" 
-                               step="any" placeholder="Enter capacitance value">
-                    </div>
-                `;
-                break;
-                
-            case 'Inductor':
-                title = 'Specify label and/or inductance (in units of Henry)';
-                propertyFields = `
-                    <div class="property-field">
-                        <label for="inductance">Inductance</label>
-                        <input type="number" id="inductance" name="inductance" 
-                               value="${properties.values.inductance || ''}" 
-                               step="any" placeholder="Enter inductance value">
-                    </div>
-                `;
-                break;
-                
-            default:
-                title = 'Specify label and/or properties';
-                propertyFields = '';
+        const config = elementConfigs[elementType];
+        if (!config) {
+            console.warn(`[PropertyPanel] No configuration found for element type: "${elementType}"`);
+            console.warn(`[PropertyPanel] Available configurations:`, Object.keys(elementConfigs));
+            return this.generateFallbackContent(elementType, currentLabel);
         }
+
+        console.log(`[PropertyPanel] Using configuration for: "${elementType}"`);
+        
+        // Generate property fields
+        const propertyFields = config.fields.map(field => {
+            const currentValue = properties.values[field.key] || '';
+            return `
+                <div class="property-field">
+                    <label for="${field.key}">${field.label}${field.unit ? ` (${field.unit})` : ''}</label>
+                    <input type="number" 
+                           id="${field.key}" 
+                           name="${field.key}" 
+                           value="${currentValue}" 
+                           step="any" 
+                           placeholder="${field.placeholder}">
+                </div>
+            `;
+        }).join('');
+
+        // Add orientation field for elements that have it
+        const orientationField = properties.values.hasOwnProperty('orientation') ? `
+            <div class="property-field">
+                <label for="orientation">Orientation</label>
+                <select id="orientation" name="orientation">
+                    <option value="0" ${properties.values.orientation === 0 ? 'selected' : ''}>Horizontal</option>
+                    <option value="90" ${properties.values.orientation === 90 ? 'selected' : ''}>Vertical</option>
+                </select>
+            </div>
+        ` : '';
 
         return `
             <div class="property-panel-header">
@@ -160,10 +241,42 @@ export class PropertyPanel {
             </div>
             <div class="property-panel-content">
                 <div class="property-panel-title">
-                    <em>${title}</em>
-                    ${elementType === 'Junction' ? `<br><em>${subtitle}</em>` : ''}
+                    <em>${config.title}</em>
+                    <div class="help-text">${config.helpText}</div>
                 </div>
                 ${propertyFields}
+                ${orientationField}
+                <div class="property-field">
+                    <label for="label">Label</label>
+                    <input type="text" id="label" name="label" 
+                           value="${currentLabel}" 
+                           placeholder="Enter element label">
+                    <small class="field-help">Optional identifier for this element</small>
+                </div>
+            </div>
+            <div class="property-panel-actions">
+                <button type="button" class="cancel-btn">Cancel</button>
+                <button type="button" class="ok-btn">OK</button>
+            </div>
+        `;
+    }
+
+    /**
+     * Generate fallback content for unknown element types
+     * @param {string} elementType - The element type name
+     * @param {string} currentLabel - Current label value
+     * @returns {string} HTML content
+     * @private
+     */
+    generateFallbackContent(elementType, currentLabel) {
+        return `
+            <div class="property-panel-header">
+                <h3>Circuit Editor</h3>
+            </div>
+            <div class="property-panel-content">
+                <div class="property-panel-title">
+                    <em>Configure ${elementType} properties</em>
+                </div>
                 <div class="property-field">
                     <label for="label">Label</label>
                     <input type="text" id="label" name="label" 
@@ -271,41 +384,32 @@ export class PropertyPanel {
         const labelInput = this.panelElement.querySelector('#label');
         if (labelInput && labelInput.value.trim()) {
             properties.label = labelInput.value.trim();
+        } else {
+            // Explicitly set null/empty if label is cleared
+            properties.label = null;
         }
 
-        // Get element-specific properties
-        const elementType = this.currentElement.constructor.name;
-        console.log("[PropertyPanel] Collecting data for element type:", elementType);
+        // Get all input fields except label
+        const inputs = this.panelElement.querySelectorAll('input:not(#label), select');
         
-        switch (elementType) {
-            case 'Junction':
-                const inductanceInput = this.panelElement.querySelector('#inductance');
-                if (inductanceInput && inductanceInput.value) {
-                    properties.inductance = parseFloat(inductanceInput.value);
+        inputs.forEach(input => {
+            const key = input.name;
+            const value = input.value.trim();
+            
+            if (key && value !== '') {
+                if (input.type === 'number') {
+                    const numValue = parseFloat(value);
+                    if (!isNaN(numValue)) {
+                        properties[key] = numValue;
+                    }
+                } else if (input.type === 'select-one' || input.tagName === 'SELECT') {
+                    // Handle select elements (like orientation)
+                    properties[key] = parseInt(value) || value;
+                } else {
+                    properties[key] = value;
                 }
-                break;
-                
-            case 'Resistor':
-                const resistanceInput = this.panelElement.querySelector('#resistance');
-                if (resistanceInput && resistanceInput.value) {
-                    properties.resistance = parseFloat(resistanceInput.value);
-                }
-                break;
-                
-            case 'Capacitor':
-                const capacitanceInput = this.panelElement.querySelector('#capacitance');
-                if (capacitanceInput && capacitanceInput.value) {
-                    properties.capacitance = parseFloat(capacitanceInput.value);
-                }
-                break;
-                
-            case 'Inductor':
-                const inductorInductanceInput = this.panelElement.querySelector('#inductance');
-                if (inductorInductanceInput && inductorInductanceInput.value) {
-                    properties.inductance = parseFloat(inductorInductanceInput.value);
-                }
-                break;
-        }
+            }
+        });
 
         console.log("[PropertyPanel] Collected properties:", properties);
         return properties;
@@ -391,6 +495,17 @@ export class PropertyPanel {
                 line-height: 1.4;
             }
 
+            .help-text {
+                margin-top: 8px;
+                padding: 8px 12px;
+                background: #f8f9fa;
+                border-left: 3px solid #007bff;
+                border-radius: 0 4px 4px 0;
+                font-size: 13px;
+                color: #6c757d;
+                font-style: normal;
+            }
+
             .property-field {
                 margin-bottom: 15px;
             }
@@ -420,6 +535,14 @@ export class PropertyPanel {
             .property-field input:focus {
                 outline: none;
                 border-color: #007bff;
+            }
+
+            .field-help {
+                display: block;
+                margin-top: 4px;
+                font-size: 12px;
+                color: #6c757d;
+                font-style: italic;
             }
 
             .property-panel-actions {
