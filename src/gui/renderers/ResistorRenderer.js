@@ -41,10 +41,8 @@ export class ResistorRenderer extends ImageRenderer {
         // Draw connecting lines from terminals to resistor body
         this.renderConnections(start, end, midX, midY);
 
-        // Optionally, draw a label below the resistor.
-        if (resistor.label) {
-            this.renderLabel(resistor.label.text, midX, midY + 25);
-        }
+        // Render properties (label and/or value) using the new system
+        this.renderProperties(resistor, midX, midY, angle);
     }
 
     renderFallback(resistor, midX, midY) {

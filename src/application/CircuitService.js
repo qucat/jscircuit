@@ -236,6 +236,9 @@ export class CircuitService extends EventEmitter {
                 }
             });
 
+            // Emit update to trigger canvas re-render
+            this.emit("update", { type: "updateElementProperties", elementId, newProperties });
+
             return true;
         } catch (error) {
             console.error('Error updating element properties:', error);

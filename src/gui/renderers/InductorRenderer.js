@@ -37,9 +37,8 @@ export class InductorRenderer extends ImageRenderer {
         // Draw connections
         this.renderConnections(start, end, midX, midY);
 
-        if (inductor.label && inductor.label.text) {
-            this.renderLabel(inductor.label.text, midX, midY + 30);
-        }
+        // Render properties (label and/or value) using the new system
+        this.renderProperties(inductor, midX, midY, angle);
     }
 
     renderFallback(inductor, midX, midY) {
