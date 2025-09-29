@@ -190,7 +190,17 @@ export class GUIAdapter {
 
       // Handle Escape key to cancel element placement
       if (e.key === 'Escape' && this.placingElement) {
-        console.log("[GUIAdapter] Element placement cancelled");
+        console.log("[GUIAdapter] Element placement cancelled with Escape");
+        
+        // Delete the placing element from the circuit
+        const deleteCommand = this.guiCommandRegistry.get('deleteSelection');
+        if (deleteCommand) {
+          // Set the placing element as selected first so deleteSelection can delete it
+          this.circuitRenderer.setSelectedElements([this.placingElement]);
+          this.commandHistory.executeCommand(deleteCommand, this.circuitService);
+        }
+        
+        // Clear placement mode
         this.placingElement = null;
         // Clear selection since placement was cancelled
         this.circuitRenderer.setSelectedElements([]);
@@ -502,10 +512,16 @@ export class GUIAdapter {
         const snappedY = Math.round(offsetY / 10) * 10;
         const width = 60;
 
-        this.placingElement.nodes[0].x = snappedX - width / 2;
-        this.placingElement.nodes[0].y = snappedY;
-        this.placingElement.nodes[1].x = snappedX + width / 2;
-        this.placingElement.nodes[1].y = snappedY;
+        // Get current orientation from element properties (preserve rotation)
+        const currentOrientation = this.placingElement.properties?.values?.orientation || 0;
+        const angleRad = (currentOrientation * Math.PI) / 180;
+        
+        // Calculate node positions based on current rotation
+        const halfWidth = width / 2;
+        this.placingElement.nodes[0].x = snappedX - halfWidth * Math.cos(angleRad);
+        this.placingElement.nodes[0].y = snappedY - halfWidth * Math.sin(angleRad);
+        this.placingElement.nodes[1].x = snappedX + halfWidth * Math.cos(angleRad);
+        this.placingElement.nodes[1].y = snappedY + halfWidth * Math.sin(angleRad);
 
         this.circuitService.emit("update", {
           type: "movePreview",
@@ -595,10 +611,16 @@ export class GUIAdapter {
       const snappedY = Math.round(this.currentMousePos.y / 10) * 10;
       const width = 60;
 
-      element.nodes[0].x = snappedX - width / 2;
-      element.nodes[0].y = snappedY;
-      element.nodes[1].x = snappedX + width / 2;
-      element.nodes[1].y = snappedY;
+      // Get current orientation from element properties (preserve rotation)
+      const currentOrientation = element.properties?.values?.orientation || 0;
+      const angleRad = (currentOrientation * Math.PI) / 180;
+      
+      // Calculate node positions based on current rotation
+      const halfWidth = width / 2;
+      element.nodes[0].x = snappedX - halfWidth * Math.cos(angleRad);
+      element.nodes[0].y = snappedY - halfWidth * Math.sin(angleRad);
+      element.nodes[1].x = snappedX + halfWidth * Math.cos(angleRad);
+      element.nodes[1].y = snappedY + halfWidth * Math.sin(angleRad);
 
       // Emit update to immediately show the element at the correct position
       this.circuitService.emit("update", {
