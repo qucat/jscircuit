@@ -27,6 +27,8 @@ import { MultiSelectElementCommand } from "../gui/commands/MultiSelectElementCom
 import { DeleteElementCommand } from "../gui/commands/DeleteElementCommand.js";
 import { DeleteAllCommand } from "../gui/commands/DeleteAllCommand.js";
 import { UpdateElementPropertiesCommand } from "../gui/commands/UpdateElementPropertiesCommand.js";
+import { CopyElementsCommand } from "../gui/commands/CopyElementsCommand.js";
+import { PasteElementsCommand } from "../gui/commands/PasteElementsCommand.js";
 import { WireSplitService } from "../application/WireSplitService.js";
 
 // Register elements once
@@ -151,6 +153,14 @@ export function setupCommands(circuitService, circuitRenderer) {
 
     if (!GUICommandRegistry.getTypes().includes("updateElementProperties")) {
         GUICommandRegistry.register("updateElementProperties", () => new UpdateElementPropertiesCommand(circuitService, circuitRenderer));
+    }
+
+    if (!GUICommandRegistry.getTypes().includes("copyElements")) {
+        GUICommandRegistry.register("copyElements", () => new CopyElementsCommand(circuitService, circuitRenderer));
+    }
+
+    if (!GUICommandRegistry.getTypes().includes("pasteElements")) {
+        GUICommandRegistry.register("pasteElements", () => new PasteElementsCommand(circuitService, circuitRenderer));
     }
 
     if (!GUICommandRegistry.getTypes().includes("deselectAll")) {
