@@ -8,12 +8,27 @@
  * or to view-only renderer operations. State changes emit "update" → Renderer re-renders.
  *
  * Data flow:
- *   UI events → GUIAdapter.handleAction(id) → (Command|History|Renderer) → CircuitService emits "update" → CircuitRenderer.render()
+ *   UI events → GUI      if (this.placingElement) {
+        const snappedX = Math.round(offsetX / 10) * 10;
+        const snappedY = Math.round(offsetY / 10) * 10;
+        const width = 60;
+
+        // Get current orientation from element properties (preserve rotation)
+        const currentOrientation = this.placingElement.properties?.values?.orientation || 0;
+        const angleRad = (currentOrientation * Math.PI) / 180;
+        
+        // Calculate node positions based on current rotation
+        const halfWidth = width / 2;
+        this.placingElement.nodes[0].x = snappedX - halfWidth * Math.cos(angleRad);
+        this.placingElement.nodes[0].y = snappedY - halfWidth * Math.sin(angleRad);
+        this.placingElement.nodes[1].x = snappedX + halfWidth * Math.cos(angleRad);
+        this.placingElement.nodes[1].y = snappedY + halfWidth * Math.sin(angleRad);andleAction(id) → (Command|History|Renderer) → CircuitService emits "update" → CircuitRenderer
  */
 
 import { CircuitRenderer } from "../renderers/CircuitRenderer.js";
 import { CommandHistory } from "../commands/CommandHistory.js";
 import { ACTIONS, KEYMAP } from "../../config/menu.bindings.js";
+import { PropertyPanel } from "../property_panel/PropertyPanel.js";
 
 
 /**
@@ -85,6 +100,8 @@ export class GUIAdapter {
     this.selectionBox = null; // Selection box state: { startX, startY, endX, endY }
     /** @private */
     this.isSelecting = false; // True when drawing selection box
+    /** @private */
+    this.currentMousePos = { x: 0, y: 0 }; // Track current mouse position for immediate placement
 
     // Listener refs for clean disposal
     /** @private */ this._onMenuAction = null;
@@ -111,6 +128,9 @@ export class GUIAdapter {
 
     // Pointer interactions on canvas
     this.setupCanvasInteractions();
+
+    // Property panel integration
+    this.setupPropertyPanel();
 
     // Re-render on domain state changes
     this.circuitService.on("update", () => this.circuitRenderer.render());
@@ -156,8 +176,16 @@ export class GUIAdapter {
         'ArrowDown': 'Down'
       };
       
+      // Map special keys to match menu config names
+      const specialKeyMap = {
+        'Delete': 'Del',
+        'Backspace': 'Del'  // Both Del and Backspace should trigger delete
+      };
+      
       if (arrowMap[key]) {
         key = arrowMap[key];
+      } else if (specialKeyMap[key]) {
+        key = specialKeyMap[key];
       } else if (key.length === 1) {
         key = key.toUpperCase();
       }
@@ -172,6 +200,46 @@ export class GUIAdapter {
         console.log("[GUIAdapter] Wire drawing mode cancelled");
         e.preventDefault();
         return;
+      }
+
+      // Handle Escape key to cancel element placement
+      if (e.key === 'Escape' && this.placingElement) {
+        console.log("[GUIAdapter] Element placement cancelled with Escape");
+        
+        // Delete only the placing element, not all selected elements
+        this.circuitService.deleteElement(this.placingElement.id);
+        
+        // Clear placement mode
+        this.placingElement = null;
+        // Clear selection since placement was cancelled
+        this.circuitRenderer.setSelectedElements([]);
+        this.circuitRenderer.render();
+        e.preventDefault();
+        return;
+      }
+
+      // Handle rotation keys during element placement
+      if (this.placingElement && e.ctrlKey) {
+        let rotationAngle = 0;
+        
+        if (e.key === 'ArrowRight') {
+          rotationAngle = 90; // Rotate 90° clockwise
+          e.preventDefault();
+        } else if (e.key === 'ArrowLeft') {
+          rotationAngle = -90; // Rotate 90° counterclockwise
+          e.preventDefault();
+        } else if (e.key === 'ArrowUp') {
+          rotationAngle = 180; // Rotate 180°
+          e.preventDefault();
+        } else if (e.key === 'ArrowDown') {
+          rotationAngle = 180; // Rotate 180° (same as up for simple elements)
+          e.preventDefault();
+        }
+
+        if (rotationAngle !== 0) {
+          this.rotatePlacingElement(rotationAngle);
+          return;
+        }
       }
 
       const sig = signature(e);
@@ -226,8 +294,11 @@ export class GUIAdapter {
 
     this._exec(spec);
 
-    // Domain ops will emit "update" → render() automatically; renderer ops may not.
-    this.circuitRenderer.render();
+    // Note: Domain operations (commands) will emit "update" → render() automatically via event listener.
+    // Only render manually for UI-only operations that don't trigger domain events.
+    if (spec.kind !== "command") {
+      this.circuitRenderer.render();
+    }
   }
 
   /**
@@ -244,6 +315,12 @@ export class GUIAdapter {
           this.setCrosshairCursor();
           console.log("[GUIAdapter] Wire drawing mode activated");
           return;
+        }
+
+        // If user is creating a non-wire element while in wire drawing mode, exit wire mode
+        if (spec.name === "addElement" && this.wireDrawingMode && spec.args && spec.args[0] !== "Wire") {
+          this.resetCursor();
+          console.log("[GUIAdapter] Wire drawing mode deactivated - creating", spec.args[0]);
         }
 
         const args = spec.args ?? [];
@@ -359,48 +436,70 @@ export class GUIAdapter {
         const snappedY = Math.round(offsetY / 10) * 10;
         const width = 60;
 
-        this.placingElement.nodes[0].x = snappedX - width / 2;
-        this.placingElement.nodes[0].y = snappedY;
-        this.placingElement.nodes[1].x = snappedX + width / 2;
-        this.placingElement.nodes[1].y = snappedY;
+        // Get current orientation from element properties (preserve rotation)
+        const currentOrientation = this.placingElement.properties?.values?.orientation || 0;
+        const angleRad = (currentOrientation * Math.PI) / 180;
+        
+        // Calculate node positions based on current rotation
+        const halfWidth = width / 2;
+        this.placingElement.nodes[0].x = snappedX - halfWidth * Math.cos(angleRad);
+        this.placingElement.nodes[0].y = snappedY - halfWidth * Math.sin(angleRad);
+        this.placingElement.nodes[1].x = snappedX + halfWidth * Math.cos(angleRad);
+        this.placingElement.nodes[1].y = snappedY + halfWidth * Math.sin(angleRad);
 
         this.circuitService.emit("update", {
           type: "finalizePlacement",
           element: this.placingElement,
         });
 
+        // Store reference to placed element for property panel
+        const placedElement = this.placingElement;
+        
         this.placingElement = null;
+        // Keep the placed element selected for user convenience
+        this.circuitRenderer.setSelectedElements([placedElement]);
         this.circuitRenderer.render();
+        
+        // Open property panel immediately after placing element
+        console.log("[GUIAdapter] Auto-opening property panel for newly placed element:", placedElement.id);
+        this.handleElementDoubleClick(placedElement, true); // true indicates this is a newly placed element
+        
         return;
       }
 
       // Regular command start
       if (event.button === 0) {
-        const element = this.findElementAt(offsetX, offsetY);
-
-        // If clicking on an element, select it first
-        if (element) {
-          const selectCommand = this.guiCommandRegistry.get("selectElement");
-          if (selectCommand) {
-            selectCommand.execute(element);
-          }
-        }
-
-        // Determine which command to start based on context
-        if (element) {
-          // Clicking on an element always starts drag
-          this.activeCommand = this.guiCommandRegistry.get("dragElement", this.circuitService);
-        } else if (this.wireDrawingMode) {
-          // Only start wire drawing if wire mode is active
+        // Wire drawing mode takes priority over all other interactions
+        if (this.wireDrawingMode) {
+          // In wire drawing mode, always start wire drawing regardless of what's under the cursor
+          // This allows drawing wire nodes on top of existing nodes/elements
+          console.log("[GUIAdapter] Wire drawing mode: creating wire node at", offsetX, offsetY);
           this.activeCommand = this.guiCommandRegistry.get(
             "drawWire",
             this.circuitService,
             this.elementRegistry,
           );
         } else {
-          // Clicking on empty space starts selection box
-          this.startSelectionBox(offsetX, offsetY);
-          this.activeCommand = null;
+          // Normal interaction logic when not in wire drawing mode
+          const element = this.findElementAt(offsetX, offsetY);
+
+          // If clicking on an element, select it first
+          if (element) {
+            const selectCommand = this.guiCommandRegistry.get("selectElement");
+            if (selectCommand) {
+              selectCommand.execute(element);
+            }
+          }
+
+          // Determine which command to start based on context
+          if (element) {
+            // Clicking on an element starts drag
+            this.activeCommand = this.guiCommandRegistry.get("dragElement", this.circuitService);
+          } else {
+            // Clicking on empty space starts selection box
+            this.startSelectionBox(offsetX, offsetY);
+            this.activeCommand = null;
+          }
         }
 
         if (this.activeCommand) {
@@ -417,6 +516,10 @@ export class GUIAdapter {
     // Move / live placement preview / command move
     this.canvas.addEventListener("mousemove", (event) => {
       const { offsetX, offsetY } = this.getTransformedMousePosition(event);
+      
+      // Always track current mouse position for immediate element placement
+      this.currentMousePos.x = offsetX;
+      this.currentMousePos.y = offsetY;
 
       // Live update for placing element
       if (this.placingElement) {
@@ -424,10 +527,16 @@ export class GUIAdapter {
         const snappedY = Math.round(offsetY / 10) * 10;
         const width = 60;
 
-        this.placingElement.nodes[0].x = snappedX - width / 2;
-        this.placingElement.nodes[0].y = snappedY;
-        this.placingElement.nodes[1].x = snappedX + width / 2;
-        this.placingElement.nodes[1].y = snappedY;
+        // Get current orientation from element properties (preserve rotation)
+        const currentOrientation = this.placingElement.properties?.values?.orientation || 0;
+        const angleRad = (currentOrientation * Math.PI) / 180;
+        
+        // Calculate node positions based on current rotation
+        const halfWidth = width / 2;
+        this.placingElement.nodes[0].x = snappedX - halfWidth * Math.cos(angleRad);
+        this.placingElement.nodes[0].y = snappedY - halfWidth * Math.sin(angleRad);
+        this.placingElement.nodes[1].x = snappedX + halfWidth * Math.cos(angleRad);
+        this.placingElement.nodes[1].y = snappedY + halfWidth * Math.sin(angleRad);
 
         this.circuitService.emit("update", {
           type: "movePreview",
@@ -505,7 +614,90 @@ export class GUIAdapter {
     // Listen to the element placement event
     this.circuitService.on("startPlacing", ({ element }) => {
       this.placingElement = element;
+      
+      // Clear existing selections and select only the placing element
+      // This ensures rotation during placement only affects the placing element
+      this.circuitRenderer.setSelectedElements([element]);
+      console.log("[GUIAdapter] Starting placement mode - selected placing element:", element.id);
+      
+      // Immediately position the element at the current mouse position
+      // This prevents the element from staying at default coordinates until mouse movement
+      const snappedX = Math.round(this.currentMousePos.x / 10) * 10;
+      const snappedY = Math.round(this.currentMousePos.y / 10) * 10;
+      const width = 60;
+
+      // Get current orientation from element properties (preserve rotation)
+      const currentOrientation = element.properties?.values?.orientation || 0;
+      const angleRad = (currentOrientation * Math.PI) / 180;
+      
+      // Calculate node positions based on current rotation
+      const halfWidth = width / 2;
+      element.nodes[0].x = snappedX - halfWidth * Math.cos(angleRad);
+      element.nodes[0].y = snappedY - halfWidth * Math.sin(angleRad);
+      element.nodes[1].x = snappedX + halfWidth * Math.cos(angleRad);
+      element.nodes[1].y = snappedY + halfWidth * Math.sin(angleRad);
+
+      // Emit update to immediately show the element at the correct position
+      this.circuitService.emit("update", {
+        type: "movePreview",
+        element: element,
+      });
+      
+      // If user starts placing a non-wire element while in wire drawing mode, exit wire mode
+      if (this.wireDrawingMode && element.type !== 'wire') {
+        this.resetCursor();
+        console.log("[GUIAdapter] Wire drawing mode deactivated - placing", element.type);
+      }
     });
+  }
+
+  /**
+   * Sets up property panel integration with double-click handling.
+   */
+  setupPropertyPanel() {
+    // Set up double-click callback on the circuit renderer
+    this.circuitRenderer.setElementDoubleClickCallback((element) => {
+      this.handleElementDoubleClick(element);
+    });
+  }
+
+  /**
+   * Handles double-click on circuit elements to open property panel.
+   * @param {Object} element - The clicked circuit element
+   * @param {boolean} isNewlyPlaced - Whether this element was just placed (true) or is being edited (false)
+   */
+  handleElementDoubleClick(element, isNewlyPlaced = false) {
+    console.log("[GUIAdapter] Double-click detected on element:", element);
+    if (!element) return;
+
+    // Open property panel for the element
+    this.propertyPanel = new PropertyPanel();
+    console.log("[GUIAdapter] Opening property panel for element:", element.id, "newly placed:", isNewlyPlaced);
+    this.propertyPanel.show(element,
+      // onSave callback
+      (element, updatedProperties) => {
+        console.log("[GUIAdapter] Property panel save callback with properties:", updatedProperties);
+        // Handle property save - get fresh command instance
+        const command = this.guiCommandRegistry.get('updateElementProperties');
+        if (command) {
+          command.setData(element.id, updatedProperties);
+          this.commandHistory.executeCommand(command, this.circuitService);
+        }
+      },
+      // onCancel callback
+      () => {
+        console.log("[GUIAdapter] Property panel cancelled for element:", element.id, "newly placed:", isNewlyPlaced);
+        if (isNewlyPlaced) {
+          // If this element was just placed and user cancelled, delete it
+          console.log("[GUIAdapter] Removing newly placed element due to cancellation:", element.id);
+          // Delete only the specific element, not all selected elements
+          this.circuitService.deleteElement(element.id);
+          // Clear selections since we deleted the element
+          this.circuitRenderer.setSelectedElements([]);
+          this.circuitRenderer.render();
+        }
+      }
+    );
   }
 
   /**
@@ -526,17 +718,52 @@ export class GUIAdapter {
   }
 
   /**
-   * Find first element near the given world coordinate.
+   * Find the most appropriate element at given world coordinates.
+   * Prioritizes elements with nodes close to the click point, and non-wire elements over wires.
    * @param {number} worldX
    * @param {number} worldY
    * @returns {?Object} element or null
    */
   findElementAt(worldX, worldY) {
-    return (
-      this.circuitService
-        .getElements()
-        .find((el) => this.isInsideElement(worldX, worldY, el)) || null
-    );
+    const elements = this.circuitService.getElements();
+    const nodeProximityThreshold = 15; // Distance to prioritize node-based selection
+
+    let bestElement = null;
+    let bestScore = -1;
+
+    for (const element of elements) {
+      if (!this.isInsideElement(worldX, worldY, element)) continue;
+
+      // Calculate selection score based on proximity to nodes and element type
+      let score = 0;
+
+      // Check if click is close to any node of this element
+      let closestNodeDistance = Infinity;
+      if (Array.isArray(element.nodes)) {
+        for (const node of element.nodes) {
+          const distance = Math.hypot(worldX - node.x, worldY - node.y);
+          closestNodeDistance = Math.min(closestNodeDistance, distance);
+        }
+      }
+
+      // Higher score for elements with nodes close to click point
+      if (closestNodeDistance <= nodeProximityThreshold) {
+        score += 100 - closestNodeDistance; // Closer nodes get higher scores
+      }
+
+      // Prioritize non-wire elements over wires
+      if (element.type !== 'wire') {
+        score += 50;
+      }
+
+      // Update best element if this one has a higher score
+      if (score > bestScore) {
+        bestScore = score;
+        bestElement = element;
+      }
+    }
+
+    return bestElement;
   }
 
   /**
@@ -711,5 +938,64 @@ export class GUIAdapter {
       this.canvas.style.cursor = 'default';
     }
     this.wireDrawingMode = false;
+  }
+
+  /**
+   * Rotate the element currently being placed
+   * @param {number} angle - Rotation angle in degrees (90, -90, 180, etc.)
+   * @private
+   */
+  rotatePlacingElement(angle) {
+    if (!this.placingElement) return;
+
+    console.log(`[GUIAdapter] Rotating placing element by ${angle}°`);
+    
+    // Initialize properties if they don't exist
+    if (!this.placingElement.properties) {
+      console.warn("[GUIAdapter] Element missing properties, cannot set orientation");
+    } else {
+      // Initialize properties.values if it doesn't exist
+      if (!this.placingElement.properties.values) {
+        this.placingElement.properties.values = {};
+      }
+      
+      // Update element's orientation property
+      const currentOrientation = this.placingElement.properties.values.orientation || 0;
+      this.placingElement.properties.values.orientation = (currentOrientation + angle) % 360;
+      
+      // Normalize negative angles
+      if (this.placingElement.properties.values.orientation < 0) {
+        this.placingElement.properties.values.orientation += 360;
+      }
+    }
+    
+    // Get current element center
+    const centerX = (this.placingElement.nodes[0].x + this.placingElement.nodes[1].x) / 2;
+    const centerY = (this.placingElement.nodes[0].y + this.placingElement.nodes[1].y) / 2;
+    
+    // For most components, rotation changes the node positions
+    const width = 60; // Standard component width
+    const angleRad = (angle * Math.PI) / 180;
+    const currentAngleRad = Math.atan2(
+      this.placingElement.nodes[1].y - this.placingElement.nodes[0].y,
+      this.placingElement.nodes[1].x - this.placingElement.nodes[0].x
+    );
+    const newAngleRad = currentAngleRad + angleRad;
+    
+    // Calculate new node positions
+    const halfWidth = width / 2;
+    this.placingElement.nodes[0].x = centerX - halfWidth * Math.cos(newAngleRad);
+    this.placingElement.nodes[0].y = centerY - halfWidth * Math.sin(newAngleRad);
+    this.placingElement.nodes[1].x = centerX + halfWidth * Math.cos(newAngleRad);
+    this.placingElement.nodes[1].y = centerY + halfWidth * Math.sin(newAngleRad);
+    
+    // Emit update to trigger re-render with new rotation
+    this.circuitService.emit("update", {
+      type: "rotatePreview",
+      element: this.placingElement,
+    });
+    
+    // Force immediate re-render to show rotation
+    this.circuitRenderer.render();
   }
 }

@@ -37,9 +37,8 @@ export class JunctionRenderer extends ImageRenderer {
         // Draw connections
         this.renderConnections(start, end, midX, midY);
 
-        if (junction.label && junction.label.text) {
-            this.renderLabel(junction.label.text, midX, midY + 30);
-        }
+        // Render properties (label and/or value) using the new system
+        this.renderProperties(junction, midX, midY, angle);
     }
 
     renderFallback(junction, midX, midY) {

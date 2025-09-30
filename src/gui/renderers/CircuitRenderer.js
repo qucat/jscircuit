@@ -76,7 +76,7 @@ export class CircuitRenderer {
     }
     
     /**
-     * Initializes event listeners for zooming and panning.
+     * Initializes event listeners for zooming, panning, and double-click property editing.
      */
     initEventListeners() {
         this.canvas.addEventListener("wheel", (event) => this.zoom(event));
@@ -90,6 +90,7 @@ export class CircuitRenderer {
             this.stopPan();
             this.clearAllHovers();
         });
+        this.canvas.addEventListener("dblclick", (event) => this.handleDoubleClick(event));
     }
 
     /**
@@ -346,6 +347,80 @@ export class CircuitRenderer {
         const logicalY = (mouseY - this.offsetY) / this.scale;
 
         this.checkElementHovers(logicalX, logicalY);
+    }
+
+    /**
+     * Handles double-click events for property editing
+     */
+    handleDoubleClick(event) {
+        event.preventDefault();
+        console.log("[CircuitRenderer] Double-click detected");
+
+        const rect = this.canvas.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
+
+        // Transform mouse coordinates to logical coordinates
+        const logicalX = (mouseX - this.offsetX) / this.scale;
+        const logicalY = (mouseY - this.offsetY) / this.scale;
+
+        console.log("[CircuitRenderer] Double-click at logical coordinates:", logicalX, logicalY);
+
+        // Find element at click position
+        const clickedElement = this.findElementAtPosition(logicalX, logicalY);
+        console.log("[CircuitRenderer] Found element at position:", clickedElement);
+
+        if (clickedElement && this.onElementDoubleClick) {
+            console.log("[CircuitRenderer] Calling double-click callback with element:", clickedElement.id);
+            // Delegate to the GUIAdapter via callback
+            this.onElementDoubleClick(clickedElement);
+        } else if (!clickedElement) {
+            console.log("[CircuitRenderer] No element found at double-click position");
+        } else if (!this.onElementDoubleClick) {
+            console.log("[CircuitRenderer] No double-click callback set");
+        }
+    }
+
+    /**
+     * Find element at the given position using the same logic as hover detection
+     */
+    findElementAtPosition(x, y) {
+        const elements = this.circuitService.getElements();
+        if (!elements) return null;
+
+        // Check elements in reverse order (top-most first)
+        for (let i = elements.length - 1; i >= 0; i--) {
+            const element = elements[i];
+            const renderer = this.renderers.get(element.type);
+            
+            if (renderer) {
+                let isHit = false;
+                
+                // Special handling for wires which need different hover detection
+                if (element.type === 'wire' && renderer.checkHover) {
+                    isHit = renderer.checkHover(element, x, y);
+                } else if (renderer.isPointInBounds) {
+                    const [start, end] = element.nodes;
+                    const midX = (start.x + end.x) / 2;
+                    const midY = (start.y + end.y) / 2;
+                    isHit = renderer.isPointInBounds(x, y, midX, midY);
+                }
+                
+                if (isHit) {
+                    return element;
+                }
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * Set callback for element double-click events
+     */
+    setElementDoubleClickCallback(callback) {
+        console.log("[CircuitRenderer] Setting double-click callback");
+        this.onElementDoubleClick = callback;
     }
 
     /**

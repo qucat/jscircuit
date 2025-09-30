@@ -1,0 +1,44 @@
+// Test PropertyPanel HTML generation
+import { CircuitService } from '../src/application/CircuitService.js';
+import { Circuit } from '../src/domain/aggregates/Circuit.js';
+import { ElementRegistry } from '../src/config/settings.js';
+import { PropertyPanel } from '../src/gui/property_panel/PropertyPanel.js';
+import { CommandHistory } from '../src/gui/commands/CommandHistory.js';
+import { Position } from '../src/domain/valueObjects/Position.js';
+import { Properties } from '../src/domain/valueObjects/Properties.js';
+
+console.log('🧪 Testing PropertyPanel HTML Generation\n');
+
+// Create test setup
+const circuit = new Circuit();
+const circuitService = new CircuitService(circuit, ElementRegistry);
+const commandHistory = new CommandHistory(circuitService);
+
+// Create a test resistor
+const resistorFactory = ElementRegistry.get('Resistor');
+const testResistor = resistorFactory(
+    'TEST_R1',
+    [new Position(10, 20), new Position(30, 20)],
+    null,
+    new Properties({ resistance: 1000, orientation: 0 })
+);
+
+console.log('📋 Test Element Properties:');
+console.log(`   Element type: ${testResistor.constructor.name}`);
+console.log(`   Properties: ${JSON.stringify(testResistor.properties.values)}`);
+console.log(`   Label: ${testResistor.label || 'null'}`);
+
+// Create PropertyPanel
+const propertyPanel = new PropertyPanel(circuitService, commandHistory);
+
+// Test HTML generation
+console.log('\n🎨 Generated HTML Content:');
+console.log('=====================================');
+
+// Access the private method for testing
+const htmlContent = propertyPanel.generateContentForElement(testResistor);
+console.log(htmlContent);
+
+console.log('=====================================');
+
+console.log('\n✅ HTML generation test complete!');

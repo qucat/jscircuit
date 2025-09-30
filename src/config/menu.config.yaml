@@ -41,14 +41,12 @@ menus:
       - id: edit.copy
         label: Copy
         shortcut: Ctrl+C
-        disabled: true
-        action: { kind: disabled }
+        action: { kind: command, name: copyElements }
 
       - id: edit.paste
         label: Paste
         shortcut: Ctrl+V
-        disabled: true
-        action: { kind: disabled }
+        action: { kind: command, name: pasteElements }
 
       - type: separator
 

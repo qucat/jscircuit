@@ -108,9 +108,8 @@ export class GroundRenderer extends ImageRenderer {
         // Draw the connection node at the exact connection point
         this.renderTerminal(connectionNode);
 
-        if (ground.label && ground.label.text) {
-            this.renderLabel(ground.label.text, groundX, groundY + 30);
-        }
+        // Render properties (label only for ground components)
+        this.renderProperties(ground, groundX, groundY, orientationRad);
     }
 
     renderFallback(ground, nodeX, nodeY) {

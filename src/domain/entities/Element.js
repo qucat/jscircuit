@@ -49,4 +49,13 @@ export class Element {
         const nodesText = this.nodes.map(t => `(${t.x}, ${t.y})`).join(', ');
         return `${this.type} (${this.id}): nodes: [${nodesText}]${labelText}, properties: ${this.properties.describe()}`;
     }
+
+    /**
+     * Gets the properties container for this element.
+     *
+     * @returns {Properties} The properties container.
+     */
+    getProperties() {
+        return this.properties;
+    }
 }

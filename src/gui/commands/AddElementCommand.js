@@ -54,8 +54,8 @@ execute(nodes = null) {
 
   const positions = snappedNodes.map(pt => new Position(pt.x, pt.y));
   
-  // Create empty Properties instance for the element
-  const properties = new Properties({});
+  // Create Properties instance with default orientation for all elements
+  const properties = new Properties({ orientation: 0 });
   
   // Use ElementFactory.create with correct parameter order
   const element = ElementFactory.create(this.elementType, undefined, positions, properties, null);

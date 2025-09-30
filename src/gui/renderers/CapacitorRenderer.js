@@ -37,9 +37,8 @@ export class CapacitorRenderer extends ImageRenderer {
         // Draw connections
         this.renderConnections(start, end, midX, midY);
 
-        if (capacitor.label && capacitor.label.text) {
-            this.renderLabel(capacitor.label.text, midX, midY + 30);
-        }
+        // Render properties (label and/or value) using the new system
+        this.renderProperties(capacitor, midX, midY, angle);
     }
 
     renderFallback(capacitor, midX, midY, rotation = 0) {
