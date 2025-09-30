@@ -5,21 +5,179 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Circuit Designer</title>
     <style>
-        canvas {
-            border: 1px solid #ccc;
-            /* margin-top: 20px; */
-        }
+        /* Main layout styling */
         .controls {
             margin-top: 10px;
+        }
+
+        /* Ensure body and html have clean defaults */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        }
+
+        /* Circuit stage - main container */
+        .circuit-stage {
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Menu bar - fixed at top, no scrolling */
+        .menubar {
+            flex-shrink: 0;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            z-index: 1000;
+        }
+
+        /* Canvas container - this is where scrollbars should appear */
+        .canvas-container {
+            flex: 1;
+            overflow: auto;
+            position: relative;
+            border: 1px solid #ccc; /* Move border from canvas to container */
+        }
+
+        /* Canvas styling */
+        #circuitCanvas {
+            display: block;
+            width: max(100%, 1200px);  /* Responsive with minimum width for scrollbars */
+            height: max(100%, 800px);  /* Responsive with minimum height for scrollbars */
+            min-width: 1200px;         /* Ensure scrollbars appear on smaller screens */
+            min-height: 800px;         /* Ensure scrollbars appear on smaller screens */
+            max-width: none;
+            max-height: none;
+            border: none; /* Remove border from canvas */
+        }
+
+        /* macOS-style scrollbars - ONLY for canvas container */
+        .canvas-container {
+            scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+        }
+
+        /* Webkit scrollbars - ONLY for canvas container */
+        .canvas-container::-webkit-scrollbar {
+            width: 7px;  /* Reduced from 14px to half size */
+            height: 7px; /* Reduced from 14px to half size */
+            background: transparent;
+        }
+
+        .canvas-container::-webkit-scrollbar-track {
+            background: transparent;
+            border-radius: 5px; /* Reduced from 10px to match smaller size */
+        }
+
+        .canvas-container::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 5px; /* Reduced from 10px to match smaller size */
+            border: 1px solid transparent; /* Reduced from 3px to match smaller size */
+            background-clip: padding-box;
+            transition: background-color 0.2s ease-in-out;
+            min-height: 5px; /* Reduced to half of previous 10px */
+        }
+
+        /* Specific styling for vertical scrollbar to make it more compact */
+        .canvas-container::-webkit-scrollbar:vertical {
+            width: 6px; /* Reduced from 12px to half size */
+        }
+
+        .canvas-container::-webkit-scrollbar-thumb:vertical {
+            min-height: 4px; /* Reduced from 8px to half size */
+            border: 1px solid transparent; /* Reduced from 2px to match smaller size */
+        }
+
+        /* Specific styling for horizontal scrollbar */
+        .canvas-container::-webkit-scrollbar:horizontal {
+            height: 7px; /* Fixed typo and reduced to half size */
+        }
+
+        .canvas-container::-webkit-scrollbar-thumb:horizontal {
+            min-width: 5px; /* Reduced from 10px to half size */
+            border: 1px solid transparent; /* Reduced from 3px to match smaller size */
+        }
+
+        .canvas-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.25);
+            background-clip: padding-box;
+        }
+
+        .canvas-container::-webkit-scrollbar-thumb:active {
+            background: rgba(0, 0, 0, 0.4);
+            background-clip: padding-box;
+        }
+
+        .canvas-container::-webkit-scrollbar-corner {
+            background: transparent;
+        }
+
+        .canvas-container::-webkit-scrollbar-track:hover {
+            background: rgba(0, 0, 0, 0.03);
+            border-radius: 5px; /* Reduced from 10px to match smaller size */
+        }
+
+        /* Dark mode support - ONLY for canvas container */
+        @media (prefers-color-scheme: dark) {
+            .canvas-container::-webkit-scrollbar-thumb {
+                background: rgba(255, 255, 255, 0.2);
+            }
+
+            .canvas-container::-webkit-scrollbar-thumb:vertical {
+                background: rgba(255, 255, 255, 0.2);
+            }
+
+            .canvas-container::-webkit-scrollbar-thumb:hover {
+                background: rgba(255, 255, 255, 0.3);
+            }
+
+            .canvas-container::-webkit-scrollbar-thumb:active {
+                background: rgba(255, 255, 255, 0.5);
+            }
+
+            .canvas-container::-webkit-scrollbar-track:hover {
+                background: rgba(255, 255, 255, 0.05);
+            }
+        }
+
+        /* Test button styling - remove in production */
+        .debug-button {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 9999;
+            padding: 8px 12px;
+            background: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .debug-button:hover {
+            background: #0056CC;
+        }
+
+        .debug-button:active {
+            background: #004499;
         }
     </style>
 </head>
 <body>
     <div class="circuit-stage">
         <div class="menubar controls" id="menubar"></div>
-        <canvas id="circuitCanvas"></canvas>
+        <div class="canvas-container">
+            <canvas id="circuitCanvas"></canvas>
+        </div>
     </div>
     <script type="module" src="./static/main.js"></script>
+
     <style>
         /* Reserve layout, but keep pixels hidden until ready */
         #circuitCanvas { opacity: 0; transition: opacity 120ms ease; }
