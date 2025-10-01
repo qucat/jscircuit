@@ -274,8 +274,13 @@ export class CircuitRenderer {
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
         
-        // Position in top-left corner with some padding
+        // Position in top-left corner of the VIEWPORT, not canvas content
+        // This ensures the message stays fixed during scrolling
         const padding = 10;
+        const canvasRect = this.canvas.getBoundingClientRect();
+        
+        // Calculate viewport-relative position by inverting the current transform
+        ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform to identity
         const x = padding;
         const y = padding;
         
@@ -292,7 +297,7 @@ export class CircuitRenderer {
         ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
         ctx.fillText(message, x, y);
         
-        ctx.restore();
+        ctx.restore(); // This will restore the original transform and all other settings
     }
 
     /**

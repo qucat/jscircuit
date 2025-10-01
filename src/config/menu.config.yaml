@@ -1,25 +1,49 @@
 menus:
   - label: File
     items:
-      - id: file.open
-        label: Open
+      - id: openNetlist
+        label: "Open Netlist..."
         shortcut: Ctrl+O
-        action: { kind: todo, note: "importState dialog" }
+        action: { kind: command, name: openNetlist }
 
-      - id: file.save
-        label: Save
+      - id: saveNetlist
+        label: "Save Netlist..."
         shortcut: Ctrl+S
-        action: { kind: todo, note: "exportState to file" }
+        action: { kind: command, name: saveNetlist }
 
       - type: separator
 
-      - id: file.exit
-        label: Exit
-        shortcut: Ctrl+Q
-        action: { kind: todo, note: "close app" }
+      - id: deleteAll
+        label: "Clear All"
+        shortcut: Ctrl+Shift+Del
+        action: { kind: command, name: deleteAll }
 
   - label: Edit
     items:
+      - id: selectAll
+        label: "Select All"
+        shortcut: Ctrl+A
+        action: { kind: command, name: selectAll }
+
+      - id: deselectAll
+        label: "Deselect All"
+        shortcut: Ctrl+D
+        action: { kind: command, name: deselectAll }
+
+      - type: separator
+
+      - id: copyElements
+        label: Copy
+        shortcut: Ctrl+C
+        action: { kind: command, name: copyElements }
+
+      - id: pasteElements
+        label: Paste
+        shortcut: Ctrl+V
+        action: { kind: command, name: pasteElements }
+
+      - type: separator
+
       - id: edit.undo
         label: Undo
         shortcut: Ctrl+Z
@@ -32,59 +56,15 @@ menus:
 
       - type: separator
 
-      - id: edit.cut
-        label: Cut
-        shortcut: Ctrl+X
-        disabled: true
-        action: { kind: disabled }
-
-      - id: edit.copy
-        label: Copy
-        shortcut: Ctrl+C
-        action: { kind: command, name: copyElements }
-
-      - id: edit.paste
-        label: Paste
-        shortcut: Ctrl+V
-        action: { kind: command, name: pasteElements }
-
-      - type: separator
-
-      - id: edit.selectAll
-        label: Select all
-        shortcut: Ctrl+A
-        action: { kind: command, name: selectAll }
-
-      - type: separator
-
-      - id: edit.delete
+      - id: deleteSelection
         label: Delete
         shortcut: Del
         action: { kind: command, name: deleteSelection }
 
-      - id: edit.rotateRight
-        label: Rotate →
-        shortcut: Ctrl+Right
-        action: { kind: command, name: rotateRight }
-
-      - id: edit.rotateLeft
-        label: Rotate ←
-        shortcut: Ctrl+Left
-        action: { kind: command, name: rotateLeft }
-
-      - id: edit.rotateUp
-        label: Rotate ↑
-        shortcut: Ctrl+Up
-        action: { kind: command, name: rotateUp }
-
-      - id: edit.rotateDown
-        label: Rotate ↓
-        shortcut: Ctrl+Down
-        action: { kind: command, name: rotateDown }
-
-      - id: edit.deleteAll
-        label: Delete all
-        action: { kind: command, name: deleteAll }
+      - id: rotateElement
+        label: "Rotate Element"
+        shortcut: Ctrl+R
+        action: { kind: command, name: rotateElement }
 
   - label: Insert
     items:

@@ -1,6 +1,7 @@
-import fs from 'fs';
+// Remove fs import since we're running in browser
 import { Position } from '../../domain/valueObjects/Position.js';
 import { Properties } from '../../domain/valueObjects/Properties.js';
+import { Label } from '../../domain/valueObjects/Label.js';
 import { ElementFactory } from '../../domain/factories/ElementFactory.js';
 
 /**
@@ -8,12 +9,24 @@ import { ElementFactory } from '../../domain/factories/ElementFactory.js';
  * and full element type with expected property name.
  */
 const typeMap = {
-    R: { fullType: 'resistor', propertyKey: 'resistance' },
-    C: { fullType: 'capacitor', propertyKey: 'capacitance' },
-    L: { fullType: 'inductor', propertyKey: 'inductance' },
-    J: { fullType: 'junction', propertyKey: 'value' },
-    G: { fullType: 'ground', propertyKey: 'value' },
-    W: { fullType: 'wire', propertyKey: 'value' }
+    R: { fullType: 'Resistor', propertyKey: 'resistance' },
+    C: { fullType: 'Capacitor', propertyKey: 'capacitance' },
+    L: { fullType: 'Inductor', propertyKey: 'inductance' },
+    J: { fullType: 'Junction', propertyKey: 'value' },
+    G: { fullType: 'Ground', propertyKey: 'value' },
+    W: { fullType: 'Wire', propertyKey: 'value' }
+};
+
+/**
+ * Reverse mapping from lowercase element types (as used in instances) to short codes
+ */
+const elementTypeToShortCode = {
+    'resistor': 'R',
+    'capacitor': 'C',
+    'inductor': 'L',
+    'junction': 'J',
+    'ground': 'G',
+    'wire': 'W'
 };
 
 /**
@@ -24,25 +37,24 @@ const typeMap = {
  */
 export class QucatNetlistAdapter {
     /**
-     * Export the current circuit to a .qucat-style netlist file.
+     * Export the current circuit to a .qucat-style netlist string.
      * 
      * @param {Circuit} circuit - The domain aggregate.
-     * @param {string} path - Destination file path.
+     * @returns {string} The netlist content as a string.
      */
-    static exportToFile(circuit, path) {
+    static exportToString(circuit) {
         const serialized = circuit.getSerializedElements();
-        const netlist = this._serializeElements(serialized);
-        fs.writeFileSync(path, netlist, 'utf-8');
+        return this._serializeElements(serialized);
     }
 
     /**
-     * Import elements from a .qucat-style netlist file.
+     * Import elements from a .qucat-style netlist string.
      * 
-     * @param {string} path - Path to the file to load.
+     * @param {string} content - The netlist content as a string.
      * @returns {Element[]} An array of Element instances.
      */
-    static importFromFile(path) {
-        const lines = fs.readFileSync(path, 'utf-8').trim().split('\n');
+    static importFromString(content) {
+        const lines = content.trim().split('\n').filter(line => line.trim());
         return this._deserializeElements(lines);
     }
 
@@ -56,15 +68,19 @@ export class QucatNetlistAdapter {
         return elements.map(el => {
             const { type, nodes, properties, label, id } = el;
 
-            // Identify which shorttype matches to type
-            const mapEntry = Object.entries(typeMap).find(([shortType, { fullType }]) => fullType === type);
-            if (!mapEntry) throw new Error(`Unknown element type: ${type}`);
-            const [shortType] = mapEntry;
+            // Use reverse mapping to get short code from element type
+            const shortType = elementTypeToShortCode[type];
+            if (!shortType) throw new Error(`Unknown element type: ${type}`);
 
             const node1 = `${nodes[0].x},${nodes[0].y}`;
             const node2 = `${nodes[1].x},${nodes[1].y}`;
 
-            const value = Object.values(properties).find(v => typeof v === 'number') ?? '';
+            // Get the main property for this element type
+            const mapEntry = typeMap[shortType];
+            const { propertyKey } = mapEntry;
+            
+            // Extract the main value (resistance, capacitance, etc.)
+            const value = propertyKey && properties[propertyKey] !== undefined ? properties[propertyKey] : '';
             const labelStr = label ?? '';
 
             let vFormatted = value;
@@ -104,19 +120,19 @@ export class QucatNetlistAdapter {
             const [x2, y2] = pos2.split(',').map(Number);
             const nodes = [new Position(x1, y1), new Position(x2, y2)];
     
-            // Parse value correctly
+            // Parse the main property value
             const raw = valueStr?.trim();
             const parsedValue = raw === '' || raw === undefined ? undefined : parseFloat(raw);
 
-            const label = labelStr && labelStr.trim() !== '' ? labelStr : null;
+            const label = labelStr && labelStr.trim() !== '' ? new Label(labelStr.trim()) : null;
 
-            // Always create the property object with the correct key
+            // Create minimal property object with the main property key always present
             const propObj = {};
-            if (propertyKey !== undefined) {
-                propObj[propertyKey] = parsedValue;
+            if (propertyKey) {
+                propObj[propertyKey] = parsedValue; // undefined if no value was serialized
             }
 
-            //  Always create a Properties instance
+            // Create Properties instance (ElementRegistry will add defaults)
             const properties = new Properties(propObj);
 
             const element = ElementFactory.create(fullType, null, nodes, properties, label);

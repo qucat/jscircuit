@@ -45,8 +45,10 @@ describe('QucatNetlistAdapter roundtrip test with CircuitService', () => {
         [r1, w1, w2, r2].forEach(el => service.addElement(el));
         originalElements = service.getElements();
 
-        // Export to .qucat format (short type netlist)
-        QucatNetlistAdapter.exportToFile(circuit, EXPORT_PATH);
+        // Export to .qucat format string (browser-compatible)
+        const netlistContent = QucatNetlistAdapter.exportToString(circuit);
+        // Write to file for test compatibility
+        fs.writeFileSync(EXPORT_PATH, netlistContent, 'utf-8');
     });
 
     // Clean up files to keep tests isolated
@@ -64,7 +66,8 @@ describe('QucatNetlistAdapter roundtrip test with CircuitService', () => {
     it('Should throw an error on unknown element short type', () => {
         // Create a manually malformed line using unknown type "Z"
         fs.writeFileSync(BAD_EXPORT_PATH, `Z;0,0;1,1;10;weird`);
-        assert.throws(() => QucatNetlistAdapter.importFromFile(BAD_EXPORT_PATH), /Unknown element type/);
+        const badContent = fs.readFileSync(BAD_EXPORT_PATH, 'utf-8');
+        assert.throws(() => QucatNetlistAdapter.importFromString(badContent), /Unknown element type/);
     });
 
     it('Should import a non-empty file', () => {
@@ -73,12 +76,14 @@ describe('QucatNetlistAdapter roundtrip test with CircuitService', () => {
     });
 
     it('Should recreate all original elements', () => {
-        const imported = QucatNetlistAdapter.importFromFile(EXPORT_PATH);
+        const netlistContent = fs.readFileSync(EXPORT_PATH, 'utf-8');
+        const imported = QucatNetlistAdapter.importFromString(netlistContent);
         assert.strictEqual(imported.length, originalElements.length);
     });
 
     it('Should handle empty properties gracefully', () => {
-        const imported = QucatNetlistAdapter.importFromFile(EXPORT_PATH);
+        const netlistContent = fs.readFileSync(EXPORT_PATH, 'utf-8');
+        const imported = QucatNetlistAdapter.importFromString(netlistContent);
 
         // Since IDs are not roundtripped, match by type and node positions
         const r2 = imported.find(el =>
@@ -93,7 +98,8 @@ describe('QucatNetlistAdapter roundtrip test with CircuitService', () => {
     });
 
     it('Should preserve element type mappings', () => {
-        const imported = QucatNetlistAdapter.importFromFile(EXPORT_PATH);
+        const netlistContent = fs.readFileSync(EXPORT_PATH, 'utf-8');
+        const imported = QucatNetlistAdapter.importFromString(netlistContent);
 
         const r1 = imported.find(el =>
             el.type === 'resistor' &&
@@ -111,7 +117,8 @@ describe('QucatNetlistAdapter roundtrip test with CircuitService', () => {
     });
 
     it('Should roundtrip the entire structure accurately', () => {
-        const imported = QucatNetlistAdapter.importFromFile(EXPORT_PATH);
+        const netlistContent = fs.readFileSync(EXPORT_PATH, 'utf-8');
+        const imported = QucatNetlistAdapter.importFromString(netlistContent);
         assert.strictEqual(imported.length, originalElements.length);
 
         for (let i = 0; i < originalElements.length; i++) {

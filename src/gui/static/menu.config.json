@@ -1,0 +1,71 @@
+{
+  "menus": [
+    {
+      "label": "File",
+      "items": [
+        {
+          "id": "openNetlist",
+          "label": "Open Netlist...",
+          "action": { "kind": "command", "name": "openNetlist" },
+          "shortcut": "Ctrl+O"
+        },
+        {
+          "id": "saveNetlist",
+          "label": "Save Netlist...",
+          "action": { "kind": "command", "name": "saveNetlist" },
+          "shortcut": "Ctrl+S"
+        },
+        {
+          "type": "separator"
+        },
+        {
+          "id": "deleteAll",
+          "label": "Clear All",
+          "action": { "kind": "command", "name": "deleteAll" },
+          "shortcut": "Ctrl+Shift+Del"
+        }
+      ]
+    },
+    {
+      "label": "Edit",
+      "items": [
+        {
+          "id": "selectAll",
+          "label": "Select All",
+          "action": { "kind": "command", "name": "selectAll" },
+          "shortcut": "Ctrl+A"
+        },
+        {
+          "id": "deselectAll",
+          "label": "Deselect All",
+          "action": { "kind": "command", "name": "deselectAll" },
+          "shortcut": "Ctrl+D"
+        },
+        {
+          "type": "separator"
+        },
+        {
+          "id": "copyElements",
+          "label": "Copy",
+          "action": { "kind": "command", "name": "copyElements" },
+          "shortcut": "Ctrl+C"
+        },
+        {
+          "id": "pasteElements",
+          "label": "Paste",
+          "action": { "kind": "command", "name": "pasteElements" },
+          "shortcut": "Ctrl+V"
+        },
+        {
+          "type": "separator"
+        },
+        {
+          "id": "deleteSelection",
+          "label": "Delete Selection",
+          "action": { "kind": "command", "name": "deleteSelection" },
+          "shortcut": "Del"
+        }
+      ]
+    }
+  ]
+}

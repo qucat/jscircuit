@@ -127,7 +127,8 @@ export class Circuit {
             id: el.id,
             type: el.type,
             nodes: el.nodes.map(p => ({ x: p.x, y: p.y })),
-            properties: el.properties.values
+            properties: el.properties.values,
+            label: el.label ? el.label.value : null
         }));
     }
 }

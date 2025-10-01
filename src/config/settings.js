@@ -29,6 +29,8 @@ import { DeleteAllCommand } from "../gui/commands/DeleteAllCommand.js";
 import { UpdateElementPropertiesCommand } from "../gui/commands/UpdateElementPropertiesCommand.js";
 import { CopyElementsCommand } from "../gui/commands/CopyElementsCommand.js";
 import { PasteElementsCommand } from "../gui/commands/PasteElementsCommand.js";
+import { SaveNetlistCommand } from "../gui/commands/SaveNetlistCommand.js";
+import { OpenNetlistCommand } from "../gui/commands/OpenNetlistCommand.js";
 import { WireSplitService } from "../application/WireSplitService.js";
 
 // Register elements once
@@ -301,5 +303,18 @@ export function setupCommands(circuitService, circuitRenderer) {
             },
             undo: () => console.log("Rotate Down undo")
         }));
+    }
+
+    // Register save and open netlist commands
+    if (!GUICommandRegistry.getTypes().includes("saveNetlist")) {
+        GUICommandRegistry.register("saveNetlist", () =>
+            new SaveNetlistCommand(circuitService, circuitRenderer)
+        );
+    }
+
+    if (!GUICommandRegistry.getTypes().includes("openNetlist")) {
+        GUICommandRegistry.register("openNetlist", () =>
+            new OpenNetlistCommand(circuitService, circuitRenderer)
+        );
     }
 }
