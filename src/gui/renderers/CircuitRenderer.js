@@ -145,9 +145,6 @@ export class CircuitRenderer {
         // Render selection box overlay (after transformations are restored)
         this.renderSelectionBox();
         
-        // Render zoom message if active
-        this.renderZoomMessage();
-        
         // Render bounding box for multiple selected elements (disabled for now)
         // this.renderSelectionBoundingBox();
     }
@@ -202,13 +199,11 @@ export class CircuitRenderer {
 
         const newScale = this.scale * zoomDirection;
         
-        // Check zoom limits and show feedback
+        // Check zoom limits (50% to 150%)
         if (newScale < 0.5) {
-            this.showZoomMessage("Minimum zoom level reached (50%)");
             return;
         }
-        if (newScale > 3.0) {
-            this.showZoomMessage("Maximum zoom level reached (300%)");
+        if (newScale > 4.0) {
             return;
         }
 
@@ -226,79 +221,7 @@ export class CircuitRenderer {
         });
     }
 
-    /**
-     * Show a temporary message directly on the canvas
-     * @param {string} message - The message to display
-     */
-    showZoomMessage(message) {
-        // Store the message to be rendered on the canvas
-        this.zoomMessage = {
-            text: message,
-            timestamp: Date.now(),
-            duration: 2000 // Show for 2 seconds
-        };
-        
-        // Trigger a render to show the message
-        this.render();
-        
-        // Clear the message after duration
-        clearTimeout(this.messageTimeout);
-        this.messageTimeout = setTimeout(() => {
-            this.zoomMessage = null;
-            this.render(); // Re-render to remove the message
-        }, this.zoomMessage.duration);
-    }
 
-    /**
-     * Render the zoom message on the canvas
-     */
-    renderZoomMessage() {
-        if (!this.zoomMessage) return;
-        
-        const ctx = this.context;
-        const message = this.zoomMessage.text;
-        
-        // Calculate fade effect based on time remaining
-        const elapsed = Date.now() - this.zoomMessage.timestamp;
-        const remaining = this.zoomMessage.duration - elapsed;
-        const fadeTime = 500; // Fade out over last 500ms
-        let opacity = 1;
-        
-        if (remaining < fadeTime) {
-            opacity = remaining / fadeTime;
-        }
-        
-        // Set up text styling
-        ctx.save();
-        ctx.font = '14px Arial, sans-serif';
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'top';
-        
-        // Position in top-left corner of the VIEWPORT, not canvas content
-        // This ensures the message stays fixed during scrolling
-        const padding = 10;
-        const canvasRect = this.canvas.getBoundingClientRect();
-        
-        // Calculate viewport-relative position by inverting the current transform
-        ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform to identity
-        const x = padding;
-        const y = padding;
-        
-        // Draw background
-        const textMetrics = ctx.measureText(message);
-        const bgPadding = 8;
-        const bgWidth = textMetrics.width + bgPadding * 2;
-        const bgHeight = 16 + bgPadding * 2;
-        
-        ctx.fillStyle = `rgba(0, 0, 0, ${0.8 * opacity})`;
-        ctx.fillRect(x - bgPadding, y - bgPadding, bgWidth, bgHeight);
-        
-        // Draw text
-        ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
-        ctx.fillText(message, x, y);
-        
-        ctx.restore(); // This will restore the original transform and all other settings
-    }
 
     /**
      * Starts panning when mouse is pressed.
