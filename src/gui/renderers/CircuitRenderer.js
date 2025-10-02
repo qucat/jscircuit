@@ -44,7 +44,7 @@ export class CircuitRenderer {
         this.offset = { x: 0, y: 0 };
 
        // Zooming and Panning State
-        this.scale = 1.0;
+        this.scale = 1.5; // Start at 150% zoom for better detail visibility
         this.offsetX = 0;
         this.offsetY = 0;
         this.isPanning = false;
@@ -200,10 +200,10 @@ export class CircuitRenderer {
         const newScale = this.scale * zoomDirection;
         
         // Check zoom limits (50% to 150%)
-        if (newScale < 0.5) {
+        if (newScale < 1.0) {
             return;
         }
-        if (newScale > 4.0) {
+        if (newScale > 3.0) {
             return;
         }
 
