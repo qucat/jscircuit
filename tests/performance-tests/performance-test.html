@@ -133,17 +133,17 @@
     </div>
 
     <script type="module">
-        import { Circuit } from './src/domain/aggregates/Circuit.js';
-        import { CircuitService } from './src/application/CircuitService.js';
-        import { GUIAdapter } from './src/gui/adapters/GUIAdapter.js';
+        import { Circuit } from '../../src/domain/aggregates/Circuit.js';
+        import { CircuitService } from '../../src/application/CircuitService.js';
+        import { GUIAdapter } from '../../src/gui/adapters/GUIAdapter.js';
         import { 
             ElementRegistry, 
             rendererFactory, 
             GUICommandRegistry, 
             setupCommands 
-        } from './src/config/settings.js';
-        import { Logger } from './src/utils/Logger.js';
-        import { globalPerformanceMonitor, globalRenderScheduler } from './src/utils/PerformanceUtils.js';
+        } from '../../src/config/settings.js';
+        import { Logger } from '../../src/utils/Logger.js';
+        import { globalPerformanceMonitor, globalRenderScheduler } from '../../src/utils/PerformanceUtils.js';
         
         // Initialize the circuit generator
         const canvas = document.getElementById('circuitCanvas');

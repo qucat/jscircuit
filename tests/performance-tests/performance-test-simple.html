@@ -171,21 +171,21 @@
                 document.getElementById('loadingStatus').textContent = 'Loading modules...';
                 
                 // Import modules
-                const { Circuit } = await import('./src/domain/aggregates/Circuit.js');
-                const { CircuitService } = await import('./src/application/CircuitService.js');
-                const { GUIAdapter } = await import('./src/gui/adapters/GUIAdapter.js');
+                const { Circuit } = await import('../../src/domain/aggregates/Circuit.js');
+                const { CircuitService } = await import('../../src/application/CircuitService.js');
+                const { GUIAdapter } = await import('../../src/gui/adapters/GUIAdapter.js');
                 const { 
                     ElementRegistry, 
                     rendererFactory, 
                     GUICommandRegistry, 
                     setupCommands 
-                } = await import('./src/config/settings.js');
+                } = await import('../../src/config/settings.js');
                 
                 // Import performance utilities
-                const LoggerModule = await import('./src/utils/Logger.js');
+                const LoggerModule = await import('../../src/utils/Logger.js');
                 Logger = LoggerModule.Logger;
                 
-                const { globalPerformanceMonitor, globalRenderScheduler } = await import('./src/utils/PerformanceUtils.js');
+                const { globalPerformanceMonitor, globalRenderScheduler } = await import('../../src/utils/PerformanceUtils.js');
                 
                 document.getElementById('loadingStatus').textContent = 'Initializing circuit...';
                 

@@ -79,7 +79,7 @@ globalRenderScheduler.scheduleRender(() => this.performRender());
 ### Phase 3: Development Tools
 
 #### 5. **Performance Test Page**
-- **File**: `performance-test.html`
+- **File**: `tests/performance-tests/performance-test.html`
 - **Purpose**: Real-time performance monitoring and testing
 - **Features**:
   - Live render time and frame rate display
@@ -185,7 +185,7 @@ globalRenderScheduler.scheduleRender(() => {
 
 ## 🧪 **Testing Performance**
 
-1. Open `performance-test.html` in browser
+1. Open `tests/performance-tests/performance-test.html` in browser
 2. Monitor metrics with DevTools closed vs open
 3. Use stress test to verify throttling
 4. Toggle debug mode to see logging impact
