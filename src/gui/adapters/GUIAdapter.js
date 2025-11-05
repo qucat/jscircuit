@@ -437,18 +437,17 @@ export class GUIAdapter {
       if (event.button === 0 && this.placingElement) {
         const snappedX = GRID_CONFIG.snapToGrid(offsetX);
         const snappedY = GRID_CONFIG.snapToGrid(offsetY);
-        const width = GRID_CONFIG.componentSpanPixels; // Use grid-based component width
 
         // Get current orientation from element properties (preserve rotation)
         const currentOrientation = this.placingElement.properties?.values?.orientation || 0;
         const angleRad = (currentOrientation * Math.PI) / 180;
         
-        // Calculate node positions based on current rotation
-        const halfWidth = width / 2;
-        this.placingElement.nodes[0].x = snappedX - halfWidth * Math.cos(angleRad);
-        this.placingElement.nodes[0].y = snappedY - halfWidth * Math.sin(angleRad);
-        this.placingElement.nodes[1].x = snappedX + halfWidth * Math.cos(angleRad);
-        this.placingElement.nodes[1].y = snappedY + halfWidth * Math.sin(angleRad);
+        // Use grid configuration to calculate proper node positions that align to grid
+        const nodePositions = GRID_CONFIG.calculateNodePositions(snappedX, snappedY, angleRad);
+        this.placingElement.nodes[0].x = nodePositions.start.x;
+        this.placingElement.nodes[0].y = nodePositions.start.y;
+        this.placingElement.nodes[1].x = nodePositions.end.x;
+        this.placingElement.nodes[1].y = nodePositions.end.y;
 
         this.circuitService.emit("update", {
           type: "finalizePlacement",
@@ -528,18 +527,17 @@ export class GUIAdapter {
       if (this.placingElement) {
         const snappedX = GRID_CONFIG.snapToGrid(offsetX);
         const snappedY = GRID_CONFIG.snapToGrid(offsetY);
-        const width = GRID_CONFIG.componentSpanPixels; // Use grid-based component width
 
         // Get current orientation from element properties (preserve rotation)
         const currentOrientation = this.placingElement.properties?.values?.orientation || 0;
         const angleRad = (currentOrientation * Math.PI) / 180;
         
-        // Calculate node positions based on current rotation
-        const halfWidth = width / 2;
-        this.placingElement.nodes[0].x = snappedX - halfWidth * Math.cos(angleRad);
-        this.placingElement.nodes[0].y = snappedY - halfWidth * Math.sin(angleRad);
-        this.placingElement.nodes[1].x = snappedX + halfWidth * Math.cos(angleRad);
-        this.placingElement.nodes[1].y = snappedY + halfWidth * Math.sin(angleRad);
+        // Use grid configuration to calculate proper node positions that align to grid
+        const nodePositions = GRID_CONFIG.calculateNodePositions(snappedX, snappedY, angleRad);
+        this.placingElement.nodes[0].x = nodePositions.start.x;
+        this.placingElement.nodes[0].y = nodePositions.start.y;
+        this.placingElement.nodes[1].x = nodePositions.end.x;
+        this.placingElement.nodes[1].y = nodePositions.end.y;
 
         this.circuitService.emit("update", {
           type: "movePreview",
@@ -627,18 +625,17 @@ export class GUIAdapter {
       // This prevents the element from staying at default coordinates until mouse movement
       const snappedX = GRID_CONFIG.snapToGrid(this.currentMousePos.x);
       const snappedY = GRID_CONFIG.snapToGrid(this.currentMousePos.y);
-      const width = GRID_CONFIG.componentSpanPixels; // Use grid-based component width
 
       // Get current orientation from element properties (preserve rotation)
       const currentOrientation = element.properties?.values?.orientation || 0;
       const angleRad = (currentOrientation * Math.PI) / 180;
       
-      // Calculate node positions based on current rotation
-      const halfWidth = width / 2;
-      element.nodes[0].x = snappedX - halfWidth * Math.cos(angleRad);
-      element.nodes[0].y = snappedY - halfWidth * Math.sin(angleRad);
-      element.nodes[1].x = snappedX + halfWidth * Math.cos(angleRad);
-      element.nodes[1].y = snappedY + halfWidth * Math.sin(angleRad);
+      // Use grid configuration to calculate proper node positions that align to grid
+      const nodePositions = GRID_CONFIG.calculateNodePositions(snappedX, snappedY, angleRad);
+      element.nodes[0].x = nodePositions.start.x;
+      element.nodes[0].y = nodePositions.start.y;
+      element.nodes[1].x = nodePositions.end.x;
+      element.nodes[1].y = nodePositions.end.y;
 
       // Emit update to immediately show the element at the correct position
       this.circuitService.emit("update", {
@@ -977,7 +974,6 @@ export class GUIAdapter {
     const centerY = (this.placingElement.nodes[0].y + this.placingElement.nodes[1].y) / 2;
     
     // For most components, rotation changes the node positions
-    const width = GRID_CONFIG.componentSpanPixels; // Use grid-based component width
     const angleRad = (angle * Math.PI) / 180;
     const currentAngleRad = Math.atan2(
       this.placingElement.nodes[1].y - this.placingElement.nodes[0].y,
@@ -985,12 +981,12 @@ export class GUIAdapter {
     );
     const newAngleRad = currentAngleRad + angleRad;
     
-    // Calculate new node positions
-    const halfWidth = width / 2;
-    this.placingElement.nodes[0].x = centerX - halfWidth * Math.cos(newAngleRad);
-    this.placingElement.nodes[0].y = centerY - halfWidth * Math.sin(newAngleRad);
-    this.placingElement.nodes[1].x = centerX + halfWidth * Math.cos(newAngleRad);
-    this.placingElement.nodes[1].y = centerY + halfWidth * Math.sin(newAngleRad);
+    // Use grid configuration to calculate proper node positions that align to grid
+    const nodePositions = GRID_CONFIG.calculateNodePositions(centerX, centerY, newAngleRad);
+    this.placingElement.nodes[0].x = nodePositions.start.x;
+    this.placingElement.nodes[0].y = nodePositions.start.y;
+    this.placingElement.nodes[1].x = nodePositions.end.x;
+    this.placingElement.nodes[1].y = nodePositions.end.y;
     
     // Emit update to trigger re-render with new rotation
     this.circuitService.emit("update", {

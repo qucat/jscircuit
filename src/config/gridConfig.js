@@ -26,6 +26,9 @@ export const GRID_CONFIG = {
     // Component height (2 grid points for visual appeal)
     componentHeightPixels: 2 * GRID_SPACING,   // 20 pixels
     
+    // Grid snapping utility function
+    snapToGrid: (value) => Math.round(value / GRID_SPACING) * GRID_SPACING,
+    
     // Calculate node positions for 2-node components
     // For nodes to be on grid points AND span 5 grid spaces:
     // - If component spans 5 grid spaces (50 pixels), nodes must be 5 spaces apart
@@ -46,8 +49,7 @@ export const GRID_CONFIG = {
             };
         } else {
             // For other orientations, use trigonometry but ensure nodes land on grid points
-            const halfSpanGridSpaces = COMPONENT_GRID_SPACES / 2; // 2.5 grid spaces
-            const halfSpanPixels = halfSpanGridSpaces * GRID_SPACING; // 25 pixels
+            const halfSpanPixels = COMPONENT_SPAN_PIXELS / 2; // 25 pixels
             
             const startX = centerX - halfSpanPixels * Math.cos(angleRadians);
             const startY = centerY - halfSpanPixels * Math.sin(angleRadians);

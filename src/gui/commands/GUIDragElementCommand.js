@@ -1,5 +1,6 @@
 import { GUICommand } from "./GUICommand.js";
 import { Position } from "../../domain/valueObjects/Position.js";
+import { GRID_CONFIG } from "../../config/gridConfig.js";
 
 /**
  * @class DragElementCommand
@@ -48,9 +49,8 @@ export class DragElementCommand extends GUICommand {
     // Axis lock: "horizontal", "vertical", or null
     this.dragAxis = null;
 
-    // Snapping
+    // Snapping - use centralized grid configuration
     this.enableSnapping = true;
-    this.gridSpacing = 10;
 
     // If you want an immediate lock with no threshold, set below to 0
     // or to 2, 5, etc. if you want to require some minimal difference
@@ -193,8 +193,8 @@ move(mouseX, mouseY) {
     let intendedX = mouseX - this.offset.x;
     let intendedY = mouseY - this.offset.y;
     if (this.enableSnapping) {
-      intendedX = Math.round(intendedX / this.gridSpacing) * this.gridSpacing;
-      intendedY = Math.round(intendedY / this.gridSpacing) * this.gridSpacing;
+      intendedX = GRID_CONFIG.snapToGrid(intendedX);
+      intendedY = GRID_CONFIG.snapToGrid(intendedY);
     }
 
     // Step 4: lock axis if dragging a 2-node wire
@@ -237,8 +237,8 @@ move(mouseX, mouseY) {
       let intendedY = mouseY - this.offset.y;
 
       if (this.enableSnapping) {
-        intendedX = Math.round(intendedX / this.gridSpacing) * this.gridSpacing;
-        intendedY = Math.round(intendedY / this.gridSpacing) * this.gridSpacing;
+        intendedX = GRID_CONFIG.snapToGrid(intendedX);
+        intendedY = GRID_CONFIG.snapToGrid(intendedY);
       }
 
       const deltaX = intendedX - firstNode.x;
@@ -280,8 +280,8 @@ moveMultipleElements(mouseX, mouseY) {
     let intendedY = mouseY - elementOffset.y;
 
     if (this.enableSnapping) {
-      intendedX = Math.round(intendedX / this.gridSpacing) * this.gridSpacing;
-      intendedY = Math.round(intendedY / this.gridSpacing) * this.gridSpacing;
+      intendedX = GRID_CONFIG.snapToGrid(intendedX);
+      intendedY = GRID_CONFIG.snapToGrid(intendedY);
     }
 
     const deltaX = intendedX - firstNode.x;

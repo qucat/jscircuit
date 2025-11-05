@@ -1,5 +1,6 @@
 import { GUICommand } from "./GUICommand.js";
 import { Position } from "../../domain/valueObjects/Position.js";
+import { GRID_CONFIG } from "../../config/gridConfig.js";
 
 /**
  * DrawWireCommand:
@@ -25,7 +26,6 @@ export class DrawWireCommand extends GUICommand {
 
     // If the user never moves, we can remove the ephemeral wire in a cancel() method
     this.enableSnapping = true;
-    this.gridSpacing = 10;
 
     // If you want to wait for a bigger movement before locking, set this higher
     this.THRESHOLD = 2;
@@ -40,8 +40,8 @@ export class DrawWireCommand extends GUICommand {
     let snappedX = mouseX;
     let snappedY = mouseY;
     if (this.enableSnapping) {
-      snappedX = Math.round(mouseX / this.gridSpacing) * this.gridSpacing;
-      snappedY = Math.round(mouseY / this.gridSpacing) * this.gridSpacing;
+      snappedX = GRID_CONFIG.snapToGrid(mouseX);
+      snappedY = GRID_CONFIG.snapToGrid(mouseY);
     }
 
     // 2) Create a new wire with both nodes at the same place
@@ -75,8 +75,8 @@ export class DrawWireCommand extends GUICommand {
     let snappedX = mouseX;
     let snappedY = mouseY;
     if (this.enableSnapping) {
-      snappedX = Math.round(mouseX / this.gridSpacing) * this.gridSpacing;
-      snappedY = Math.round(mouseY / this.gridSpacing) * this.gridSpacing;
+      snappedX = GRID_CONFIG.snapToGrid(mouseX);
+      snappedY = GRID_CONFIG.snapToGrid(mouseY);
     }
 
     // 2) Compare how far we've moved from the start node
