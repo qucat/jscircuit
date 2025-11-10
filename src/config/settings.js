@@ -85,7 +85,8 @@ if (ElementRegistry.getTypes().length === 0) {
         if (finalProps.values.orientation === undefined) {
             finalProps.values.orientation = 0;
         }
-        return new Ground(id, nodes, label, finalProps);
+        // Ground elements don't need labels, always pass null
+        return new Ground(id, nodes, null, finalProps);
     });
 }
 

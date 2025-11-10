@@ -108,8 +108,7 @@ export class GroundRenderer extends ImageRenderer {
         // Draw the connection node at the exact connection point
         this.renderTerminal(connectionNode);
 
-        // Render properties (label only for ground components)
-        this.renderProperties(ground, groundX, groundY, orientationRad);
+        // Ground components don't need labeling, so we skip renderProperties
     }
 
     renderFallback(ground, nodeX, nodeY) {
@@ -159,24 +158,27 @@ export class GroundRenderer extends ImageRenderer {
         const imageX = nodeX - (this.SCALED_WIDTH / 2); // Image center is offset left from node
         const imageY = nodeY; // Image center Y aligns with node Y
         
-        const halfWidth = this.SCALED_WIDTH / 2;
-        const halfHeight = this.SCALED_HEIGHT / 2;
+        const selectionPadding = 20; // 15 pixels padding on all sides
+        const halfWidth = this.SCALED_WIDTH / 2 + selectionPadding;
+        const halfHeight = this.SCALED_HEIGHT / 2 + selectionPadding;
         
-        // Check if mouse is within the ground image bounds OR near the connection node
-        const inImageBounds = (
+        // Expanded selection bounds with padding around the entire ground element
+        const inExpandedBounds = (
             mouseX >= imageX - halfWidth &&
             mouseX <= imageX + halfWidth &&
             mouseY >= imageY - halfHeight &&
             mouseY <= imageY + halfHeight
         );
         
+        // Also include a larger area around the connection node (increased from 5 to 10 pixels)
+        const nodeRadius = 10;
         const inNodeBounds = (
-            mouseX >= nodeX - 5 &&
-            mouseX <= nodeX + 5 &&
-            mouseY >= nodeY - 5 &&
-            mouseY <= nodeY + 5
+            mouseX >= nodeX - nodeRadius &&
+            mouseX <= nodeX + nodeRadius &&
+            mouseY >= nodeY - nodeRadius &&
+            mouseY <= nodeY + nodeRadius
         );
         
-        return inImageBounds || inNodeBounds;
+        return inExpandedBounds || inNodeBounds;
     }
 }

@@ -667,8 +667,12 @@ export class GUIAdapter {
    * @param {boolean} isNewlyPlaced - Whether this element was just placed (true) or is being edited (false)
    */
   handleElementDoubleClick(element, isNewlyPlaced = false) {
-    console.log("[GUIAdapter] Double-click detected on element:", element);
     if (!element) return;
+    
+    // Skip property panel for ground elements - they don't need labeling or property editing
+    if (element.type === 'ground') {
+      return;
+    }
 
     // Open property panel for the element
     this.propertyPanel = new PropertyPanel();
