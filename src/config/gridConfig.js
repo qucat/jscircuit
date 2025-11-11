@@ -8,7 +8,7 @@ import { CoordinateAdapter } from '../infrastructure/adapters/CoordinateAdapter.
 
 // Use CoordinateAdapter as the single source of truth
 export const GRID_SPACING = CoordinateAdapter.CONFIG.PIXELS_PER_GRID_UNIT; // 10 pixels between logical grid units
-export const COMPONENT_GRID_POINTS = CoordinateAdapter.CONFIG.V2_COMPONENT_SPAN; // Components span 6 logical grid points
+export const COMPONENT_GRID_POINTS = CoordinateAdapter.CONFIG.V2_COMPONENT_SPAN; // Components span 5 logical grid intervals (50 pixels)
 export const COMPONENT_SPAN_PIXELS = COMPONENT_GRID_POINTS * GRID_SPACING; // 60 pixels
 
 /**
@@ -32,21 +32,25 @@ export const GRID_CONFIG = {
     
     
     // Calculate node positions for 2-node components using logical coordinates
-    // For v2.0: components span 6 logical grid units (60 pixels)
+    // For v2.0: components span 5 logical grid intervals (50 pixels)
     calculateNodePositions: (centerX, centerY, angleRadians = 0) => {
         if (angleRadians === 0) {
-            // Horizontal orientation: calculate using logical coordinates
-            const halfSpanLogical = COMPONENT_GRID_POINTS / 2; // 3 logical grid units
+            // Horizontal orientation: ensure nodes land on grid points
+            // For 5-interval span, center must be at N+0.5 logical positions
             const centerLogicalX = Math.round(centerX / GRID_SPACING);
             const centerLogicalY = Math.round(centerY / GRID_SPACING);
             
+            // Offset by ±2.5 intervals, then round to nearest grid points
+            const startLogicalX = Math.round(centerLogicalX - 2.5);
+            const endLogicalX = Math.round(centerLogicalX + 2.5);
+            
             return {
                 start: {
-                    x: (centerLogicalX - halfSpanLogical) * GRID_SPACING,
+                    x: startLogicalX * GRID_SPACING,
                     y: centerLogicalY * GRID_SPACING
                 },
                 end: {
-                    x: (centerLogicalX + halfSpanLogical) * GRID_SPACING,
+                    x: endLogicalX * GRID_SPACING,
                     y: centerLogicalY * GRID_SPACING
                 }
             };

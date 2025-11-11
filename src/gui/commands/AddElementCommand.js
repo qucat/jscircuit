@@ -43,7 +43,7 @@ export class AddElementCommand extends GUICommand {
 
   /**
    * Executes the command, creating an element with proper grid-based sizing.
-   * For 2-node components, creates nodes that span exactly 5 grid spaces (50 pixels).
+   * For 2-node components, creates nodes that span exactly 5 grid intervals (50 pixels).
    * Mouse position is snapped to logical grid for proper alignment.
    */
   execute() {
@@ -64,7 +64,7 @@ export class AddElementCommand extends GUICommand {
     }
 
     // Calculate node positions using grid configuration
-    // This ensures 2-node components span exactly 5 grid spaces (50 pixels)
+    // This ensures 2-node components span exactly 5 grid intervals (50 pixels)
     const nodePositions = GRID_CONFIG.calculateNodePositions(centerX, centerY, 0); // 0 degrees initially
     
     console.log('[AddElementCommand] Node positions calculated:', nodePositions);
