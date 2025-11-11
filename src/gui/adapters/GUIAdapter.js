@@ -1,28 +1,12 @@
 /**
  * @module GUIAdapter
  * @description
- * Bridges UI and application logic in a DDD + Hex architecture.
+ * Bridges UI and application logic.
  *
  * UI adapters (menubar, keyboard, mouse) emit **semantic action ids** (from YAML/JSON config).
  * GUIAdapter maps those ids to domain commands (via GUICommandRegistry + CommandHistory)
  * or to view-only renderer operations. State changes emit "update" → Renderer re-renders.
  *
- * Data flow:
- *   UI events → GUI      if (this.placingElement) {
-        const snappedX = Math.round(offsetX / 10) * 10;
-        const snappedY = Math.round(offsetY / 10) * 10;
-        const width = 60;
-
-        // Get current orientation from element properties (preserve rotation)
-        const currentOrientation = this.placingElement.properties?.values?.orientation || 0;
-        const angleRad = (currentOrientation * Math.PI) / 180;
-        
-        // Calculate node positions based on current rotation
-        const halfWidth = width / 2;
-        this.placingElement.nodes[0].x = snappedX - halfWidth * Math.cos(angleRad);
-        this.placingElement.nodes[0].y = snappedY - halfWidth * Math.sin(angleRad);
-        this.placingElement.nodes[1].x = snappedX + halfWidth * Math.cos(angleRad);
-        this.placingElement.nodes[1].y = snappedY + halfWidth * Math.sin(angleRad);andleAction(id) → (Command|History|Renderer) → CircuitService emits "update" → CircuitRenderer
  */
 
 import { CircuitRenderer } from "../renderers/CircuitRenderer.js";

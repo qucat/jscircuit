@@ -25,8 +25,8 @@ export class CoordinateAdapter {
     static CONFIG = {
         PIXELS_PER_GRID_UNIT: 10,
         V1_COMPONENT_SPAN: 1,        // v1.0: 1 interval per component
-        V2_COMPONENT_SPAN: 5,        // v2.0: 5 intervals per component
-        SCALING_FACTOR: 5            // v2.0 span / v1.0 span = 5/1 = 5
+        V2_COMPONENT_SPAN: 5,        // v2.0: 5 intervals per component (1 × 5 scaling)
+        SCALING_FACTOR: 5            // Coordinate scaling: 1 v1.0 interval = 5 v2.0 intervals
     };
 
     /**
@@ -162,17 +162,16 @@ export class CoordinateAdapter {
      * @returns {Object} Object with {start: GridCoordinate, end: GridCoordinate}
      */
     static createV1ComponentNodes(center, orientation = 'horizontal') {
-        const halfSpan = this.CONFIG.V1_COMPONENT_SPAN / 2; // 1 grid unit
-        
+        // For v1.0: 1 unit span means start=center, end=center+1
         if (orientation === 'horizontal') {
             return {
-                start: new GridCoordinate(center.x - halfSpan, center.y),
-                end: new GridCoordinate(center.x + halfSpan, center.y)
+                start: new GridCoordinate(center.x, center.y),
+                end: new GridCoordinate(center.x + this.CONFIG.V1_COMPONENT_SPAN, center.y)
             };
         } else { // vertical
             return {
-                start: new GridCoordinate(center.x, center.y - halfSpan),
-                end: new GridCoordinate(center.x, center.y + halfSpan)
+                start: new GridCoordinate(center.x, center.y),
+                end: new GridCoordinate(center.x, center.y + this.CONFIG.V1_COMPONENT_SPAN)
             };
         }
     }

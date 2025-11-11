@@ -14,8 +14,8 @@ describe('Logical Coordinate System Integration Tests', () => {
 
         it('should use CoordinateAdapter configuration values', () => {
             expect(GRID_CONFIG.pixelsPerGridUnit).to.equal(10);
-            expect(GRID_CONFIG.componentLogicalSpan).to.equal(6);
-            expect(GRID_CONFIG.componentSpanPixels).to.equal(60); // 6 * 10
+            expect(GRID_CONFIG.componentLogicalSpan).to.equal(5);
+            expect(GRID_CONFIG.componentSpanPixels).to.equal(50); // 5 * 10
         });
 
         it('should maintain backwards compatibility with legacy spacing', () => {
@@ -40,13 +40,13 @@ describe('Logical Coordinate System Integration Tests', () => {
             const startPixel = CoordinateAdapter.gridToPixel(nodes.start);
             const endPixel = CoordinateAdapter.gridToPixel(nodes.end);
             
-            expect(startPixel.x).to.equal(-30); // -3 * 10
+            expect(startPixel.x).to.equal(-20); // -2 * 10
             expect(startPixel.y).to.equal(0);
-            expect(endPixel.x).to.equal(30);   // 3 * 10
+            expect(endPixel.x).to.equal(30);    // 3 * 10
             expect(endPixel.y).to.equal(0);
             
-            // Should span 6 logical units = 60 pixels
-            expect(endPixel.x - startPixel.x).to.equal(60);
+            // Should span 5 logical units = 50 pixels
+            expect(endPixel.x - startPixel.x).to.equal(50);
         });
 
         it('should position components using GRID_CONFIG', () => {
@@ -82,19 +82,19 @@ describe('Logical Coordinate System Integration Tests', () => {
             const v2Start = CoordinateAdapter.v1ToV2Grid(v1Start);
             const v2End = CoordinateAdapter.v1ToV2Grid(v1End);
             
-            expect(v2Start.x).to.equal(0);
-            expect(v2Start.y).to.equal(-6);
-            expect(v2End.x).to.equal(3);
-            expect(v2End.y).to.equal(-6);
+            expect(v2Start.x).to.equal(0);    // 0 * 5
+            expect(v2Start.y).to.equal(-10);  // -2 * 5
+            expect(v2End.x).to.equal(5);      // 1 * 5
+            expect(v2End.y).to.equal(-10);    // -2 * 5
             
             // Convert to pixel coordinates for rendering
             const startPixel = CoordinateAdapter.gridToPixel(v2Start);
             const endPixel = CoordinateAdapter.gridToPixel(v2End);
             
             expect(startPixel.x).to.equal(0);
-            expect(startPixel.y).to.equal(-60);
-            expect(endPixel.x).to.equal(30);
-            expect(endPixel.y).to.equal(-60);
+            expect(startPixel.y).to.equal(-100); // -10 * 10
+            expect(endPixel.x).to.equal(50);     // 5 * 10
+            expect(endPixel.y).to.equal(-100);   // -10 * 10
         });
 
         it('should detect and convert coordinate formats automatically', () => {
@@ -113,8 +113,8 @@ describe('Logical Coordinate System Integration Tests', () => {
             const v2Coord = CoordinateAdapter.convertCoordinate(v1Coord, 'v1.0', 'v2.0');
             const pixelCoord = CoordinateAdapter.convertCoordinate(v2Coord, 'v2.0', 'pixel');
             
-            expect(pixelCoord.x).to.equal(-150); // -5 * 3 * 10
-            expect(pixelCoord.y).to.equal(30);   // 1 * 3 * 10
+            expect(pixelCoord.x).to.equal(-250); // -5 * 5 * 10
+            expect(pixelCoord.y).to.equal(50);   // 1 * 5 * 10
         });
 
         it('should handle modern pixel format conversion to logical', () => {
@@ -167,28 +167,28 @@ describe('Logical Coordinate System Integration Tests', () => {
     describe('Rendering Coordinate Integration', () => {
         it('should convert logical component to render coordinates', () => {
             // Component stored in logical coordinates
-            const logicalStart = new GridCoordinate(-3, 2);
+            const logicalStart = new GridCoordinate(-2, 2);
             const logicalEnd = new GridCoordinate(3, 2);
             
-            // Valid v2.0 component
+            // Valid v2.0 component (spans 5 units)
             expect(CoordinateAdapter.isValidV2Component(logicalStart, logicalEnd)).to.be.true;
             
             // Convert for rendering
             const renderStart = CoordinateAdapter.gridToPixel(logicalStart);
             const renderEnd = CoordinateAdapter.gridToPixel(logicalEnd);
             
-            expect(renderStart.x).to.equal(-30);
-            expect(renderStart.y).to.equal(20);
-            expect(renderEnd.x).to.equal(30);
-            expect(renderEnd.y).to.equal(20);
+            expect(renderStart.x).to.equal(-20); // -2 * 10
+            expect(renderStart.y).to.equal(20);  // 2 * 10
+            expect(renderEnd.x).to.equal(30);    // 3 * 10
+            expect(renderEnd.y).to.equal(20);    // 2 * 10
             
             // Calculate render center and dimensions
             const renderCenter = renderStart.midpoint(renderEnd);
-            expect(renderCenter.x).to.equal(0);
+            expect(renderCenter.x).to.equal(5);  // (-20 + 30) / 2 = 5
             expect(renderCenter.y).to.equal(20);
             
             const renderWidth = renderEnd.distanceTo(renderStart);
-            expect(renderWidth).to.equal(60); // 6 logical units * 10 pixels
+            expect(renderWidth).to.equal(50); // 5 logical units * 10 pixels
         });
 
         it('should maintain precision through coordinate transformations', () => {
@@ -215,51 +215,51 @@ describe('Logical Coordinate System Integration Tests', () => {
 
     describe('Component Scaling Integration', () => {
         it('should scale components from v1.0 to v2.0 correctly', () => {
-            // v1.0 component spans 2 logical units
+            // v1.0 component spans 1 logical unit (from 0 to 1)
             const v1Center = new GridCoordinate(0, 0);
             const v1Nodes = CoordinateAdapter.createV1ComponentNodes(v1Center, 'horizontal');
             
-            expect(v1Nodes.start.x).to.equal(-1);
+            expect(v1Nodes.start.x).to.equal(0);
             expect(v1Nodes.end.x).to.equal(1);
             expect(CoordinateAdapter.isValidV1Component(v1Nodes.start, v1Nodes.end)).to.be.true;
             
-            // Scale to v2.0
+            // Scale to v2.0 (5x scaling)
             const v2Start = CoordinateAdapter.v1ToV2Grid(v1Nodes.start);
             const v2End = CoordinateAdapter.v1ToV2Grid(v1Nodes.end);
             
-            expect(v2Start.x).to.equal(-3);
-            expect(v2End.x).to.equal(3);
+            expect(v2Start.x).to.equal(0);
+            expect(v2End.x).to.equal(5);
             expect(CoordinateAdapter.isValidV2Component(v2Start, v2End)).to.be.true;
             
             // Pixel representation
             const pixelStart = CoordinateAdapter.gridToPixel(v2Start);
             const pixelEnd = CoordinateAdapter.gridToPixel(v2End);
             
-            expect(pixelEnd.x - pixelStart.x).to.equal(60); // v2.0 component spans 60 pixels
+            expect(pixelEnd.x - pixelStart.x).to.equal(50); // v2.0 component spans 50 pixels (5 intervals * 10px)
         });
 
         it('should maintain component proportions during scaling', () => {
             const components = [
-                { v1Start: new GridCoordinate(-1, 0), v1End: new GridCoordinate(1, 0) },
-                { v1Start: new GridCoordinate(2, -1), v1End: new GridCoordinate(2, 1) },
-                { v1Start: new GridCoordinate(-3, 5), v1End: new GridCoordinate(-1, 5) }
+                { v1Start: new GridCoordinate(0, 0), v1End: new GridCoordinate(1, 0) },    // Horizontal, span 1
+                { v1Start: new GridCoordinate(2, 0), v1End: new GridCoordinate(2, 1) },    // Vertical, span 1
+                { v1Start: new GridCoordinate(-3, 5), v1End: new GridCoordinate(-2, 5) }   // Horizontal, span 1
             ];
             
             components.forEach((comp, index) => {
-                // Verify v1.0 component
+                // Verify v1.0 component (should span exactly 1 unit)
                 expect(CoordinateAdapter.isValidV1Component(comp.v1Start, comp.v1End)).to.be.true;
                 
                 // Scale to v2.0
                 const v2Start = CoordinateAdapter.v1ToV2Grid(comp.v1Start);
                 const v2End = CoordinateAdapter.v1ToV2Grid(comp.v1End);
                 
-                // Verify v2.0 component
+                // Verify v2.0 component (should span exactly 5 units)
                 expect(CoordinateAdapter.isValidV2Component(v2Start, v2End)).to.be.true;
                 
-                // Check scaling factor
+                // Check scaling factor (v1 span 1 → v2 span 5)
                 const v1Span = comp.v1Start.distanceTo(comp.v1End);
                 const v2Span = v2Start.distanceTo(v2End);
-                expect(v2Span).to.equal(v1Span * 3);
+                expect(v2Span).to.equal(v1Span * 5); // 5x scaling factor
             });
         });
     });

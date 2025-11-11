@@ -45,34 +45,54 @@ export class AddElementCommand extends GUICommand {
    * Executes the command, creating an element with proper grid-based sizing.
    * For 2-node components, creates nodes that span exactly 5 grid intervals (50 pixels).
    * Mouse position is snapped to logical grid for proper alignment.
+   *
+   * @param {Array<{x: number, y: number}>} customNodes - Optional custom node positions (for testing)
    */
-  execute() {
-    // Determine center position for the component
-    let centerX, centerY;
+  execute(customNodes = null) {
+    let positions;
     
-    if (this.currentMousePosition) {
-      // Snap mouse position to logical grid first
-      const snappedPixelPos = CoordinateAdapter.snapToGrid(this.currentMousePosition);
-      centerX = snappedPixelPos.x;
-      centerY = snappedPixelPos.y;
-      console.log('[AddElementCommand] Using mouse position:', this.currentMousePosition, '→ snapped:', { x: centerX, y: centerY });
+    if (customNodes && customNodes.length > 0) {
+      // Use custom nodes directly (for testing and backward compatibility)
+      if (this.gridSpacing && this.enableSnapping !== false) {
+        // Apply grid snapping if gridSpacing is set and snapping is enabled
+        positions = customNodes.map(node => new Position(
+          Math.round(node.x / this.gridSpacing) * this.gridSpacing,
+          Math.round(node.y / this.gridSpacing) * this.gridSpacing
+        ));
+        console.log('[AddElementCommand] Using custom nodes with snapping:', customNodes, '→', positions.map(p => ({ x: p.x, y: p.y })));
+      } else {
+        // Use custom nodes without snapping
+        positions = customNodes.map(node => new Position(node.x, node.y));
+        console.log('[AddElementCommand] Using custom nodes:', customNodes);
+      }
     } else {
-      // Use grid-aligned default position
-      centerX = this.DEFAULT_X;
-      centerY = this.DEFAULT_Y;
-      console.log('[AddElementCommand] Using default position:', { x: centerX, y: centerY });
-    }
+      // Calculate positions using grid logic (normal operation)
+      let centerX, centerY;
+      
+      if (this.currentMousePosition) {
+        // Snap mouse position to logical grid first
+        const snappedPixelPos = CoordinateAdapter.snapToGrid(this.currentMousePosition);
+        centerX = snappedPixelPos.x;
+        centerY = snappedPixelPos.y;
+        console.log('[AddElementCommand] Using mouse position:', this.currentMousePosition, '→ snapped:', { x: centerX, y: centerY });
+      } else {
+        // Use grid-aligned default position
+        centerX = this.DEFAULT_X;
+        centerY = this.DEFAULT_Y;
+        console.log('[AddElementCommand] Using default position:', { x: centerX, y: centerY });
+      }
 
-    // Calculate node positions using grid configuration
-    // This ensures 2-node components span exactly 5 grid intervals (50 pixels)
-    const nodePositions = GRID_CONFIG.calculateNodePositions(centerX, centerY, 0); // 0 degrees initially
-    
-    console.log('[AddElementCommand] Node positions calculated:', nodePositions);
-    
-    const positions = [
-      new Position(nodePositions.start.x, nodePositions.start.y),
-      new Position(nodePositions.end.x, nodePositions.end.y)
-    ];
+      // Calculate node positions using grid configuration
+      // This ensures 2-node components span exactly 5 grid intervals (50 pixels)
+      const nodePositions = GRID_CONFIG.calculateNodePositions(centerX, centerY, 0); // 0 degrees initially
+      
+      console.log('[AddElementCommand] Node positions calculated:', nodePositions);
+      
+      positions = [
+        new Position(nodePositions.start.x, nodePositions.start.y),
+        new Position(nodePositions.end.x, nodePositions.end.y)
+      ];
+    }
     
     // Create Properties instance with default orientation for all elements
     const properties = new Properties({ orientation: 0 });

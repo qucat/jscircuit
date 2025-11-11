@@ -17,18 +17,28 @@ export const COMPONENT_SPAN_PIXELS = COMPONENT_GRID_POINTS * GRID_SPACING; // 60
 export const GRID_CONFIG = {
     // Basic measurements
     spacing: GRID_SPACING,                    // 10 pixels between points
-    componentGridPoints: COMPONENT_GRID_POINTS, // 6 grid points span
-    componentSpanPixels: COMPONENT_SPAN_PIXELS, // 60 pixels total
+    componentGridPoints: COMPONENT_GRID_POINTS, // 5 grid points span
+    componentSpanPixels: COMPONENT_SPAN_PIXELS, // 50 pixels total
+    
+    // Integration test compatibility properties
+    pixelsPerGridUnit: GRID_SPACING,         // 10 pixels per grid unit
+    componentLogicalSpan: COMPONENT_GRID_POINTS, // 5 logical grid intervals
+    v1ComponentSpan: CoordinateAdapter.CONFIG.V1_COMPONENT_SPAN, // v1.0: 1 interval
     
     // Component height (2 grid points for visual appeal)
     componentHeightPixels: 2 * GRID_SPACING,   // 20 pixels
     
     // Legacy compatibility
     legacyComponentGridPoints: 5,               // Old system (migration)
-    v1ComponentSpan: CoordinateAdapter.CONFIG.V1_COMPONENT_SPAN, // v1.0: 2 grid points
     
     // Grid snapping utility function
     snapToGrid: (value) => Math.round(value / GRID_SPACING) * GRID_SPACING,
+    
+    // Logical grid snapping (pixels to logical grid units)
+    snapToLogicalGrid: (pixelValue) => Math.round(pixelValue / GRID_SPACING),
+    
+    // Convert logical grid units to pixels
+    logicalToPixel: (logicalValue) => logicalValue * GRID_SPACING,
     
     
     // Calculate node positions for 2-node components using logical coordinates

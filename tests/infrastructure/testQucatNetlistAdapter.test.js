@@ -8,6 +8,7 @@ import { Position } from '../../src/domain/valueObjects/Position.js';
 import { Properties } from '../../src/domain/valueObjects/Properties.js';
 import { QucatNetlistAdapter } from '../../src/infrastructure/adapters/QucatNetlistAdapter.js';
 import { ElementRegistry } from '../../src/domain/factories/ElementRegistry.js';
+import { CoordinateAdapter } from '../../src/infrastructure/adapters/CoordinateAdapter.js';
 import { generateId } from '../../src/utils/idGenerator.js';
 
 const EXPORT_PATH = './roundtrip_test_output.txt';
@@ -36,11 +37,11 @@ describe('QucatNetlistAdapter roundtrip test with CircuitService', () => {
         const circuit = new Circuit();
         const service = new CircuitService(circuit, ElementRegistry);
 
-        // Create and add a mix of resistors and wires
-        const r1 = new Resistor('R1', [new Position(0, 0), new Position(1, 0)], null, new Properties({ resistance: 1000 }));
-        const r2 = new Resistor('R2', [new Position(2, 1), new Position(2, 2)], null, new Properties()); // intentionally empty properties
-        const w1 = new Wire('W1', [new Position(1, 0), new Position(1, 1)]);
-        const w2 = new Wire('W2', [new Position(1, 1), new Position(2, 1)]);
+        // Create and add a mix of resistors and wires using grid-aligned pixel coordinates
+        const r1 = new Resistor('R1', [new Position(0, 0), new Position(50, 0)], null, new Properties({ resistance: 1000 }));
+        const r2 = new Resistor('R2', [new Position(20, 10), new Position(70, 10)], null, new Properties()); // intentionally empty properties
+        const w1 = new Wire('W1', [new Position(50, 0), new Position(50, 10)]);
+        const w2 = new Wire('W2', [new Position(50, 10), new Position(20, 10)]);
 
         [r1, w1, w2, r2].forEach(el => service.addElement(el));
         originalElements = service.getElements();
@@ -86,13 +87,14 @@ describe('QucatNetlistAdapter roundtrip test with CircuitService', () => {
         const imported = QucatNetlistAdapter.importFromString(netlistContent);
 
         // Since IDs are not roundtripped, match by type and node positions
+        // The logical coordinates (2,1)-(7,1) from export become pixel coordinates (20,10)-(70,10) on import
         const r2 = imported.find(el =>
             el.type === 'resistor' &&
-            el.nodes[0].x === 2 && el.nodes[0].y === 1 &&
-            el.nodes[1].x === 2 && el.nodes[1].y === 2
+            el.nodes[0].x === 20 && el.nodes[0].y === 10 &&
+            el.nodes[1].x === 70 && el.nodes[1].y === 10
         );
 
-        assert(r2, 'Expected resistor at (2,1)-(2,2)');
+        assert(r2, 'Expected resistor at pixel coordinates (20,10)-(70,10)');
         assert('resistance' in r2.properties.values);
         assert.strictEqual(r2.properties.values.resistance, undefined);
     });
@@ -101,13 +103,14 @@ describe('QucatNetlistAdapter roundtrip test with CircuitService', () => {
         const netlistContent = fs.readFileSync(EXPORT_PATH, 'utf-8');
         const imported = QucatNetlistAdapter.importFromString(netlistContent);
 
+        // The logical coordinates (0,0)-(5,0) from export become pixel coordinates (0,0)-(50,0) on import
         const r1 = imported.find(el =>
             el.type === 'resistor' &&
             el.nodes[0].x === 0 && el.nodes[0].y === 0 &&
-            el.nodes[1].x === 1 && el.nodes[1].y === 0
+            el.nodes[1].x === 50 && el.nodes[1].y === 0
         );
 
-        assert(r1, 'Expected resistor at (0,0)-(1,0)');
+        assert(r1, 'Expected resistor at pixel coordinates (0,0)-(50,0)');
         assert.strictEqual(r1.type, 'resistor');
     });
 
@@ -123,15 +126,16 @@ describe('QucatNetlistAdapter roundtrip test with CircuitService', () => {
 
         for (let i = 0; i < originalElements.length; i++) {
             const original = originalElements[i];
-
-            // Match by type and exact node coordinates (ID is not preserved)
+            
+            // The roundtrip should preserve pixel coordinates (original -> logical -> pixel)
+            // So we match by type and original pixel coordinates
             const roundtripped = imported.find(el =>
                 el.type === original.type &&
                 el.nodes[0].x === original.nodes[0].x && el.nodes[0].y === original.nodes[0].y &&
                 el.nodes[1].x === original.nodes[1].x && el.nodes[1].y === original.nodes[1].y
             );
 
-            assert(roundtripped, `Missing roundtripped element: type ${original.type} with nodes (${original.nodes.map(n => `${n.x},${n.y}`).join(' - ')})`);
+            assert(roundtripped, `Missing roundtripped element: type ${original.type} with nodes (${original.nodes[0].x},${original.nodes[0].y} - ${original.nodes[1].x},${original.nodes[1].y})`);
             assert.strictEqual(roundtripped.type, original.type, `Type mismatch for element`);
 
             assert.deepStrictEqual(

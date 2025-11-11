@@ -7,9 +7,9 @@ describe('CoordinateAdapter Tests', () => {
     describe('Configuration Constants', () => {
         it('should have correct configuration values', () => {
             expect(CoordinateAdapter.CONFIG.PIXELS_PER_GRID_UNIT).to.equal(10);
-            expect(CoordinateAdapter.CONFIG.V1_COMPONENT_SPAN).to.equal(2);
-            expect(CoordinateAdapter.CONFIG.V2_COMPONENT_SPAN).to.equal(6);
-            expect(CoordinateAdapter.CONFIG.SCALING_FACTOR).to.equal(3);
+            expect(CoordinateAdapter.CONFIG.V1_COMPONENT_SPAN).to.equal(1);
+            expect(CoordinateAdapter.CONFIG.V2_COMPONENT_SPAN).to.equal(5);
+            expect(CoordinateAdapter.CONFIG.SCALING_FACTOR).to.equal(5);
         });
 
         it('should maintain correct scaling relationship', () => {
@@ -103,15 +103,15 @@ describe('CoordinateAdapter Tests', () => {
         it('should scale v1.0 coordinates to v2.0 correctly', () => {
             const v1Coord = new GridCoordinate(-1, 0);
             const v2Coord = CoordinateAdapter.v1ToV2Grid(v1Coord);
-            expect(v2Coord.x).to.equal(-3); // -1 * 3
-            expect(v2Coord.y).to.equal(0);  // 0 * 3
+            expect(v2Coord.x).to.equal(-5); // -1 * 5
+            expect(v2Coord.y).to.equal(0);  // 0 * 5
         });
 
         it('should handle positive v1.0 coordinates', () => {
             const v1Coord = new GridCoordinate(2, 3);
             const v2Coord = CoordinateAdapter.v1ToV2Grid(v1Coord);
-            expect(v2Coord.x).to.equal(6);  // 2 * 3
-            expect(v2Coord.y).to.equal(9);  // 3 * 3
+            expect(v2Coord.x).to.equal(10); // 2 * 5
+            expect(v2Coord.y).to.equal(15); // 3 * 5
         });
 
         it('should handle zero v1.0 coordinates', () => {
@@ -130,24 +130,24 @@ describe('CoordinateAdapter Tests', () => {
 
     describe('v2ToV1Grid', () => {
         it('should scale v2.0 coordinates to v1.0 correctly', () => {
-            const v2Coord = new GridCoordinate(-3, 0);
+            const v2Coord = new GridCoordinate(-5, 0);
             const v1Coord = CoordinateAdapter.v2ToV1Grid(v2Coord);
-            expect(v1Coord.x).to.equal(-1); // round(-3 / 3)
-            expect(v1Coord.y).to.equal(0);  // round(0 / 3)
+            expect(v1Coord.x).to.equal(-1); // round(-5 / 5)
+            expect(v1Coord.y).to.equal(0);  // round(0 / 5)
         });
 
         it('should handle positive v2.0 coordinates', () => {
-            const v2Coord = new GridCoordinate(6, 9);
+            const v2Coord = new GridCoordinate(10, 15);
             const v1Coord = CoordinateAdapter.v2ToV1Grid(v2Coord);
-            expect(v1Coord.x).to.equal(2); // round(6 / 3)
-            expect(v1Coord.y).to.equal(3); // round(9 / 3)
+            expect(v1Coord.x).to.equal(2); // round(10 / 5)
+            expect(v1Coord.y).to.equal(3); // round(15 / 5)
         });
 
         it('should round fractional results to nearest integer', () => {
-            const v2Coord = new GridCoordinate(4, 5); // 4/3=1.33, 5/3=1.67
+            const v2Coord = new GridCoordinate(7, 8); // 7/5=1.4, 8/5=1.6
             const v1Coord = CoordinateAdapter.v2ToV1Grid(v2Coord);
-            expect(v1Coord.x).to.equal(1); // round(1.33)
-            expect(v1Coord.y).to.equal(2); // round(1.67)
+            expect(v1Coord.x).to.equal(1); // round(1.4)
+            expect(v1Coord.y).to.equal(2); // round(1.6)
         });
 
         it('should return GridCoordinate instance', () => {
@@ -204,14 +204,14 @@ describe('CoordinateAdapter Tests', () => {
 
     describe('Component Validation', () => {
         describe('isValidV2Component', () => {
-            it('should validate horizontal v2.0 component (6 units span)', () => {
-                const start = new GridCoordinate(-3, 0);
+            it('should validate horizontal v2.0 component (5 units span)', () => {
+                const start = new GridCoordinate(-2, 0); // -2 to +3 = 5 units span
                 const end = new GridCoordinate(3, 0);
                 expect(CoordinateAdapter.isValidV2Component(start, end)).to.be.true;
             });
 
-            it('should validate vertical v2.0 component (6 units span)', () => {
-                const start = new GridCoordinate(0, -3);
+            it('should validate vertical v2.0 component (5 units span)', () => {
+                const start = new GridCoordinate(0, -2); // -2 to +3 = 5 units span
                 const end = new GridCoordinate(0, 3);
                 expect(CoordinateAdapter.isValidV2Component(start, end)).to.be.true;
             });
@@ -230,33 +230,33 @@ describe('CoordinateAdapter Tests', () => {
 
             it('should handle order independence', () => {
                 const start = new GridCoordinate(3, 0);
-                const end = new GridCoordinate(-3, 0);
+                const end = new GridCoordinate(-2, 0); // 5 units span
                 expect(CoordinateAdapter.isValidV2Component(start, end)).to.be.true;
             });
         });
 
         describe('isValidV1Component', () => {
-            it('should validate horizontal v1.0 component (2 units span)', () => {
-                const start = new GridCoordinate(-1, 0);
+            it('should validate horizontal v1.0 component (1 units span)', () => {
+                const start = new GridCoordinate(0, 0);
                 const end = new GridCoordinate(1, 0);
                 expect(CoordinateAdapter.isValidV1Component(start, end)).to.be.true;
             });
 
-            it('should validate vertical v1.0 component (2 units span)', () => {
-                const start = new GridCoordinate(0, -1);
+            it('should validate vertical v1.0 component (1 units span)', () => {
+                const start = new GridCoordinate(0, 0);
                 const end = new GridCoordinate(0, 1);
                 expect(CoordinateAdapter.isValidV1Component(start, end)).to.be.true;
             });
 
             it('should reject incorrect span length', () => {
-                const start = new GridCoordinate(-3, 0);
-                const end = new GridCoordinate(3, 0); // 6 units span, should be 2
+                const start = new GridCoordinate(-2, 0);
+                const end = new GridCoordinate(3, 0); // 5 units span, should be 1
                 expect(CoordinateAdapter.isValidV1Component(start, end)).to.be.false;
             });
 
             it('should handle order independence', () => {
                 const start = new GridCoordinate(1, 0);
-                const end = new GridCoordinate(-1, 0);
+                const end = new GridCoordinate(0, 0);
                 expect(CoordinateAdapter.isValidV1Component(start, end)).to.be.true;
             });
         });
@@ -267,9 +267,9 @@ describe('CoordinateAdapter Tests', () => {
             it('should create horizontal v2.0 component nodes', () => {
                 const center = new GridCoordinate(0, 5);
                 const nodes = CoordinateAdapter.createV2ComponentNodes(center, 'horizontal');
-                expect(nodes.start.x).to.equal(-3);
+                expect(nodes.start.x).to.equal(-2); // 0 + (-2)
                 expect(nodes.start.y).to.equal(5);
-                expect(nodes.end.x).to.equal(3);
+                expect(nodes.end.x).to.equal(3);    // 0 + 3
                 expect(nodes.end.y).to.equal(5);
             });
 
@@ -277,16 +277,16 @@ describe('CoordinateAdapter Tests', () => {
                 const center = new GridCoordinate(2, 0);
                 const nodes = CoordinateAdapter.createV2ComponentNodes(center, 'vertical');
                 expect(nodes.start.x).to.equal(2);
-                expect(nodes.start.y).to.equal(-3);
+                expect(nodes.start.y).to.equal(-2); // 0 + (-2)
                 expect(nodes.end.x).to.equal(2);
-                expect(nodes.end.y).to.equal(3);
+                expect(nodes.end.y).to.equal(3);    // 0 + 3
             });
 
             it('should default to horizontal orientation', () => {
                 const center = new GridCoordinate(0, 0);
                 const nodes = CoordinateAdapter.createV2ComponentNodes(center);
-                expect(nodes.start.x).to.equal(-3);
-                expect(nodes.end.x).to.equal(3);
+                expect(nodes.start.x).to.equal(-2); // 0 + (-2)
+                expect(nodes.end.x).to.equal(3);    // 0 + 3
                 expect(nodes.start.y).to.equal(0);
                 expect(nodes.end.y).to.equal(0);
             });
@@ -302,9 +302,9 @@ describe('CoordinateAdapter Tests', () => {
             it('should create horizontal v1.0 component nodes', () => {
                 const center = new GridCoordinate(0, 2);
                 const nodes = CoordinateAdapter.createV1ComponentNodes(center, 'horizontal');
-                expect(nodes.start.x).to.equal(-1);
+                expect(nodes.start.x).to.equal(0); // center
                 expect(nodes.start.y).to.equal(2);
-                expect(nodes.end.x).to.equal(1);
+                expect(nodes.end.x).to.equal(1);   // center + 1 (1 unit span)
                 expect(nodes.end.y).to.equal(2);
             });
 
@@ -312,9 +312,9 @@ describe('CoordinateAdapter Tests', () => {
                 const center = new GridCoordinate(3, 0);
                 const nodes = CoordinateAdapter.createV1ComponentNodes(center, 'vertical');
                 expect(nodes.start.x).to.equal(3);
-                expect(nodes.start.y).to.equal(-1);
+                expect(nodes.start.y).to.equal(0); // center
                 expect(nodes.end.x).to.equal(3);
-                expect(nodes.end.y).to.equal(1);
+                expect(nodes.end.y).to.equal(1);   // center + 1 (1 unit span)
             });
 
             it('should create valid v1.0 components', () => {
@@ -385,22 +385,22 @@ describe('CoordinateAdapter Tests', () => {
         it('should convert from v1.0 to v2.0', () => {
             const v1Coord = new GridCoordinate(-1, 2);
             const v2Coord = CoordinateAdapter.convertCoordinate(v1Coord, 'v1.0', 'v2.0');
-            expect(v2Coord.x).to.equal(-3);
-            expect(v2Coord.y).to.equal(6);
+            expect(v2Coord.x).to.equal(-5); // -1 * 5
+            expect(v2Coord.y).to.equal(10); // 2 * 5
         });
 
         it('should convert from v2.0 to v1.0', () => {
-            const v2Coord = new GridCoordinate(-3, 6);
+            const v2Coord = new GridCoordinate(-5, 10);
             const v1Coord = CoordinateAdapter.convertCoordinate(v2Coord, 'v2.0', 'v1.0');
-            expect(v1Coord.x).to.equal(-1);
-            expect(v1Coord.y).to.equal(2);
+            expect(v1Coord.x).to.equal(-1); // round(-5 / 5)
+            expect(v1Coord.y).to.equal(2);  // round(10 / 5)
         });
 
         it('should handle complex conversion chain (pixel -> v1.0)', () => {
             const pixelPos = new Position(30, -60);
             const v1Coord = CoordinateAdapter.convertCoordinate(pixelPos, 'pixel', 'v1.0');
-            expect(v1Coord.x).to.equal(1); // 30 -> 3 -> 1
-            expect(v1Coord.y).to.equal(-2); // -60 -> -6 -> -2
+            expect(v1Coord.x).to.equal(1);  // 30 pixels -> 3 logical -> 0.6 v1.0 -> round(1)
+            expect(v1Coord.y).to.equal(-1); // -60 pixels -> -6 logical -> -1.2 v1.0 -> round(-1)
         });
 
         it('should throw error for unsupported source format', () => {
@@ -422,29 +422,29 @@ describe('CoordinateAdapter Tests', () => {
         it('should handle v1.0 Ground example: G;0,-2;1,-2;;', () => {
             const start = new GridCoordinate(0, -2);
             const end = new GridCoordinate(1, -2);
-            expect(CoordinateAdapter.isValidV1Component(start, end)).to.be.false; // Ground spans 1 unit, not 2
+            expect(CoordinateAdapter.isValidV1Component(start, end)).to.be.true; // Ground spans 1 unit correctly
             
             // Convert to v2.0 format
             const v2Start = CoordinateAdapter.v1ToV2Grid(start);
             const v2End = CoordinateAdapter.v1ToV2Grid(end);
             expect(v2Start.x).to.equal(0);
-            expect(v2Start.y).to.equal(-6);
-            expect(v2End.x).to.equal(3);
-            expect(v2End.y).to.equal(-6);
+            expect(v2Start.y).to.equal(-10); // -2 * 5
+            expect(v2End.x).to.equal(5);     // 1 * 5
+            expect(v2End.y).to.equal(-10);   // -2 * 5
         });
 
         it('should handle v1.0 Resistor example: R;-5,1;-4,1;1.0e+00;', () => {
             const start = new GridCoordinate(-5, 1);
             const end = new GridCoordinate(-4, 1);
-            expect(CoordinateAdapter.isValidV1Component(start, end)).to.be.false; // Only spans 1 unit
+            expect(CoordinateAdapter.isValidV1Component(start, end)).to.be.true; // Spans 1 unit correctly
             
-            // But if we consider this as a 1-unit component that should be scaled
+            // Convert to v2.0 format
             const v2Start = CoordinateAdapter.v1ToV2Grid(start);
             const v2End = CoordinateAdapter.v1ToV2Grid(end);
-            expect(v2Start.x).to.equal(-15);
-            expect(v2Start.y).to.equal(3);
-            expect(v2End.x).to.equal(-12);
-            expect(v2End.y).to.equal(3);
+            expect(v2Start.x).to.equal(-25); // -5 * 5
+            expect(v2Start.y).to.equal(5);   // 1 * 5
+            expect(v2End.x).to.equal(-20);   // -4 * 5
+            expect(v2End.y).to.equal(5);     // 1 * 5
         });
 
         it('should handle v2.0 pixel format: R;0,0;50,0;3.0e+1;', () => {
@@ -460,8 +460,8 @@ describe('CoordinateAdapter Tests', () => {
             expect(endLogical.x).to.equal(5);
             expect(endLogical.y).to.equal(0);
             
-            // Should not be a valid v2.0 component (spans 5 instead of 6)
-            expect(CoordinateAdapter.isValidV2Component(startLogical, endLogical)).to.be.false;
+            // Should be a valid v2.0 component (spans 5 units correctly)
+            expect(CoordinateAdapter.isValidV2Component(startLogical, endLogical)).to.be.true;
         });
     });
 });
