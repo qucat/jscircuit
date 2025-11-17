@@ -381,9 +381,16 @@ export class GUIAdapter {
    * @private
    */
   _zoomStep(sign) {
+    // Get canvas center for zoom focus when using menu commands
+    const rect = this.canvas.getBoundingClientRect();
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    
     const evtLike = {
       deltaY: sign > 0 ? 100 : -100,
       ctrlKey: true,
+      offsetX: centerX,
+      offsetY: centerY,
       preventDefault() {}
     };
     this.circuitRenderer.zoom(evtLike);
@@ -983,9 +990,9 @@ export class GUIAdapter {
     this.placingElement.nodes[1].x = nodePositions.end.x;
     this.placingElement.nodes[1].y = nodePositions.end.y;
     
-    // Emit update to trigger re-render with new rotation
-    this.circuitService.emit("update", {
-      type: "rotatePreview",
+    // Emit update event for rotation
+    this.circuitService.emit('update', {
+      type: 'rotatePlacingElement',
       element: this.placingElement,
     });
     
