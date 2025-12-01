@@ -108,69 +108,75 @@ export class PropertyPanel {
         const elementConfigs = {
             // Use both constructor names and type property names
             Junction: {
-                title: 'Junction Properties',
-                description: 'Configure Josephson junction parameters',
-                helpText: 'Note: Josephson junctions act as nonlinear inductors in superconducting circuits.',
+                title: 'Specify label and/or Josephson inductance (in units of Henry)',
+                description: 'Note that L = (hbar/2e)**2/[Josephson Energy in Joules]',
+                helpText: '',
                 fields: [
-                    { key: 'critical_current', label: 'Critical Current', unit: 'A', placeholder: 'Enter critical current' },
-                    { key: 'capacitance', label: 'Capacitance', unit: 'F', placeholder: 'Enter capacitance' },
+                    { key: 'inductance', label: 'Inductance', unit: '', placeholder: '' },
+                    { key: 'label', label: 'Label', unit: '', placeholder: '' }
                 ]
             },
             junction: {  // lowercase version
-                title: 'Junction Properties',
-                description: 'Configure Josephson junction parameters',
-                helpText: 'Note: Josephson junctions act as nonlinear inductors in superconducting circuits.',
+                title: 'Specify label and/or Josephson inductance (in units of Henry)',
+                description: 'Note that L = (hbar/2e)**2/[Josephson Energy in Joules]',
+                helpText: '',
                 fields: [
-                    { key: 'critical_current', label: 'Critical Current', unit: 'A', placeholder: 'Enter critical current' },
-                    { key: 'capacitance', label: 'Capacitance', unit: 'F', placeholder: 'Enter capacitance' },
+                    { key: 'inductance', label: 'Inductance', unit: '', placeholder: '' },
+                    { key: 'label', label: 'Label', unit: '', placeholder: '' }
                 ]
             },
             Resistor: {
-                title: 'Resistor Properties',
-                description: 'Configure resistance value',
-                helpText: 'Specify resistance in Ohms (Ω)',
+                title: 'Specify label and/or resistance (in units of Ohm)',
+                description: '',
+                helpText: '',
                 fields: [
-                    { key: 'resistance', label: 'Resistance', unit: 'Ω', placeholder: 'Enter resistance value' }
+                    { key: 'resistance', label: 'Resistance', unit: '', placeholder: '' },
+                    { key: 'label', label: 'Label', unit: '', placeholder: '' }
                 ]
             },
             resistor: {  // lowercase version
-                title: 'Resistor Properties',
-                description: 'Configure resistance value', 
-                helpText: 'Specify resistance in Ohms (Ω)',
+                title: 'Specify label and/or resistance (in units of Ohm)',
+                description: '',
+                helpText: '',
                 fields: [
-                    { key: 'resistance', label: 'Resistance', unit: 'Ω', placeholder: 'Enter resistance value' }
+                    { key: 'resistance', label: 'Resistance', unit: '', placeholder: '' },
+                    { key: 'label', label: 'Label', unit: '', placeholder: '' }
                 ]
             },
             Capacitor: {
-                title: 'Capacitor Properties', 
-                description: 'Configure capacitance value',
-                helpText: 'Specify capacitance in Farads (F)',
+                title: 'Specify label and/or capacitance (in units of Farad)',
+                description: '',
+                helpText: '',
                 fields: [
-                    { key: 'capacitance', label: 'Capacitance', unit: 'F', placeholder: 'Enter capacitance value' }
+                    { key: 'capacitance', label: 'Capacitance', unit: '', placeholder: '' },
+                    { key: 'label', label: 'Label', unit: '', placeholder: '' }
                 ]
             },
             capacitor: {  // lowercase version
-                title: 'Capacitor Properties', 
-                description: 'Configure capacitance value',
-                helpText: 'Specify capacitance in Farads (F)',
+                title: 'Specify label and/or capacitance (in units of Farad)',
+                description: '',
+                helpText: '',
                 fields: [
-                    { key: 'capacitance', label: 'Capacitance', unit: 'F', placeholder: 'Enter capacitance value' }
+                    { key: 'capacitance', label: 'Capacitance', unit: '', placeholder: '' },
+                    { key: 'label', label: 'Label', unit: '', placeholder: '' }
                 ]
             },
             Inductor: {
-                title: 'Inductor Properties',
-                description: 'Configure inductance value', 
-                helpText: 'Specify inductance in Henry (H)',
+                title: 'Specify label and/or inductance (in units of Henry)',
+                description: 'Note that L = (hbar/2e)**2/[Josephson Energy in Joules]',
+                helpText: '',
                 fields: [
-                    { key: 'inductance', label: 'Inductance', unit: 'H', placeholder: 'Enter inductance value' }
+                    { key: 'inductance', label: 'Inductance', unit: '', placeholder: '' },
+                    { key: 'label', label: 'Label', unit: '', placeholder: '' }
                 ]
             },
             inductor: {  // lowercase version
-                title: 'Inductor Properties',
-                description: 'Configure inductance value', 
-                helpText: 'Specify inductance in Henry (H)',
+                title: 'Specify label and/or inductance (in units of Henry)',
+                description: 'Note that L = (hbar/2e)**2/[Josephson Energy in Joules]',
+                helpText: '',
                 fields: [
-                    { key: 'inductance', label: 'Inductance', unit: 'H', placeholder: 'Enter inductance value' }
+                    { key: 'inductance', label: 'Inductance', unit: '', placeholder: '' },
+                    { key: 'label', label: 'Label', unit: '', placeholder: '' }
                 ]
             },
             Wire: {
@@ -226,21 +232,15 @@ export class PropertyPanel {
 
         return `
             <div class="property-panel-header">
-                <h3>${elementType.toUpperCase()}</h3>
+                <h3>Circuit Editor</h3>
             </div>
             <div class="property-panel-content">
                 <div class="property-panel-title">
                     <em>${config.title}</em>
-                    <div class="help-text">${config.helpText}</div>
+                    ${config.description && config.description.trim() ? `<div class="property-description">${config.description}</div>` : ''}
+                    ${config.helpText && config.helpText.trim() ? `<div class="help-text">${config.helpText}</div>` : ''}
                 </div>
                 ${propertyFields}
-                <div class="property-field">
-                    <label for="label">Label</label>
-                    <input type="text" id="label" name="label" 
-                           value="${currentLabel}" 
-                           placeholder="Enter element label">
-                    <small class="field-help">Optional identifier for this element</small>
-                </div>
             </div>
             <div class="property-panel-actions">
                 <button type="button" class="cancel-btn">Cancel</button>
@@ -567,12 +567,17 @@ export class PropertyPanel {
                 line-height: 1.4;
             }
 
+            .property-description {
+                margin-top: 8px;
+                margin-bottom: 8px;
+                font-size: 13px;
+                color: #333;
+                font-style: normal;
+                font-family: 'Courier New', monospace;
+            }
+
             .help-text {
                 margin-top: 8px;
-                padding: 8px 12px;
-                background: #f8f9fa;
-                border-left: 3px solid #007bff;
-                border-radius: 0 4px 4px 0;
                 font-size: 13px;
                 color: #6c757d;
                 font-style: normal;
