@@ -185,14 +185,12 @@ export class GUIAdapter {
       // Handle Escape key to cancel wire drawing mode
       if (e.key === 'Escape' && this.wireDrawingMode) {
         this.resetCursor();
-        console.log("[GUIAdapter] Wire drawing mode cancelled");
         e.preventDefault();
         return;
       }
 
       // Handle Escape key to cancel element placement
       if (e.key === 'Escape' && this.placingElement) {
-        console.log("[GUIAdapter] Element placement cancelled with Escape");
         
         // Delete only the placing element, not all selected elements
         this.circuitService.deleteElement(this.placingElement.id);
@@ -301,14 +299,12 @@ export class GUIAdapter {
         if (spec.name === "addElement" && spec.args && spec.args[0] === "Wire") {
           this.wireDrawingMode = true;
           this.setCrosshairCursor();
-          console.log("[GUIAdapter] Wire drawing mode activated");
           return;
         }
 
         // If user is creating a non-wire element while in wire drawing mode, exit wire mode
         if (spec.name === "addElement" && this.wireDrawingMode && spec.args && spec.args[0] !== "Wire") {
           this.resetCursor();
-          console.log("[GUIAdapter] Wire drawing mode deactivated - creating", spec.args[0]);
         }
 
         const args = spec.args ?? [];
@@ -461,7 +457,6 @@ export class GUIAdapter {
         this.circuitRenderer.render();
         
         // Open property panel immediately after placing element
-        console.log("[GUIAdapter] Auto-opening property panel for newly placed element:", placedElement.id);
         this.handleElementDoubleClick(placedElement, true); // true indicates this is a newly placed element
         
         return;
@@ -473,7 +468,6 @@ export class GUIAdapter {
         if (this.wireDrawingMode) {
           // In wire drawing mode, always start wire drawing regardless of what's under the cursor
           // This allows drawing wire nodes on top of existing nodes/elements
-          console.log("[GUIAdapter] Wire drawing mode: creating wire node at", offsetX, offsetY);
           this.activeCommand = this.guiCommandRegistry.get(
             "drawWire",
             this.circuitService,
@@ -603,7 +597,6 @@ export class GUIAdapter {
         // Reset wire drawing mode after completing a wire
         if (wasWireDrawing && this.wireDrawingMode) {
           this.resetCursor();
-          console.log("[GUIAdapter] Wire drawing mode deactivated");
         }
 
         this.activeCommand = null;
@@ -617,7 +610,6 @@ export class GUIAdapter {
       // Clear existing selections and select only the placing element
       // This ensures rotation during placement only affects the placing element
       this.circuitRenderer.setSelectedElements([element]);
-      console.log("[GUIAdapter] Starting placement mode - selected placing element:", element.id);
       
       // Immediately position the element at the current mouse position
       // This prevents the element from staying at default coordinates until mouse movement
@@ -644,7 +636,6 @@ export class GUIAdapter {
       // If user starts placing a non-wire element while in wire drawing mode, exit wire mode
       if (this.wireDrawingMode && element.type !== 'wire') {
         this.resetCursor();
-        console.log("[GUIAdapter] Wire drawing mode deactivated - placing", element.type);
       }
     });
   }
@@ -674,11 +665,9 @@ export class GUIAdapter {
 
     // Open property panel for the element
     this.propertyPanel = new PropertyPanel();
-    console.log("[GUIAdapter] Opening property panel for element:", element.id, "newly placed:", isNewlyPlaced);
     this.propertyPanel.show(element,
       // onSave callback
       (element, updatedProperties) => {
-        console.log("[GUIAdapter] Property panel save callback with properties:", updatedProperties);
         // Handle property save - get fresh command instance
         const command = this.guiCommandRegistry.get('updateElementProperties');
         if (command) {
@@ -688,10 +677,8 @@ export class GUIAdapter {
       },
       // onCancel callback
       () => {
-        console.log("[GUIAdapter] Property panel cancelled for element:", element.id, "newly placed:", isNewlyPlaced);
         if (isNewlyPlaced) {
           // If this element was just placed and user cancelled, delete it
-          console.log("[GUIAdapter] Removing newly placed element due to cancellation:", element.id);
           // Delete only the specific element, not all selected elements
           this.circuitService.deleteElement(element.id);
           // Clear selections since we deleted the element
@@ -827,7 +814,6 @@ export class GUIAdapter {
       endX: x,
       endY: y
     };
-    console.log("[GUIAdapter] Started selection box at", x, y);
   }
 
   /**
@@ -888,7 +874,6 @@ export class GUIAdapter {
       }
     }
 
-    console.log("[GUIAdapter] Found", selectedElements.length, "elements in selection box");
 
     // Clean up selection state
     this.isSelecting = false;
@@ -950,7 +935,6 @@ export class GUIAdapter {
   rotatePlacingElement(angle) {
     if (!this.placingElement) return;
 
-    console.log(`[GUIAdapter] Rotating placing element by ${angle}°`);
     
     // Initialize properties if they don't exist
     if (!this.placingElement.properties) {

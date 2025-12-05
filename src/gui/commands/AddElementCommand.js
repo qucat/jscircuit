@@ -59,11 +59,9 @@ export class AddElementCommand extends GUICommand {
           Math.round(node.x / this.gridSpacing) * this.gridSpacing,
           Math.round(node.y / this.gridSpacing) * this.gridSpacing
         ));
-        console.log('[AddElementCommand] Using custom nodes with snapping:', customNodes, '→', positions.map(p => ({ x: p.x, y: p.y })));
       } else {
         // Use custom nodes without snapping
         positions = customNodes.map(node => new Position(node.x, node.y));
-        console.log('[AddElementCommand] Using custom nodes:', customNodes);
       }
     } else {
       // Calculate positions using grid logic (normal operation)
@@ -74,19 +72,16 @@ export class AddElementCommand extends GUICommand {
         const snappedPixelPos = CoordinateAdapter.snapToGrid(this.currentMousePosition);
         centerX = snappedPixelPos.x;
         centerY = snappedPixelPos.y;
-        console.log('[AddElementCommand] Using mouse position:', this.currentMousePosition, '→ snapped:', { x: centerX, y: centerY });
       } else {
         // Use grid-aligned default position
         centerX = this.DEFAULT_X;
         centerY = this.DEFAULT_Y;
-        console.log('[AddElementCommand] Using default position:', { x: centerX, y: centerY });
       }
 
       // Calculate node positions using grid configuration
       // This ensures 2-node components span exactly 5 grid intervals (50 pixels)
       const nodePositions = GRID_CONFIG.calculateNodePositions(centerX, centerY, 0); // 0 degrees initially
       
-      console.log('[AddElementCommand] Node positions calculated:', nodePositions);
       
       positions = [
         new Position(nodePositions.start.x, nodePositions.start.y),
@@ -100,7 +95,6 @@ export class AddElementCommand extends GUICommand {
     // Use ElementFactory.create with correct parameter order
     const element = ElementFactory.create(this.elementType, undefined, positions, properties, null);
 
-    console.log('[AddElementCommand] Created element with nodes:', element.nodes.map(n => ({ x: n.x, y: n.y })));
 
     // Add the element in "placement mode" (so it follows the mouse)
     this.circuitService.addElement(element);
@@ -113,6 +107,5 @@ export class AddElementCommand extends GUICommand {
   undo() {
     // Implementation would need to track the added element and remove it
     // For now, this is a placeholder
-    console.log("Undo AddElementCommand not fully implemented yet");
   }
 }

@@ -12,7 +12,6 @@ export class MoveElementCommand extends Command {
         // Store previous position for undo
         this.previousPositions.set(element.id, [...element.nodes]);
 
-        console.log(`Emitting dragElement event for ${element.id}`);
 
         this.emit("commandExecuted", {
             type: "dragElement",

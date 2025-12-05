@@ -31,7 +31,6 @@ describe("CircuitService Dragging Test", function () {
     function setupListener(label) {
         const updates = [];
         circuitService.on("update", (event) => {
-            console.log(`[${label} Update]`, event);
             updates.push(event);
         });
         return updates;

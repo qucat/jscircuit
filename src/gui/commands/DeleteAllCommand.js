@@ -25,11 +25,9 @@ export class DeleteAllCommand extends GUICommand {
     const allElements = this.circuitService.getElements();
     
     if (!allElements || allElements.length === 0) {
-      console.log("[DeleteAllCommand] No elements in circuit to delete");
       return;
     }
     
-    console.log(`[DeleteAllCommand] Deleting all ${allElements.length} element(s)`);
     
     // Store elements for undo (deep copy to preserve state)
     this.deletedElements = allElements.map(element => ({
@@ -48,7 +46,6 @@ export class DeleteAllCommand extends GUICommand {
     // Clear selection after deletion
     this.circuitRenderer.clearSelection();
     
-    console.log("[DeleteAllCommand] All elements deleted successfully");
   }
 
   /**
@@ -56,11 +53,9 @@ export class DeleteAllCommand extends GUICommand {
    */
   undo() {
     if (!this.deletedElements || this.deletedElements.length === 0) {
-      console.log("[DeleteAllCommand] No elements to restore");
       return;
     }
     
-    console.log(`[DeleteAllCommand] Restoring all ${this.deletedElements.length} deleted element(s)`);
     
     // Restore each deleted element (but only add if it doesn't already exist)
     this.deletedElements.forEach(({ element }) => {
@@ -71,7 +66,6 @@ export class DeleteAllCommand extends GUICommand {
       }
     });
     
-    console.log("[DeleteAllCommand] All elements restored successfully");
   }
 
   /**

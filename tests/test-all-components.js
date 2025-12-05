@@ -7,7 +7,6 @@ import { CommandHistory } from '../src/gui/commands/CommandHistory.js';
 import { Position } from '../src/domain/valueObjects/Position.js';
 import { Properties } from '../src/domain/valueObjects/Properties.js';
 
-console.log('🧪 Testing PropertyPanel with Multiple Component Types\n');
 
 // Create test setup
 const circuit = new Circuit();
@@ -45,8 +44,6 @@ const elementTypes = [
 ];
 
 elementTypes.forEach(elementType => {
-    console.log(`\n📋 Testing ${elementType.name}:`);
-    console.log('=' .repeat(50));
     
     // Create test element
     const testElement = elementType.factory(
@@ -56,7 +53,6 @@ elementTypes.forEach(elementType => {
         new Properties(elementType.properties)
     );
     
-    console.log(`   Properties: ${JSON.stringify(testElement.properties.values)}`);
     
     // Generate HTML
     const htmlContent = propertyPanel.generateContentForElement(testElement);
@@ -68,15 +64,8 @@ elementTypes.forEach(elementType => {
     const orientationMatch = htmlContent.match(/<select[^>]*name="orientation"[^>]*>/);
     const labelMatch = htmlContent.match(/<input[^>]*name="label"[^>]*>/);
     
-    console.log(`   ✓ Resistance field: ${resistanceMatch ? 'YES' : 'NO'}`);
-    console.log(`   ✓ Capacitance field: ${capacitanceMatch ? 'YES' : 'NO'}`);
-    console.log(`   ✓ Inductance field: ${inductanceMatch ? 'YES' : 'NO'}`);
-    console.log(`   ✓ Orientation field: ${orientationMatch ? 'YES' : 'NO'}`);
-    console.log(`   ✓ Label field: ${labelMatch ? 'YES' : 'NO'}`);
     
     // Count total property fields
     const propertyFieldCount = (htmlContent.match(/<div class="property-field">/g) || []).length;
-    console.log(`   ✓ Total property fields: ${propertyFieldCount}`);
 });
 
-console.log('\n🎉 All component types tested successfully!');

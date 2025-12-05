@@ -17,13 +17,8 @@ W;-3,1;-3,2;;
 W;-3,2;-2,2;;
 W;-2,1;-2,2;;`;
 
-            console.log('Testing example netlist:');
-            console.log(exampleNetlist);
-            
             const lines = exampleNetlist.trim().split('\n').filter(line => line.trim());
             const result = QucatNetlistAdapter._detectFormatByComponentSpans(lines);
-            
-            console.log('Detection result:', result);
             
             expect(result.version).to.equal('v1.0');
             expect(result.componentCount).to.equal(2); // C and L
@@ -41,7 +36,6 @@ W;-3,1;-3,2;;
 W;-3,2;-2,2;;
 W;-2,1;-2,2;;`;
 
-            console.log('Importing example netlist...');
             const elements = QucatNetlistAdapter.importFromString(exampleNetlist);
             
             expect(elements).to.have.length(7);
@@ -49,8 +43,6 @@ W;-2,1;-2,2;;`;
             // Check capacitor conversion: v1.0 (-3,0)-(-2,0) should become pixel coordinates  
             const capacitor = elements.find(el => el.type === 'capacitor');
             expect(capacitor).to.exist;
-            
-            console.log('Capacitor nodes:', capacitor.nodes.map(n => `(${n.x}, ${n.y})`));
             
             // v1.0 coordinates (-3,0)-(-2,0) should be:
             // (-3,0) -> (-15,0) v2.0 -> (-150,0) pixels  
@@ -63,8 +55,6 @@ W;-2,1;-2,2;;`;
             // Check inductor conversion
             const inductor = elements.find(el => el.type === 'inductor');
             expect(inductor).to.exist;
-            
-            console.log('Inductor nodes:', inductor.nodes.map(n => `(${n.x}, ${n.y})`));
             
             // v1.0 coordinates (-3,1)-(-2,1) should be:
             // (-3,1) -> (-15,5) v2.0 -> (-150,50) pixels

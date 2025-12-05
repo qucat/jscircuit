@@ -23,7 +23,6 @@ export class SaveNetlistCommand extends GUICommand {
      */
     execute() {
         try {
-            console.log('[SaveNetlistCommand] Saving circuit as netlist file');
             
             // Get current circuit state
             const circuit = this.circuitService.circuit;
@@ -40,7 +39,6 @@ export class SaveNetlistCommand extends GUICommand {
             // Create and trigger download
             this._downloadNetlist(netlistContent);
             
-            console.log('[SaveNetlistCommand] Netlist file saved successfully');
             
             // No undo needed for save operation
             return { undo: () => {} };
@@ -81,6 +79,5 @@ export class SaveNetlistCommand extends GUICommand {
      */
     undo() {
         // Save operations cannot be undone
-        console.log('[SaveNetlistCommand] Save operations cannot be undone');
     }
 }

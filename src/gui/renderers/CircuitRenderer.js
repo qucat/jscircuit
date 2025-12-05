@@ -339,7 +339,6 @@ export class CircuitRenderer {
      */
     handleDoubleClick(event) {
         event.preventDefault();
-        console.log("[CircuitRenderer] Double-click detected");
 
         const rect = this.canvas.getBoundingClientRect();
         const mouseX = event.clientX - rect.left;
@@ -349,20 +348,15 @@ export class CircuitRenderer {
         const logicalX = (mouseX - this.offsetX) / this.scale;
         const logicalY = (mouseY - this.offsetY) / this.scale;
 
-        console.log("[CircuitRenderer] Double-click at logical coordinates:", logicalX, logicalY);
 
         // Find element at click position
         const clickedElement = this.findElementAtPosition(logicalX, logicalY);
-        console.log("[CircuitRenderer] Found element at position:", clickedElement);
 
         if (clickedElement && this.onElementDoubleClick) {
-            console.log("[CircuitRenderer] Calling double-click callback with element:", clickedElement.id);
             // Delegate to the GUIAdapter via callback
             this.onElementDoubleClick(clickedElement);
         } else if (!clickedElement) {
-            console.log("[CircuitRenderer] No element found at double-click position");
         } else if (!this.onElementDoubleClick) {
-            console.log("[CircuitRenderer] No double-click callback set");
         }
     }
 
@@ -404,7 +398,6 @@ export class CircuitRenderer {
      * Set callback for element double-click events
      */
     setElementDoubleClickCallback(callback) {
-        console.log("[CircuitRenderer] Setting double-click callback");
         this.onElementDoubleClick = callback;
     }
 

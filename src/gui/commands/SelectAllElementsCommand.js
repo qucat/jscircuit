@@ -22,7 +22,6 @@ export class SelectAllElementsCommand extends GUICommand {
         const allElements = this.circuitService.getElements();
         
         if (allElements.length === 0) {
-            console.log("No elements in circuit to select");
             return;
         }
         
@@ -33,7 +32,6 @@ export class SelectAllElementsCommand extends GUICommand {
             this.circuitRenderer.addToSelection(element);
         });
         
-        console.log(`Selected all ${allElements.length} element(s)`);
         
         // Trigger a render to update the visual feedback
         this.circuitRenderer.render();
@@ -46,7 +44,6 @@ export class SelectAllElementsCommand extends GUICommand {
         // Restore the previous selection state
         this.circuitRenderer.setSelectedElements(this.previousSelection);
         
-        console.log(`Select all undone - restored previous selection of ${this.previousSelection.size} element(s)`);
         
         // Trigger a render to update the visual feedback
         this.circuitRenderer.render();

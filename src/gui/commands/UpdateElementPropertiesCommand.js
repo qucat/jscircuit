@@ -55,11 +55,9 @@ export class UpdateElementPropertiesCommand extends GUICommand {
      */
     undo() {
         if (!this.elementId || !this.oldProperties) {
-            console.log("[UpdateElementPropertiesCommand] Cannot undo - missing original data");
             return;
         }
 
-        console.log(`[UpdateElementPropertiesCommand] Undoing property changes for element ${this.elementId}`);
 
         // Create combined properties object with old values and old label
         const oldPropertiesWithLabel = {
@@ -71,9 +69,7 @@ export class UpdateElementPropertiesCommand extends GUICommand {
         const success = this.circuitService.updateElementProperties(this.elementId, oldPropertiesWithLabel);
         
         if (!success) {
-            console.log(`[UpdateElementPropertiesCommand] Failed to undo element ${this.elementId}`);
         } else {
-            console.log(`[UpdateElementPropertiesCommand] Properties restored successfully`);
         }
     }
 

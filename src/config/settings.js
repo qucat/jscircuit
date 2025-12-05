@@ -167,11 +167,9 @@ export function setupCommands(circuitService, circuitRenderer) {
     if (!GUICommandRegistry.getTypes().includes("deselectAll")) {
         GUICommandRegistry.register("deselectAll", () => ({
             execute: () => {
-                console.log("Deselect All executing");
                 circuitRenderer.clearSelection();
                 circuitService.emit("update");
             },
-            undo: () => console.log("Deselect All undo not implemented yet")
         }));
     }
 
@@ -183,12 +181,10 @@ export function setupCommands(circuitService, circuitRenderer) {
                 const selectedElements = circuitRenderer.getSelectedElements();
                 
                 if (!selectedElements || selectedElements.length === 0) {
-                    console.log("[rotateRight] No elements selected");
                     return { undo: () => {} }; // No-op if nothing selected
                 }
                 
                 if (selectedElements.length > 1) {
-                    console.log("[rotateRight] Can only rotate one element at a time");
                     return { undo: () => {} }; // No-op if multiple elements selected
                 }
                 
@@ -198,13 +194,11 @@ export function setupCommands(circuitService, circuitRenderer) {
                 // Rotate 90 degrees clockwise (to the right)
                 circuitService.rotateElements(elementIds, 90);
                 
-                console.log(`[rotateRight] Rotated element 90° clockwise`);
                 
                 return {
                     undo: () => circuitService.importState(before)
                 };
             },
-            undo: () => console.log("Rotate Right undo")
         }));
     }
 
@@ -215,12 +209,10 @@ export function setupCommands(circuitService, circuitRenderer) {
                 const selectedElements = circuitRenderer.getSelectedElements();
                 
                 if (!selectedElements || selectedElements.length === 0) {
-                    console.log("[rotateUp] No elements selected");
                     return { undo: () => {} }; // No-op if nothing selected
                 }
                 
                 if (selectedElements.length > 1) {
-                    console.log("[rotateUp] Can only rotate one element at a time");
                     return { undo: () => {} }; // No-op if multiple elements selected
                 }
                 
@@ -230,13 +222,11 @@ export function setupCommands(circuitService, circuitRenderer) {
                 // Rotate 180 degrees (flip upside down)
                 circuitService.rotateElements(elementIds, 180);
                 
-                console.log(`[rotateUp] Rotated element 180°`);
                 
                 return {
                     undo: () => circuitService.importState(before)
                 };
             },
-            undo: () => console.log("Rotate Up undo")
         }));
     }
 
@@ -247,12 +237,10 @@ export function setupCommands(circuitService, circuitRenderer) {
                 const selectedElements = circuitRenderer.getSelectedElements();
                 
                 if (!selectedElements || selectedElements.length === 0) {
-                    console.log("[rotateLeft] No elements selected");
                     return { undo: () => {} }; // No-op if nothing selected
                 }
                 
                 if (selectedElements.length > 1) {
-                    console.log("[rotateLeft] Can only rotate one element at a time");
                     return { undo: () => {} }; // No-op if multiple elements selected
                 }
                 
@@ -262,13 +250,11 @@ export function setupCommands(circuitService, circuitRenderer) {
                 // Rotate 90 degrees counter-clockwise (to the left)
                 circuitService.rotateElements(elementIds, -90);
                 
-                console.log(`[rotateLeft] Rotated element 90° counter-clockwise`);
                 
                 return {
                     undo: () => circuitService.importState(before)
                 };
             },
-            undo: () => console.log("Rotate Left undo")
         }));
     }
 
@@ -279,12 +265,10 @@ export function setupCommands(circuitService, circuitRenderer) {
                 const selectedElements = circuitRenderer.getSelectedElements();
                 
                 if (!selectedElements || selectedElements.length === 0) {
-                    console.log("[rotateDown] No elements selected");
                     return { undo: () => {} }; // No-op if nothing selected
                 }
                 
                 if (selectedElements.length > 1) {
-                    console.log("[rotateDown] Can only rotate one element at a time");
                     return { undo: () => {} }; // No-op if multiple elements selected
                 }
                 
@@ -294,13 +278,11 @@ export function setupCommands(circuitService, circuitRenderer) {
                 // Rotate 180 degrees (same as "up" - flip)
                 circuitService.rotateElements(elementIds, 180);
                 
-                console.log(`[rotateDown] Rotated element 180°`);
                 
                 return {
                     undo: () => circuitService.importState(before)
                 };
             },
-            undo: () => console.log("Rotate Down undo")
         }));
     }
 
@@ -312,12 +294,10 @@ export function setupCommands(circuitService, circuitRenderer) {
                 const selectedElements = circuitRenderer.getSelectedElements();
 
                 if (!selectedElements || selectedElements.length === 0) {
-                    console.log("[rotateElement] No elements selected");
                     return { undo: () => {} }; // No-op if nothing selected
                 }
 
                 if (selectedElements.length > 1) {
-                    console.log("[rotateElement] Can only rotate one element at a time");
                     return { undo: () => {} }; // No-op if multiple elements selected
                 }
 
@@ -327,13 +307,11 @@ export function setupCommands(circuitService, circuitRenderer) {
                 // Rotate 90 degrees clockwise (default rotation)
                 circuitService.rotateElements(elementIds, 90);
 
-                console.log(`[rotateElement] Rotated element 90° clockwise`);
 
                 return {
                     undo: () => circuitService.importState(before)
                 };
             },
-            undo: () => console.log("Rotate Element undo")
         }));
     }
 

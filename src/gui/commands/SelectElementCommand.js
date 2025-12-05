@@ -27,7 +27,6 @@ export class SelectElementCommand extends GUICommand {
         // Trigger re-render
         this.circuitRenderer.render();
         
-        console.log('Element selected:', element ? element.type : 'none');
     }
 
     /**
@@ -40,7 +39,6 @@ export class SelectElementCommand extends GUICommand {
         // Trigger re-render
         this.circuitRenderer.render();
         
-        console.log('Selection undone');
     }
 
     /**

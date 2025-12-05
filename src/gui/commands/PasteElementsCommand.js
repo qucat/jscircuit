@@ -32,11 +32,9 @@ export class PasteElementsCommand extends GUICommand {
     const clipboardContent = CopyElementsCommand.getClipboardContent();
     
     if (!clipboardContent || clipboardContent.length === 0) {
-      console.log("[PasteElementsCommand] No elements in clipboard to paste");
       return;
     }
     
-    console.log(`[PasteElementsCommand] Pasting ${clipboardContent.length} element(s) from clipboard`);
     
     this.pastedElements = [];
     
@@ -79,7 +77,6 @@ export class PasteElementsCommand extends GUICommand {
         this.circuitService.addElement(newElement);
         this.pastedElements.push(newElement);
         
-        console.log(`[PasteElementsCommand] Created new ${newElement.type} with ID: ${newElement.id}`);
         
       } catch (error) {
         console.error(`[PasteElementsCommand] Failed to paste element:`, error);
@@ -89,7 +86,6 @@ export class PasteElementsCommand extends GUICommand {
     // Select all pasted elements
     this.circuitRenderer.setSelectedElements(this.pastedElements);
     
-    console.log(`[PasteElementsCommand] Successfully pasted ${this.pastedElements.length} element(s)`);
   }
 
   /**
@@ -97,11 +93,9 @@ export class PasteElementsCommand extends GUICommand {
    */
   undo() {
     if (!this.pastedElements || this.pastedElements.length === 0) {
-      console.log("[PasteElementsCommand] No pasted elements to undo");
       return;
     }
     
-    console.log(`[PasteElementsCommand] Undoing paste - removing ${this.pastedElements.length} element(s)`);
     
     // Remove each pasted element from the circuit
     this.pastedElements.forEach(element => {
@@ -111,7 +105,6 @@ export class PasteElementsCommand extends GUICommand {
     // Clear selection
     this.circuitRenderer.clearSelection();
     
-    console.log("[PasteElementsCommand] Paste operation undone successfully");
   }
 
   /**

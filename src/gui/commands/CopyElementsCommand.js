@@ -25,18 +25,15 @@ export class CopyElementsCommand extends GUICommand {
     const selectedElements = this.circuitRenderer.getSelectedElements();
     
     if (!selectedElements || selectedElements.length === 0) {
-      console.log("[CopyElementsCommand] No elements selected for copying");
       return;
     }
     
-    console.log(`[CopyElementsCommand] Copying ${selectedElements.length} selected element(s)`);
     
     // Deep copy elements to clipboard (preserve all properties, nodes, labels)
     CopyElementsCommand.clipboard = selectedElements.map(element => 
       JSON.parse(JSON.stringify(element))
     );
     
-    console.log("[CopyElementsCommand] Elements copied to clipboard successfully");
   }
 
   /**
@@ -44,7 +41,6 @@ export class CopyElementsCommand extends GUICommand {
    */
   undo() {
     // Copy operation doesn't modify circuit state, so no undo needed
-    console.log("[CopyElementsCommand] Copy operation cannot be undone (no circuit changes)");
   }
 
   /**

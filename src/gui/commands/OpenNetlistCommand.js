@@ -23,7 +23,6 @@ export class OpenNetlistCommand extends GUICommand {
      * Execute open netlist operation
      */
     execute() {
-        console.log('[OpenNetlistCommand] Opening netlist file');
         
         // Store current state for undo
         this.previousState = this.circuitService.exportState();
@@ -39,12 +38,10 @@ export class OpenNetlistCommand extends GUICommand {
                 try {
                     const file = event.target.files[0];
                     if (!file) {
-                        console.log('[OpenNetlistCommand] No file selected');
                         resolve({ undo: () => {} });
                         return;
                     }
                     
-                    console.log('[OpenNetlistCommand] Loading file:', file.name);
                     
                     // Read file content
                     const content = await this._readFileContent(file);
@@ -62,7 +59,6 @@ export class OpenNetlistCommand extends GUICommand {
                     // Clear current circuit and load new elements
                     await this._loadElementsIntoCircuit(elements);
                     
-                    console.log(`[OpenNetlistCommand] Successfully loaded ${elements.length} elements`);
                     
                     // Trigger circuit update and re-render
                     this.circuitService.emit('update');
@@ -139,7 +135,6 @@ export class OpenNetlistCommand extends GUICommand {
                 this.circuitService.addElement(element);
             }
             
-            console.log('[OpenNetlistCommand] Circuit loaded with new elements');
             
         } catch (error) {
             throw new Error(`Failed to load elements into circuit: ${error.message}`);
@@ -151,12 +146,10 @@ export class OpenNetlistCommand extends GUICommand {
      */
     undo() {
         if (this.previousState) {
-            console.log('[OpenNetlistCommand] Undoing netlist load, restoring previous state');
             this.circuitService.importState(this.previousState);
             this.circuitService.emit('update');
             this.circuitRenderer.render();
         } else {
-            console.log('[OpenNetlistCommand] No previous state to restore');
         }
     }
 }

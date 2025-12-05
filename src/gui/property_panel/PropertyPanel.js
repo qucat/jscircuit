@@ -101,8 +101,6 @@ export class PropertyPanel {
         const properties = element.getProperties();
         const currentLabel = element.label ? element.label.value || element.label : '';
         
-        console.log(`[PropertyPanel] Element type: "${elementType}", constructor: "${element.constructor.name}"`);
-        console.log(`[PropertyPanel] Element properties:`, properties.values);
         
         // Simple hardcoded configurations for each element type
         const elementConfigs = {
@@ -212,7 +210,6 @@ export class PropertyPanel {
             return this.generateFallbackContent(elementType, currentLabel);
         }
 
-        console.log(`[PropertyPanel] Using configuration for: "${elementType}"`);
         
         // Generate property fields
         const propertyFields = config.fields.map(field => {
@@ -314,7 +311,6 @@ export class PropertyPanel {
 
         // Block ALL keyboard shortcuts when property panel is open
         // This prevents conflicts with text input and component shortcuts
-        console.log("[PropertyPanel] Blocking keyboard event:", event.key);
         event.stopPropagation();
 
         if (event.key === 'Escape') {
@@ -475,7 +471,6 @@ export class PropertyPanel {
             }
         });
 
-        console.log("[PropertyPanel] Collected properties:", properties);
         return properties;
     }
 

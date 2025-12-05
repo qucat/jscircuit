@@ -13,7 +13,6 @@ export class RotateElementCommand {
         const selectedElements = this.circuitRenderer.getSelectedElements();
         
         if (selectedElements.length === 0) {
-            console.log('No elements selected for rotation');
             return false;
         }
 
@@ -28,7 +27,6 @@ export class RotateElementCommand {
             this.circuitService.rotateElement(element.id, this.targetAngle || 90);
         });
 
-        console.log(`Rotated ${selectedElements.length} elements to ${this.targetAngle || 90}°`);
         return true;
     }
 
@@ -47,6 +45,5 @@ export class RotateElementCommand {
         });
         
         this.circuitRenderer.render();
-        console.log('Rotation undone');
     }
 }

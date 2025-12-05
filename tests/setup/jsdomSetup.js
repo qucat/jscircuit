@@ -52,7 +52,7 @@ export function setupJsdom() {
             });
         } catch (e) {
             // Fallback if it fails due to being non-configurable
-            console.warn('Failed to override navigator.userAgent:', e.message);
+            // Failed to override navigator.userAgent - silently handled
         }
     }
 

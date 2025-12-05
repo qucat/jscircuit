@@ -92,10 +92,6 @@ export const GRID_CONFIG = {
  * Validation function to ensure grid configuration is correct
  */
 export function validateGridConfig() {
-    console.log('✅ Grid Configuration for Component Sizing:');
-    console.log(`   Grid spacing: ${GRID_SPACING} pixels between points`);
-    console.log(`   Component span: ${COMPONENT_GRID_POINTS} grid points = ${COMPONENT_SPAN_PIXELS} pixels`);
-    console.log(`   Component height: ${GRID_CONFIG.componentHeightPixels} pixels`);
     
     // Validate calculations
     if (COMPONENT_SPAN_PIXELS !== COMPONENT_GRID_POINTS * GRID_SPACING) {

@@ -10,7 +10,6 @@ window.PropertyPanelTests = {
      * Test element placement and auto-open property panel
      */
     testAutoOpenOnPlacement() {
-        console.log("=== Testing Auto-Open Property Panel on Placement ===");
         
         // Get the GUI adapter instance
         const guiAdapter = window.guiAdapter || window.app?.guiAdapter;
@@ -25,7 +24,6 @@ window.PropertyPanelTests = {
             return false;
         }
         
-        console.log("✓ GUIAdapter and PropertyPanel found");
         
         // Check if handleElementDoubleClick method exists
         if (typeof guiAdapter.handleElementDoubleClick !== 'function') {
@@ -33,7 +31,6 @@ window.PropertyPanelTests = {
             return false;
         }
         
-        console.log("✓ handleElementDoubleClick method exists");
         return true;
     },
     
@@ -41,7 +38,6 @@ window.PropertyPanelTests = {
      * Test keyboard blocking functionality
      */
     testKeyboardBlocking() {
-        console.log("=== Testing Keyboard Blocking ===");
         
         // Create a mock property panel instance
         const propertyPanel = new PropertyPanel();
@@ -52,7 +48,6 @@ window.PropertyPanelTests = {
             return false;
         }
         
-        console.log("✓ handleKeyDown method exists");
         
         // Test event blocking
         const mockEvent = {
@@ -74,7 +69,6 @@ window.PropertyPanelTests = {
             return false;
         }
         
-        console.log("✓ Keyboard events properly blocked");
         return true;
     },
     
@@ -82,7 +76,6 @@ window.PropertyPanelTests = {
      * Test CircuitService integration
      */
     testCircuitServiceIntegration() {
-        console.log("=== Testing CircuitService Integration ===");
         
         // Get the circuit service instance
         const circuitService = window.circuitService || window.app?.circuitService;
@@ -91,7 +84,6 @@ window.PropertyPanelTests = {
             return false;
         }
         
-        console.log("✓ CircuitService found");
         
         // Check if updateElementProperties method exists
         if (typeof circuitService.updateElementProperties !== 'function') {
@@ -99,7 +91,6 @@ window.PropertyPanelTests = {
             return false;
         }
         
-        console.log("✓ updateElementProperties method exists");
         
         // Check if getElementByID method exists
         if (typeof circuitService.getElementByID !== 'function') {
@@ -107,7 +98,6 @@ window.PropertyPanelTests = {
             return false;
         }
         
-        console.log("✓ getElementByID method exists");
         return true;
     },
     
@@ -115,7 +105,6 @@ window.PropertyPanelTests = {
      * Test UpdateElementPropertiesCommand
      */
     testUpdateCommand() {
-        console.log("=== Testing UpdateElementPropertiesCommand ===");
         
         // Get the GUI adapter instance
         const guiAdapter = window.guiAdapter || window.app?.guiAdapter;
@@ -131,7 +120,6 @@ window.PropertyPanelTests = {
             return false;
         }
         
-        console.log("✓ UpdateElementPropertiesCommand found");
         
         // Check if command has required methods
         if (typeof command.setData !== 'function') {
@@ -149,7 +137,6 @@ window.PropertyPanelTests = {
             return false;
         }
         
-        console.log("✓ Command has all required methods");
         return true;
     },
     
@@ -157,7 +144,6 @@ window.PropertyPanelTests = {
      * Run all tests
      */
     runAllTests() {
-        console.log("Starting PropertyPanel Manual Tests...\n");
         
         const tests = [
             this.testAutoOpenOnPlacement,
@@ -174,25 +160,17 @@ window.PropertyPanelTests = {
                 const result = test.call(this);
                 if (result) {
                     passed++;
-                    console.log(`✅ Test ${index + 1} PASSED\n`);
                 } else {
                     failed++;
-                    console.log(`❌ Test ${index + 1} FAILED\n`);
                 }
             } catch (error) {
                 failed++;
                 console.error(`❌ Test ${index + 1} ERROR:`, error.message);
-                console.log("");
             }
         });
         
-        console.log(`=== Test Results ===`);
-        console.log(`Passed: ${passed}`);
-        console.log(`Failed: ${failed}`);
-        console.log(`Total: ${tests.length}`);
         
         return { passed, failed, total: tests.length };
     }
 };
 
-console.log("PropertyPanel Manual Tests loaded. Run PropertyPanelTests.runAllTests() to execute.");

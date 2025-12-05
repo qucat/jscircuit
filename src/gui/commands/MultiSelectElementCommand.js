@@ -39,7 +39,6 @@ export class MultiSelectElementCommand extends GUICommand {
             this.currentSelection.add(elements);
         }
         
-        console.log(`Multi-selected ${this.currentSelection.size} elements`);
     }
 
     /**
@@ -49,7 +48,6 @@ export class MultiSelectElementCommand extends GUICommand {
         // Restore previous selection
         this.circuitRenderer.setSelectedElements(this.previousSelection);
         
-        console.log('Multi-selection undone');
     }
 
     /**
