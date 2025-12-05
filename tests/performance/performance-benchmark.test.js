@@ -55,7 +55,6 @@ describe('Performance Benchmarks', function() {
             const elementCount = 500; // Reduced from 1000 for more reasonable test time
             const elements = [];
 
-            Logger.info(`Creating ${elementCount} elements for spatial index test...`);
             const createStart = performance.now();
 
             // Create elements in a grid pattern
@@ -76,14 +75,12 @@ describe('Performance Benchmarks', function() {
             }
 
             const createTime = performance.now() - createStart;
-            Logger.info(`Created ${elementCount} elements in ${createTime.toFixed(2)}ms`);
 
             // Benchmark spatial index building
             const buildStart = performance.now();
             spatialIndex.rebuild(elements);
             const buildTime = performance.now() - buildStart;
 
-            Logger.info(`Built spatial index in ${buildTime.toFixed(2)}ms`);
             expect(buildTime).to.be.lessThan(1000); // More reasonable expectation: under 1 second
 
             // Benchmark point queries
@@ -101,7 +98,6 @@ describe('Performance Benchmarks', function() {
             const queryTime = performance.now() - queryStart;
             const avgQueryTime = queryTime / queryCount;
 
-            Logger.info(`Performed ${queryCount} queries in ${queryTime.toFixed(2)}ms (${avgQueryTime.toFixed(3)}ms avg)`);
             expect(avgQueryTime).to.be.lessThan(1); // Each query should be under 1ms
         });
 
@@ -171,9 +167,6 @@ describe('Performance Benchmarks', function() {
             const spatialTime = performance.now() - spatialStart;
 
             const speedup = linearTime / spatialTime;
-            Logger.info(`Linear search: ${linearTime.toFixed(2)}ms`);
-            Logger.info(`Spatial search: ${spatialTime.toFixed(2)}ms`);
-            Logger.info(`Speedup: ${speedup.toFixed(2)}x`);
 
             // Spatial index should be significantly faster for large element counts
             expect(speedup).to.be.greaterThan(2); // At least 2x faster
@@ -212,7 +205,6 @@ describe('Performance Benchmarks', function() {
             const updateTime = performance.now() - updateStart;
             const avgUpdateTime = updateTime / updateCount;
 
-            Logger.info(`Viewport updates: ${updateTime.toFixed(2)}ms total, ${avgUpdateTime.toFixed(2)}ms avg`);
             expect(avgUpdateTime).to.be.lessThan(5); // Each update under 5ms
         });
     });
@@ -235,7 +227,6 @@ describe('Performance Benchmarks', function() {
             const addTime = performance.now() - addStart;
             const avgAddTime = addTime / elementCount;
 
-            Logger.info(`Added ${elementCount} elements in ${addTime.toFixed(2)}ms (${avgAddTime.toFixed(2)}ms avg)`);
             expect(avgAddTime).to.be.lessThan(1); // Each addition under 1ms
 
             // Benchmark element retrieval
@@ -248,7 +239,6 @@ describe('Performance Benchmarks', function() {
             const retrieveTime = performance.now() - retrieveStart;
             const avgRetrieveTime = retrieveTime / retrieveCount;
 
-            Logger.info(`Retrieved elements ${retrieveCount} times in ${retrieveTime.toFixed(2)}ms (${avgRetrieveTime.toFixed(3)}ms avg)`);
             expect(avgRetrieveTime).to.be.lessThan(0.1); // Each retrieval under 0.1ms
 
             // Benchmark element deletion
@@ -260,7 +250,6 @@ describe('Performance Benchmarks', function() {
             const deleteTime = performance.now() - deleteStart;
             const avgDeleteTime = deleteTime / elementsToDelete.length;
 
-            Logger.info(`Deleted ${elementsToDelete.length} elements in ${deleteTime.toFixed(2)}ms (${avgDeleteTime.toFixed(2)}ms avg)`);
             expect(avgDeleteTime).to.be.lessThan(1); // Each deletion under 1ms
         });
     });
@@ -303,7 +292,6 @@ describe('Performance Benchmarks', function() {
                 // Check memory usage periodically
                 if (iter % 20 === 0 && typeof process !== 'undefined' && process.memoryUsage) {
                     const memUsage = process.memoryUsage();
-                    Logger.debug(`Iteration ${iter}: Memory usage ${(memUsage.heapUsed / 1024 / 1024).toFixed(2)}MB`);
                     
                     if (iter === 0) {
                         initialMemory = memUsage.heapUsed;
@@ -315,7 +303,6 @@ describe('Performance Benchmarks', function() {
             if (typeof process !== 'undefined' && process.memoryUsage && initialMemory > 0) {
                 const finalMemory = process.memoryUsage().heapUsed;
                 const memoryGrowth = (finalMemory - initialMemory) / 1024 / 1024;
-                Logger.info(`Memory growth: ${memoryGrowth.toFixed(2)}MB`);
                 
                 // Memory growth should be reasonable (less than 50MB for this test)
                 expect(memoryGrowth).to.be.lessThan(50);
@@ -359,7 +346,6 @@ describe('Performance Benchmarks', function() {
                 const queryTime = performance.now() - queryStart;
                 const avgQueryTime = queryTime / testCase.queryCount;
 
-                Logger.info(`${testCase.name}: Build ${buildTime.toFixed(2)}ms, Query ${avgQueryTime.toFixed(3)}ms avg`);
 
                 // Performance baselines
                 expect(buildTime).to.be.lessThan(testCase.count * 0.2); // Linear in element count

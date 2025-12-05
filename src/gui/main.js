@@ -63,7 +63,6 @@ const guiAdapter = new GUIAdapter(
 await initMenu();
 
 /* ---------- Commands, first render, reveal, THEN start resize observer ---------- */
-Logger.info('QuCat Circuit Generator starting with performance optimizations...');
 globalPerformanceMonitor.startTiming('app-initialization');
 
 setupCommands(circuitService, guiAdapter.circuitRenderer);
@@ -79,7 +78,6 @@ guiAdapter.circuitRenderer.centerScrollPosition();
 stage.classList.add('ready');             // fade in only after crisp render
 
 const initTime = globalPerformanceMonitor.endTiming('app-initialization');
-Logger.info(`Application initialized in ${initTime.toFixed(2)}ms`);
 
 // Add performance monitoring for development
 if (Logger.isDev) {
@@ -100,5 +98,4 @@ if (Logger.isDev) {
     return result;
   };
   
-  Logger.info('Performance monitoring enabled. Set "setQuCatDebug(false)" to disable.');
 }

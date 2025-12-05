@@ -9,7 +9,6 @@ export class ZoomCommand extends GUICommand {
     }
 
     execute() {
-        Logger.debug(`🔍 Zooming by factor: ${this.zoomFactor}`);
         this.renderer.scale *= this.zoomFactor;
         this.renderer.render();
     }

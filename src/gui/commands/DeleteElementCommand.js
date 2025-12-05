@@ -24,11 +24,9 @@ export class DeleteElementCommand extends GUICommand {
     const selectedElements = this.circuitRenderer.getSelectedElements();
     
     if (!selectedElements || selectedElements.length === 0) {
-      Logger.debug("[DeleteElementCommand] No elements selected for deletion");
       return;
     }
     
-    Logger.debug(`[DeleteElementCommand] Deleting ${selectedElements.length} selected element(s)`);
     
     // Store elements for undo (deep copy to preserve state)
     this.deletedElements = selectedElements.map(element => ({
@@ -44,7 +42,6 @@ export class DeleteElementCommand extends GUICommand {
     // Clear selection after deletion
     this.circuitRenderer.clearSelection();
     
-    Logger.debug("[DeleteElementCommand] Elements deleted successfully");
   }
 
   /**
@@ -52,18 +49,15 @@ export class DeleteElementCommand extends GUICommand {
    */
   undo() {
     if (!this.deletedElements || this.deletedElements.length === 0) {
-      Logger.debug("[DeleteElementCommand] No elements to restore");
       return;
     }
     
-    Logger.debug(`[DeleteElementCommand] Restoring ${this.deletedElements.length} deleted element(s)`);
     
     // Restore each deleted element
     this.deletedElements.forEach(({ element }) => {
       this.circuitService.addElement(element);
     });
     
-    Logger.debug("[DeleteElementCommand] Elements restored successfully");
   }
 
   /**

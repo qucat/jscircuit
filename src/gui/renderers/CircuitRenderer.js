@@ -192,7 +192,6 @@ export class CircuitRenderer {
         // this.renderSelectionBoundingBox();
         
         const renderDuration = globalPerformanceMonitor.endTiming('circuit-render');
-        Logger.debug(`Render completed in ${renderDuration.toFixed(2)}ms`);
     }
 
     /**
@@ -472,7 +471,6 @@ export class CircuitRenderer {
         
         const hoverDuration = globalPerformanceMonitor.endTiming('hover-check');
         if (hoverDuration > 5) { // Log if hover check is slow
-            Logger.debug(`Slow hover check: ${hoverDuration.toFixed(2)}ms for ${elements?.length || 0} elements`);
         }
     }
 
@@ -613,7 +611,6 @@ export class CircuitRenderer {
         this.hoveredElement = null;
         this.selectedElement = null;
         
-        Logger.debug('CircuitRenderer disposed');
     }
 
     /**
@@ -821,7 +818,6 @@ export class CircuitRenderer {
         // Trigger re-render to apply the new centering
         this.render();
         
-        Logger.info(`View recentered - logical coordinate (0,0) is now at canvas center (${canvasCenterX}, ${canvasCenterY})`);
     }
 
     /**
@@ -844,6 +840,5 @@ export class CircuitRenderer {
         canvasContainer.scrollLeft = Math.max(0, scrollLeft);
         canvasContainer.scrollTop = Math.max(0, scrollTop);
         
-        Logger.info(`Scroll position centered: left=${canvasContainer.scrollLeft}, top=${canvasContainer.scrollTop}`);
     }
 }
