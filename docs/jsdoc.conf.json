@@ -45,8 +45,9 @@
     "sort": true,
     "sectionOrder": [
       "Getting Started",
-      "Tutorials",
-      "Modules", 
+      "Architecture Guide",
+      "Extension API",
+      "Modules",
       "Classes",
       "Interfaces",
       "Events",
@@ -56,22 +57,52 @@
     "openGraph": {
       "title": "QuCat Circuit Generator - Extension API",
       "type": "website",
-      "image": "",
+      "image": "https://raw.githubusercontent.com/jurra/qucat-circuit-generator/main/docs/qucat-logo.png",
       "site_name": "QuCat Circuit Generator Extension API",
-      "url": ""
+      "url": "https://jurra.github.io/qucat-circuit-generator/"
     },
     "meta": {
-      "title": "QuCat Circuit Generator - Extension API Documentation",
-      "description": "Developer-focused API documentation for extending the QuCat Circuit Generator with custom elements, renderers, and commands using hexagonal architecture patterns.",
-      "keyword": "circuit generator extension, quantum circuits API, JavaScript extensions, domain-driven design, hexagonal architecture"
+      "title": "QuCat Circuit Generator - Professional Extension API",
+      "description": "Modern, professional API documentation for extending the QuCat Circuit Generator with custom elements, renderers, and commands using hexagonal architecture patterns. Build quantum circuit design tools with confidence.",
+      "keyword": "circuit generator extension, quantum circuits API, JavaScript extensions, domain-driven design, hexagonal architecture, quantum simulation, circuit design, JSDoc API"
     },
     "search": true,
     "collapse": false,
     "wrap": true,
     "typedefs": true,
-    "navLevel": 2,
+    "navLevel": 3,
     "private": false,
     "removeQuotes": "none",
-    "scripts": []
+    "scripts": [],
+    "css": ["../custom-styles.css"],
+    "theme": "dark",
+    "title": "QuCat Circuit Generator",
+    "logo": "../qucat-logo.png",
+    "menu": {
+      "📚 Getting Started": {
+        "href": "../getting-started.md",
+        "target": "_self",
+        "class": "menu-item primary-menu",
+        "id": "getting-started"
+      },
+      "🏗️ Extension Guide": {
+        "href": "../EXTENSION_GUIDE.md", 
+        "target": "_self",
+        "class": "menu-item primary-menu",
+        "id": "extension-guide"
+      },
+      "🔧 Live Demo": {
+        "href": "../embedded-demo.html",
+        "target": "_blank",
+        "class": "menu-item demo-menu",
+        "id": "live-demo"
+      },
+      "📂 GitHub": {
+        "href": "https://github.com/jurra/qucat-circuit-generator",
+        "target": "_blank",
+        "class": "menu-item github-menu",
+        "id": "github-link"
+      }
+    }
   }
 }

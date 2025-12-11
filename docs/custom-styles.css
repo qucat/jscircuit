@@ -1,0 +1,355 @@
+/* QuCat Circuit Generator - Professional Documentation Styles */
+
+/* Import modern fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* Root variables for consistent theming */
+:root {
+  --primary-color: #667eea;
+  --secondary-color: #764ba2;
+  --accent-color: #f093fb;
+  --text-primary: #2d3748;
+  --text-secondary: #4a5568;
+  --text-muted: #718096;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f7fafc;
+  --bg-code: #1a202c;
+  --border-color: #e2e8f0;
+  --border-radius: 8px;
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Base typography */
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+}
+
+/* Headers with better spacing and modern typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+h1 {
+  font-size: 2.25rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+h2 {
+  font-size: 1.875rem;
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+h3 {
+  font-size: 1.5rem;
+  color: var(--primary-color);
+}
+
+/* Modern navigation styling */
+.navbar, .navbar-default {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border: none;
+  box-shadow: var(--shadow-md);
+  padding: 1rem 0;
+}
+
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: white !important;
+}
+
+.navbar-nav > li > a {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.navbar-nav > li > a:hover {
+  color: white !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-radius: var(--border-radius);
+}
+
+/* Sidebar styling */
+.sidebar {
+  background-color: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+  padding: 1.5rem;
+}
+
+.sidebar .nav > li > a {
+  color: var(--text-secondary);
+  padding: 0.75rem 1rem;
+  border-radius: var(--border-radius);
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.sidebar .nav > li > a:hover,
+.sidebar .nav > li.active > a {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  transform: translateX(4px);
+}
+
+/* Main content area */
+.main-content {
+  padding: 2rem;
+  max-width: none;
+}
+
+/* Code blocks with modern styling */
+pre, code {
+  font-family: 'JetBrains Mono', 'Monaco', 'Menlo', monospace;
+  font-size: 0.875rem;
+}
+
+pre {
+  background-color: var(--bg-code);
+  color: #e2e8f0;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  overflow-x: auto;
+}
+
+code {
+  background-color: #f1f5f9;
+  color: #e53e3e;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+pre code {
+  background-color: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+/* Tables with modern design */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  background-color: white;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+th, td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+th {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  font-weight: 600;
+}
+
+tr:hover {
+  background-color: var(--bg-secondary);
+}
+
+/* Cards and sections */
+.panel, .card {
+  background-color: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1.5rem;
+}
+
+.panel-heading, .card-header {
+  background: linear-gradient(135deg, var(--bg-secondary), white);
+  border-bottom: 1px solid var(--border-color);
+  padding: 1rem 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.panel-body, .card-body {
+  padding: 1.5rem;
+}
+
+/* Buttons and links */
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+a:hover {
+  color: var(--secondary-color);
+  text-decoration: underline;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Search functionality */
+.search-input {
+  background-color: white;
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Menu icons and modern touches */
+.menu-item.primary-menu::before {
+  content: "📚";
+  margin-right: 0.5rem;
+}
+
+.menu-item.demo-menu::before {
+  content: "🔧";
+  margin-right: 0.5rem;
+}
+
+.menu-item.github-menu::before {
+  content: "📂";
+  margin-right: 0.5rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 1rem;
+  }
+  
+  h1 {
+    font-size: 1.875rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
+  
+  .navbar-nav {
+    margin-top: 1rem;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text-primary: #f7fafc;
+    --text-secondary: #e2e8f0;
+    --text-muted: #a0aec0;
+    --bg-primary: #1a202c;
+    --bg-secondary: #2d3748;
+    --border-color: #4a5568;
+  }
+  
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+  }
+  
+  .panel, .card {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+  }
+  
+  code {
+    background-color: #4a5568;
+    color: #90cdf4;
+  }
+}
+
+/* Animation enhancements */
+.fade-in {
+  animation: fadeIn 0.6s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Logo styling */
+.navbar-brand img {
+  height: 32px;
+  width: auto;
+  margin-right: 0.75rem;
+  vertical-align: middle;
+}
+
+/* Professional spacing */
+.container-fluid {
+  padding: 0 2rem;
+}
+
+/* Method signatures and parameters */
+.signature {
+  background: linear-gradient(135deg, #f8fafc, #edf2f7);
+  border-left: 4px solid var(--primary-color);
+  padding: 1rem 1.5rem;
+  border-radius: var(--border-radius);
+  margin: 1rem 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.params table {
+  margin-top: 1rem;
+}
+
+.params th {
+  background: var(--primary-color);
+}
+
+/* Enhanced readability */
+.description {
+  font-size: 1.125rem;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+/* Section dividers */
+.section-divider {
+  border: none;
+  height: 2px;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  margin: 3rem 0;
+  border-radius: 1px;
+}

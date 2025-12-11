@@ -9,12 +9,4 @@ node_modules
 # Ignored build files
 dist/
 
-# Ignore generated JSDoc documentation
-docs/dist/*
-!docs/dist/.gitkeep
-
-# Ignore copied assets in docs directory
-docs/static/
-docs/assets/
-
 compile.txt

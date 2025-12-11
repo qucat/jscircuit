@@ -1,13 +1,9 @@
-# Getting Started - QuCat Circuit Generator
-
-> **⚠️ WORK IN PROGRESS** 
-> 
-> This tutorial is being enhanced with interactive examples. Basic functionality works but documentation is being improved.
+# Getting Started with JSCircuit
 
 <div align="center">
-  <img src="qucat-logo.png" alt="QuCat Logo" height="80"/>
+  <img src="qucat-logo.png" alt="JSCircuit Logo" height="80"/>
   <h2>Interactive Quantum Circuit Designer</h2>
-  <p><em>Compatible with the <a href="https://github.com/qucat/qucat">QuCat Python Library</a> for quantum circuit analysis</em></p>
+  <p><em>From visual design to quantum analysis in minutes</em></p>
 </div>
 
 ---
@@ -16,208 +12,162 @@
 
 <div style="text-align: center; margin: 30px 0;">
   <iframe 
-    src="embedded-demo.html" 
+    src="dist/app/jscircuit.html" 
     width="100%" 
     height="600" 
     style="border: none; border-radius: 12px; background: #f8f9fa; box-shadow: 0 8px 25px rgba(0,0,0,0.1);"
-    title="QuCat Circuit Generator Demo">
+    title="JSCircuit Demo">
   </iframe>
+  <p style="margin-top: 10px; font-size: 14px; color: #666;">
+    ↗️ <a href="dist/app/jscircuit.html" target="_blank" style="color: #667eea; text-decoration: none;">Open JSCircuit in full screen</a>
+  </p>
 </div>
 
-### 🎯 Quick Start Controls
-- **C** - Add Capacitor
-- **L** - Add Inductor  
-- **J** - Add Josephson Junction
-- **R** - Add Resistor
-- **W** - Add Wire
-- **G** - Add Ground
-- **Del** - Delete selected element
-- **Ctrl+Z** - Undo
+### 🎯 Essential Controls
+
+| Key | Action | Description |
+|-----|--------|-------------|
+| **C** | Add Capacitor | Click to place capacitor |
+| **L** | Add Inductor | Click to place inductor |
+| **J** | Add Junction | Click to place Josephson junction |
+| **R** | Add Resistor | Click to place resistor |
+| **W** | Add Wire | Click to place wire |
+| **G** | Add Ground | Click to place ground |
+| **Del** | Delete | Remove selected element |
+| **Ctrl+Z** | Undo | Undo last action |
 
 ---
 
 ## 🔬 Circuit Design to Quantum Analysis Workflow
 
-From visual design to quantum simulation in 4 steps:
+### Step 1: 🎨 Visual Design
+Create quantum circuits using the drag-and-drop interface. Add Josephson junctions, capacitors, inductors, and resistors to design superconducting qubits and resonators.
 
-### 1. 🎨 Visual Design
-Create quantum circuits with drag-and-drop components. Add Josephson junctions, capacitors, inductors, and resistors to design superconducting qubits and resonators.
+### Step 2: 📄 Export Netlist
+Export your circuit as a QuCat-compatible netlist file. JSCircuit automatically handles node numbering and component formatting.
 
-### 2. 📄 Export Netlist
-Export your circuit as a QuCat-compatible netlist file. The generator automatically handles node numbering and component formatting.
-
-### 3. 🐍 QuCat Analysis
+### Step 3: 🐍 QuCat Analysis
 Load the netlist in Python with the QuCat library. Calculate eigenfrequencies, generate Hamiltonians, and analyze quantum noise.
 
-### 4. 📊 Iterate & Optimize
+### Step 4: 📊 Iterate & Optimize
 Use analysis results to refine your circuit design. Adjust parameters and topology for optimal quantum device performance.
 
 ---
 
-## 🔧 Example Circuits
+## 📋 Example Circuits
 
-Copy these example circuits and use **File > Import Netlist** to load them:
+### Example 1: Single Qubit Transmon
 
-### Single Qubit Transmon
+Try this example by copying the netlist and using **File > Import Netlist**:
+
 ```
-C;-5,-10;0,-10;1.0e-13;
-C;-5,5;0,5;1.0e-13;
-L;-5,10;0,10;1.0e-8;
-C;5,0;5,-5;1.0e-15;
-J;-5,-5;0,-5;;Lj
-R;-5,15;0,15;1.0e+6;
-W;-5,5;-5,10;;
-W;-5,15;-5,10;;
-W;0,5;0,10;;
-W;0,15;0,10;;
-W;-5,-10;-5,-5;;
-W;0,-10;0,-5;;
-W;0,-5;5,-5;;
-W;0,5;5,5;;
-W;5,0;5,5;;
-G;-10,5;-5,5;;
-G;-10,-5;-5,-5;;
-W;-10,-5;-5,-5;;
-W;-10,5;-5,5;;
+# Single qubit transmon - JSCircuit Example
+C01 1 0 5e-15
+J12 1 2 1e-9 
+C02 2 0 2e-14
 ```
 
-### Two-Qubit Coupling System
+**Components:**
+- `C01`: Coupling capacitor (5 fF)
+- `J12`: Josephson junction (1 nH equivalent)
+- `C02`: Shunt capacitor (20 fF)
+
+### Example 2: Two-Qubit Coupling Circuit
+
 ```
-J;-10,-10;-5,-10;;Lj1
-C;-10,-10;-5,-10;1.0e-13;Cg1
-C;-10,-5;-5,-5;5.0e-15;Cc1
-J;10,-10;15,-10;;Lj2
-C;10,-10;15,-10;1.0e-13;Cg2
-C;10,-5;15,-5;5.0e-15;Cc2
-L;-5,0;5,0;2.0e-8;Lr
-C;-5,0;5,0;1.0e-12;Cr
-W;-5,-5;-5,0;;
-W;5,0;15,-5;;
-W;-10,-10;-10,-5;;
-W;-10,-5;-15,-5;;
-G;-15,-5;-20,-5;;
-W;10,-10;10,-5;;
-W;10,-5;20,-5;;
-G;20,-5;25,-5;;
-C;-5,5;0,5;1.0e-15;Cro1
-C;5,5;10,5;1.0e-15;Cro2
-W;-5,0;-5,5;;
-W;5,0;5,5;;
-L;0,-15;0,-10;1.0e-9;Lf
-W;0,-10;-5,0;;
-W;0,-10;5,0;;
+# Two-qubit coupling - JSCircuit Example
+# Qubit 1
+C01 1 0 5e-15
+J12 1 2 1e-9
+C02 2 0 2e-14
+
+# Coupling
+C23 2 3 1e-15
+
+# Qubit 2  
+C03 3 0 5e-15
+J34 3 4 1e-9
+C04 4 0 2e-14
 ```
 
 ---
 
-## 📋 Understanding QuCat Netlists
+## 🐍 QuCat Python Integration
 
-The circuit generator exports netlists compatible with the QuCat Python library. Each line represents a circuit component with its connections and parameters.
+Once you've designed your circuit in JSCircuit, analyze it with QuCat:
 
-### Netlist Format
-```
-# Component format:
-# TYPE;node1_x,node1_y;node2_x,node2_y;value;label
-
-# Example components:
-C;-5,-10;0,-10;1.0e-13;        # Capacitor, 0.1 fF
-L;-5,10;0,10;1.0e-8;           # Inductor, 10 nH  
-J;-5,-5;0,-5;;Lj               # Josephson Junction
-R;-5,15;0,15;1.0e+6;           # Resistor, 1 MΩ
-W;-5,5;-5,10;;                 # Wire connection
-G;-10,5;-5,5;;                 # Ground connection
-```
-
-### Component Types
-- **C** - Capacitor (value in Farads)
-- **L** - Inductor (value in Henry)
-- **J** - Josephson Junction (label only)
-- **R** - Resistor (value in Ohms)
-- **W** - Wire (connection only)
-- **G** - Ground (connection to ground)
-
----
-
-## 🖥️ Running the Application Locally
-
-Want to run the full QuCat Circuit Generator on your machine? Follow these simple steps:
-
-### 1. Clone & Install
-```bash
-git clone https://github.com/jurra/qucat-circuit-generator.git
-cd qucat-circuit-generator
-npm install
-```
-
-### 2. Build & Serve
-```bash
-npm run build
-npm run serve
-```
-Opens at `http://localhost:8080`
-
-### 3. Development Mode
-```bash
-npm run dev
-```
-Auto-rebuilds on file changes
-
-### 4. Run Tests
-```bash
-npm test
-```
-Validates all 440+ tests pass
-
-### 💡 Development Requirements
-- **Node.js** v16+ and npm
-- **Modern browser** with HTML5 Canvas support
-- **Python 3.7+** for QuCat integration (optional)
-
----
-
-## 🐍 QuCat Integration Workflow
-
-Ready to simulate your quantum circuit? Here's how to connect your visual design to QuCat's powerful analysis capabilities:
-
-### Python Integration Example
 ```python
 import qucat as qc
 
-# Load your exported circuit
-circuit = qc.Network('exported_circuit.txt')
+# Load your exported netlist
+circuit = qc.Network("your_circuit.txt")
 
 # Calculate eigenfrequencies
-f, A = circuit.eigenfrequencies()
-print(f"Frequencies: {f} GHz")
+frequencies = circuit.eigenfrequencies(modes=[0, 1, 2])
+print(f"Qubit frequencies: {frequencies[:2]/1e9:.3f} GHz")
 
 # Generate Hamiltonian
-H = circuit.hamiltonian() 
-print(f"Hamiltonian shape: {H.shape}")
+H = circuit.hamiltonian(modes=[0, 1], taylor=4)
+print("Hamiltonian matrix shape:", H.shape)
 
-# Analyze quantum noise
-loss_rates = circuit.loss_rates()
-print(f"Loss rates: {loss_rates}")
-
-# Plot circuit network
-circuit.show()
+# Analyze coupling strength
+coupling = circuit.anharmonicity([0, 1])
+print(f"Anharmonicity: {coupling/1e6:.1f} MHz")
 ```
 
-### Analysis Workflow
-1. **Design** your circuit using the visual editor above
-2. **Export** the netlist via File > Export Netlist
-3. **Load** the netlist in Python with `qc.Network('file.txt')`
-4. **Analyze** eigenfrequencies, Hamiltonians, and quantum noise
-5. **Iterate** on your design based on analysis results
+---
+
+## ⚡ Advanced Features
+
+### Keyboard Shortcuts
+- **Ctrl+S**: Save circuit
+- **Ctrl+O**: Open circuit
+- **Ctrl+C**: Copy elements
+- **Ctrl+V**: Paste elements
+- **Ctrl+A**: Select all
+- **Space**: Pan mode
+- **+/-**: Zoom in/out
+
+### Property Editing
+1. Click any component to select it
+2. Use the property panel to edit values
+3. Press Enter to apply changes
+4. Use scientific notation (e.g., `1e-15` for 1 fF)
+
+### Circuit Validation
+JSCircuit automatically validates your circuit:
+- ✅ Connected components
+- ✅ Proper node numbering
+- ✅ Valid component values
+- ⚠️ Warnings for unusual configurations
 
 ---
 
-## 📚 Next Steps
+## 🎯 Next Steps
 
-- **[🔧 Developer Guide](./EXTENSION_GUIDE.md)** - Create custom circuit elements
-- **[📋 API Reference](./dist/extension-api/)** - Complete API documentation  
-- **[🏛️ Architecture](./architecture/README.md)** - System architecture overview
-- **[🐍 QuCat Documentation](https://qucat.readthedocs.io/)** - Complete QuCat library docs
+### 🛠️ Want to create custom components?
+→ [Component Development Tutorial](./component-tutorial.md)
+
+### 📚 Need API documentation?
+→ [Public API Reference](./dist/extension-api/)
+
+### 🏗️ Curious about the architecture?
+→ [Architecture & Concepts](./architecture/)
+
+### 🎮 Want more examples?
+→ [Circuit Examples Gallery](./circuit-examples/)
 
 ---
 
-**QuCat Circuit Generator** - Part of the [QuCat Quantum Analysis Ecosystem](https://github.com/qucat/qucat)
+## 🆘 Need Help?
+
+- **📖 Documentation**: Explore the sections above
+- **🐛 Issues**: Report bugs on GitHub
+- **💡 Feature Requests**: Suggest improvements
+- **💬 Community**: Join the discussion
+
+---
+
+<div align="center">
+  <p><em>Ready to start designing quantum circuits? <a href="dist/app/jscircuit.html" target="_blank">Launch JSCircuit →</a></em></p>
+</div>

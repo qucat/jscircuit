@@ -6,17 +6,14 @@
     "scripts": {
         "test": "npx mocha 'tests/**/*.test.js' --require ./tests/setup.js",
         "bundle": "esbuild src/gui/main.js --minify --format=esm --bundle --outdir=dist/static --asset-names=assets/[name] --loader:.png=dataurl --loader:.jpg=dataurl",
-        "copy": "cp -r assets dist/assets && cp src/gui/gui.html dist/",
+        "copy": "cp -r assets dist/assets && cp src/gui/gui.html dist/jscircuit.html && rm -f dist/gui.html",
         "menu:build": "node scripts/build-menu-config.mjs",
         "build": "npm run menu:build && npm run bundle && npm run copy && npm run menu:build",
         "serve": "npm run build && http-server -c-1",
         "docs:clean": "rm -rf docs/dist",
-        "docs:build": "npm run docs:clean && npx jsdoc -c docs/jsdoc.conf.json -t node_modules/docdash",
-        "docs:copy-assets": "cp -r dist/static docs/ && cp -r dist/assets docs/",
-        "docs:full": "npm run build && npm run docs:copy-assets && npm run docs:build",
-        "docs:serve": "npm run docs:build && cd docs/dist/extension-api && python3 -m http.server 8081 || php -S localhost:8081",
-        "deploy:prepare": "npm run build && npm run docs:build && mkdir -p deploy && cp -r dist/* deploy/ && cp -r docs deploy/ && cp index.html deploy/",
-        "deploy:serve": "npm run deploy:prepare && cd deploy && python3 -m http.server 8080"
+        "docs:build": "npm run docs:clean && npm run build && jsdoc -c docs/jsdoc.conf.json -t node_modules/docdash && cp -r dist docs/dist/app",
+        "docs:serve": "npm run docs:build && http-server -c-1 docs/dist/extension-api"
+
     },
     "type": "module",
     "author": "",
