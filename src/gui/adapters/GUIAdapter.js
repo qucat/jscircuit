@@ -1,4 +1,13 @@
 /**
+ * @module GUI/Adapters
+ * @description
+ * 🎨 **GUI Layer - Application Adapters**
+ *
+ * Adapters that bridge the gap between user interface interactions and application
+ * services, following the Hexagonal Architecture pattern.
+ */
+
+/**
  * @module GUIAdapter
  * @description
  * Bridges UI and application logic.
@@ -21,17 +30,69 @@ import { GRID_CONFIG } from "../../config/gridConfig.js";
 /**
  * @class GUIAdapter
  * @classdesc
- * Translates user intents to domain operations (commands) or view ops.
+ * **🔧 Primary GUI Extension Point**
+ *
+ * Translates user intents to domain operations (commands) or view operations.
+ * This is the main class developers will work with to customize GUI behavior,
+ * add new menu actions, or integrate custom interaction patterns.
  *
  * **Core Concepts**
  * - Event-driven execution (actions come from config-driven UI).
  * - Command injection via GUICommandRegistry.
  * - Undo/Redo via CommandHistory.
  *
+ * **Extension Points for Developers:**
+ * - Add new menu actions via action configuration
+ * - Register custom commands in GUICommandRegistry
+ * - Override or extend interaction handlers
+ * - Customize keyboard shortcuts and bindings
+ *
  * **Responsibilities**
- * 1) Render via CircuitRenderer.
- * 2) Bind UI inputs (menu, keyboard, mouse) to actions.
- * 3) Execute actions against domain (commands/history) or renderer (view).
+ * 1) **Event Translation**: Convert UI events (mouse, keyboard, menu) to semantic actions
+ * 2) **Command Orchestration**: Route actions to appropriate commands via GUICommandRegistry
+ * 3) **State Management**: Manage interaction states (wire mode, element placement, selection)
+ * 4) **Canvas Coordination**: Integrate with CircuitRenderer for visual updates
+ * 5) **History Management**: Coordinate undo/redo operations via CommandHistory
+ * 6) **Property Panel Integration**: Manage property panel interactions
+ *
+ * **Key Extension Patterns:**
+ *
+ * @example
+ * // Adding custom action handlers
+ * const guiAdapter = new GUIAdapter(canvas, circuitService, elementRegistry,
+ *                                   rendererFactory, guiCommandRegistry);
+ *
+ * // Custom actions are defined in menu.config.yaml and handled automatically
+ * guiAdapter.handleAction('custom.myAction');
+ *
+ * // Custom commands should be registered in GUICommandRegistry
+ * guiCommandRegistry.register('myCommand', (services) =>
+ *   new MyCustomCommand(services.circuitService, services.circuitRenderer));
+ *
+ * @example
+ * // Extending keyboard shortcuts (done in configuration)
+ * // In menu.config.yaml:
+ * // shortcuts:
+ * //   'Ctrl+Shift+N': 'insert.customElement'
+ * //   'F1': 'help.show'
+ * 
+ * // Or programmatically (for dynamic bindings):
+ * guiAdapter.bindShortcuts({
+ *   'Ctrl+Alt+C': 'circuit.compile',
+ *   'F2': 'element.properties'
+ * });
+ *
+ * @example
+ * // Listening to adapter state changes
+ * guiAdapter.circuitService.on('update', (event) => {
+ *   console.log('Circuit updated:', event.type);
+ *   // Custom reaction to circuit changes
+ * });
+ *
+ * // Accessing current interaction state
+ * const isWireMode = guiAdapter.wireDrawingMode;
+ * const placingElement = guiAdapter.placingElement;
+ * const selectedElements = guiAdapter.circuitRenderer.getSelectedElements();
  */
 export class GUIAdapter {
   /**
@@ -98,11 +159,27 @@ export class GUIAdapter {
   }
 
   /**
-   * Initializes bindings and performs the initial render.
-   * - Menu (config-driven) → ui:action
-   * - Keyboard shortcuts (from YAML/JSON)
-   * - Ctrl+wheel → zoom
-   * - Mouse on canvas → draw/drag/wire logic
+   * **🚀 Initialization Method** - Sets up the complete adapter with all bindings.
+   *
+   * Establishes the hexagonal architecture connections:
+   * - Menu system → action handling
+   * - Keyboard shortcuts → action routing
+   * - Mouse/touch interactions → command execution
+   * - Event system → automatic UI updates
+   *
+   * **Extension Points Initialized:**
+   * - Menu action bindings (config-driven)
+   * - Keyboard shortcut mapping
+   * - Canvas interaction handlers
+   * - Property panel integration
+   * - Domain event listeners for UI updates
+   *
+   * Call this after creating the adapter to activate all functionality.
+   *
+   * @example
+   * const adapter = new GUIAdapter(canvas, circuitService, elementRegistry,
+   *                                rendererFactory, commandRegistry);
+   * adapter.initialize(); // Activates all interactions
    */
   initialize() {
     // Declarative inputs
@@ -263,8 +340,32 @@ export class GUIAdapter {
   /* ---------------------------------------------------------------------- */
 
   /**
-   * Handle a semantic action id from the config.
-   * @param {string} id Action identifier (e.g., "edit.undo", "insert.resistor").
+   * **🎯 Primary Action Handler** - Main extension point for custom actions.
+   *
+   * Routes semantic action IDs from configuration to appropriate handlers.
+   * This is where developers can intercept and customize user interactions.
+   *
+   * **Action Flow:**
+   * 1. UI emits semantic action ID (from menu.config.yaml)
+   * 2. GUIAdapter maps ID to action specification
+   * 3. Executes appropriate command, renderer operation, or history action
+   *
+   * **Extension Pattern:**
+   * Add new actions in menu.config.yaml, register commands in GUICommandRegistry.
+   *
+   * @param {string} id - Action identifier (e.g., "edit.undo", "insert.resistor")
+   *
+   * @example
+   * // Programmatic action triggering
+   * guiAdapter.handleAction('insert.resistor');
+   * guiAdapter.handleAction('edit.undo');
+   *
+   * @example
+   * // Custom action handling (extend via configuration)
+   * // In menu.config.yaml:
+   * // actions:
+   * //   'custom.optimize': { kind: 'command', name: 'optimizeCircuit' }
+   * guiAdapter.handleAction('custom.optimize');
    */
   handleAction(id) {
     /** @type {ActionSpec|undefined} */
@@ -690,9 +791,23 @@ export class GUIAdapter {
   }
 
   /**
-   * Convert screen to world coords, accounting for renderer transform.
-   * @param {!MouseEvent} event
-   * @returns {{offsetX:number, offsetY:number}}
+   * **📐 Coordinate Transformation** - Converts screen to world coordinates.
+   *
+   * Essential for mouse interactions on the canvas. Accounts for:
+   * - Canvas position in viewport
+   * - Renderer pan offset
+   * - Renderer zoom scale
+   *
+   * Use this for all mouse position calculations in extensions.
+   *
+   * @param {!MouseEvent} event - Mouse event from canvas
+   * @returns {{offsetX:number, offsetY:number}} World coordinates
+   *
+   * @example
+   * canvas.addEventListener('click', (event) => {
+   *   const { offsetX, offsetY } = adapter.getTransformedMousePosition(event);
+   *   // Use world coordinates for element placement, hit testing, etc.
+   * });
    */
   getTransformedMousePosition(event) {
     const rect = this.canvas.getBoundingClientRect();
@@ -707,11 +822,28 @@ export class GUIAdapter {
   }
 
   /**
-   * Find the most appropriate element at given world coordinates.
-   * Prioritizes elements with nodes close to the click point, and non-wire elements over wires.
-   * @param {number} worldX
-   * @param {number} worldY
-   * @returns {?Object} element or null
+   * **🎯 Element Selection Logic** - Smart element detection at coordinates.
+   *
+   * Implements intelligent selection priorities:
+   * 1. **Node Proximity**: Elements with nodes near click point rank higher
+   * 2. **Type Priority**: Non-wire elements preferred over wires
+   * 3. **Hit Testing**: Uses element-specific intersection algorithms
+   *
+   * This method is crucial for user experience - determines which element
+   * responds to clicks when multiple elements overlap.
+   *
+   * **Extension Point**: Override for custom selection behavior.
+   *
+   * @param {number} worldX - World X coordinate
+   * @param {number} worldY - World Y coordinate
+   * @returns {?Object} Best matching element or null
+   *
+   * @example
+   * // Custom selection logic
+   * const element = adapter.findElementAt(mouseX, mouseY);
+   * if (element?.type === 'myCustomType') {
+   *   // Handle custom element interaction
+   * }
    */
   findElementAt(worldX, worldY) {
     const elements = this.circuitService.getElements();

@@ -214,14 +214,17 @@ export class PropertyPanel {
         // Generate property fields
         const propertyFields = config.fields.map(field => {
             const currentValue = properties.values[field.key] || '';
+            const inputType = field.key === 'label' ? 'text' : 'number';
+            const stepAttribute = inputType === 'number' ? 'step="any"' : '';
+            
             return `
                 <div class="property-field">
                     <label for="${field.key}">${field.label}${field.unit ? ` (${field.unit})` : ''}</label>
-                    <input type="number" 
-                           id="${field.key}" 
-                           name="${field.key}" 
-                           value="${currentValue}" 
-                           step="any" 
+                    <input type="${inputType}"
+                           id="${field.key}"
+                           name="${field.key}"
+                           value="${currentValue}"
+                           ${stepAttribute}
                            placeholder="${field.placeholder}">
                 </div>
             `;

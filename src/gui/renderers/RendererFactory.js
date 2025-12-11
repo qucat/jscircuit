@@ -1,3 +1,41 @@
+/**
+ * @module GUI/Renderers
+ * @description
+ * 🎨 **GUI Layer - Element Renderers**
+ *
+ * Visual rendering system for circuit elements using HTML5 Canvas.
+ * Provides extensible rendering through the Factory pattern.
+ */
+
+/**
+ * @class RendererFactory
+ * @description
+ * **🔧 Renderer Extension Point**
+ *
+ * Factory for creating and managing element renderers. This is the primary
+ * extension point for developers who want to add visual rendering for new
+ * circuit element types.
+ *
+ * **Usage Pattern:**
+ * 1. Create a new renderer class extending ElementRenderer
+ * 2. Register it with RendererFactory
+ * 3. The factory automatically creates instances as needed
+ *
+ * @example
+ * // Adding a custom renderer
+ * class MyCustomRenderer extends ElementRenderer {
+ *   render(element, isSelected, isHovered) {
+ *     // Custom rendering logic
+ *   }
+ * }
+ *
+ * rendererFactory.register('mycustom', MyCustomRenderer);
+ *
+ * @example
+ * // Getting a renderer instance
+ * const renderer = rendererFactory.create('resistor', context);
+ * renderer.render(element, false, false);
+ */
 export class RendererFactory {
     constructor() {
         this.registry = new Map();

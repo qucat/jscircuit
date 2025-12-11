@@ -1,3 +1,13 @@
+/**
+ * @module Application/Services
+ * @description
+ * ⚡ **Application Layer - Circuit Services**
+ *
+ * Application services that orchestrate domain operations and provide the main API
+ * for circuit manipulation. These services act as the primary interface between
+ * the GUI layer and the domain logic.
+ */
+
 import { EventEmitter } from "../utils/EventEmitter.js";
 import { Circuit } from "../domain/aggregates/Circuit.js";
 import { Element } from "../domain/entities/Element.js";
@@ -9,13 +19,50 @@ import { Label } from "../domain/valueObjects/Label.js";
 import { Logger } from "../utils/Logger.js";
 
 /**
- * CircuitService orchestrates operations on the Circuit aggregate,
- * ensuring high-level use cases like adding, deleting, and connecting elements
- * while delegating validation and low-level operations to the Circuit aggregate.
+ * @class CircuitService
+ * @extends EventEmitter
+ * @description
+ * **🔧 Primary Extension API - Circuit Operations**
  *
- * Now, CircuitService acts as an EventEmitter, broadcasting events whenever
- * circuit changes occur. This enables an **event-driven UI**, where the GUI
- * updates in response to state changes.
+ * CircuitService is the main application service that developers will interact with
+ * to programmatically manipulate circuits. It provides a clean, event-driven API
+ * for all circuit operations while maintaining domain integrity.
+ *
+ * **Key Features:**
+ * - Event-driven architecture with real-time GUI updates
+ * - Domain validation and business rule enforcement
+ * - Element lifecycle management (add, update, delete)
+ * - Circuit state serialization and persistence
+ * - Undo/redo support through state management
+ *
+ * **Events Emitted:**
+ * - `elementAdded`: When a new element is added
+ * - `elementDeleted`: When an element is removed
+ * - `elementUpdated`: When element properties change
+ * - `update`: General circuit state change notification
+ *
+ * @example
+ * // Basic circuit manipulation
+ * const service = new CircuitService(new Circuit());
+ *
+ * // Listen for changes
+ * service.on('elementAdded', (element) => {
+ *   console.log(`Added ${element.type} ${element.id}`);
+ * });
+ *
+ * // Add elements
+ * const resistor = new Resistor('R1', [pos1, pos2], null, new Properties({resistance: 1000}));
+ * service.addElement(resistor);
+ *
+ * @example
+ * // Advanced usage with properties
+ * service.updateElementProperties('R1', {
+ *   resistance: 2200,
+ *   label: 'Main Resistor'
+ * });
+ *
+ * const serialized = service.exportState();
+ * service.importState(serialized);
  */
 export class CircuitService extends EventEmitter {
   /**

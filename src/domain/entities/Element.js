@@ -1,11 +1,57 @@
+/**
+ * @module Domain/Entities
+ * @description
+ * 🏗️ **Domain Layer - Circuit Elements**
+ *
+ * Core entities representing physical circuit components in the QuCat Circuit Generator.
+ * This module provides the foundation for all circuit elements following Domain-Driven Design principles.
+ */
+
 import { Label } from '../valueObjects/Label.js';
 import { Position } from '../valueObjects/Position.js';
 import { Properties } from '../valueObjects/Properties.js';
 
 /**
- * Represents an abstract element in a circuit.
- * 
+ * @class Element
  * @abstract
+ * @description
+ * Abstract base class for all circuit elements in the QuCat Circuit Generator.
+ *
+ * This class serves as the foundation for all physical circuit components (resistors,
+ * capacitors, wires, etc.) and defines the common interface that all elements must implement.
+ *
+ * **🔧 Extension Point for Developers:**
+ * To create a new circuit element type, extend this class and implement the required
+ * properties and methods. See the examples below for implementation patterns.
+ *
+ * **Key Properties:**
+ * - `id`: Unique identifier for the element
+ * - `nodes`: Array of Position objects defining connection points
+ * - `label`: Optional text label for display
+ * - `type`: Element type identifier (set by subclasses)
+ * - `properties`: Container for element-specific properties
+ *
+ * @example
+ * // Creating a new element type
+ * class CustomElement extends Element {
+ *   constructor(id, nodes, label, properties) {
+ *     super(id, nodes, label, properties);
+ *     this.type = 'custom';
+ *   }
+ *
+ *   describe() {
+ *     return `Custom element ${this.id}`;
+ *   }
+ * }
+ *
+ * @example
+ * // Using an existing element
+ * const resistor = new Resistor(
+ *   'R1',
+ *   [new Position(0, 0), new Position(50, 0)],
+ *   new Label('1kΩ'),
+ *   new Properties({ resistance: 1000 })
+ * );
  */
 export class Element {
     /**

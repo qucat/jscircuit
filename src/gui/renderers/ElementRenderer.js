@@ -1,5 +1,42 @@
+/**
+ * @class ElementRenderer
+ * @description
+ * Base class for all circuit element renderers in the QuCat Circuit Generator.
+ *
+ * This abstract renderer provides common functionality for rendering circuit elements
+ * on the HTML5 canvas, including terminal rendering, label placement, selection
+ * indicators, and hover effects.
+ *
+ * **Renderer Architecture:**
+ * - Follows the Template Method pattern
+ * - Provides common rendering utilities (terminals, labels, selection)
+ * - Extended by specific renderers (ResistorRenderer, CapacitorRenderer, etc.)
+ * - Uses delegation pattern for element-specific rendering logic
+ *
+ * **Common Rendering Features:**
+ * - Terminal points (connection nodes)
+ * - Element labels with automatic positioning
+ * - Selection highlighting with customizable colors
+ * - Hover effects for user interaction feedback
+ * - Alignment guides for development/debugging
+ *
+ * @abstract
+ * @example
+ * class CustomRenderer extends ElementRenderer {
+ *   render(element, isSelected, isHovered) {
+ *     // Custom element rendering logic
+ *     this.renderTerminals(element.nodes);
+ *     this.renderLabel(element.label, x, y);
+ *   }
+ * }
+ */
 // ElementRenderer.js
 export class ElementRenderer {
+  /**
+   * Creates a new ElementRenderer instance.
+   *
+   * @param {CanvasRenderingContext2D} context - The 2D rendering context for the canvas
+   */
   constructor(context) {
     this.context = context;
     // Optional: show alignment guide markers (set to true to debug or visualize)
@@ -157,7 +194,7 @@ export class ElementRenderer {
       resistor: 'resistance',
       capacitor: 'capacitance',
       inductor: 'inductance',
-      junction: 'critical_current'
+      junction: 'inductance'
     };
     return typeMapping[element.type] || null;
   }

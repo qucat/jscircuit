@@ -9,7 +9,14 @@
         "copy": "cp -r assets dist/assets && cp src/gui/gui.html dist/",
         "menu:build": "node scripts/build-menu-config.mjs",
         "build": "npm run menu:build && npm run bundle && npm run copy && npm run menu:build",
-        "serve": "npm run build && http-server -c-1"
+        "serve": "npm run build && http-server -c-1",
+        "docs:clean": "rm -rf docs/dist",
+        "docs:build": "npm run docs:clean && npx jsdoc -c docs/jsdoc.conf.json -t node_modules/docdash",
+        "docs:copy-assets": "cp -r dist/static docs/ && cp -r dist/assets docs/",
+        "docs:full": "npm run build && npm run docs:copy-assets && npm run docs:build",
+        "docs:serve": "npm run docs:build && cd docs/dist/extension-api && python3 -m http.server 8081 || php -S localhost:8081",
+        "deploy:prepare": "npm run build && npm run docs:build && mkdir -p deploy && cp -r dist/* deploy/ && cp -r docs deploy/ && cp index.html deploy/",
+        "deploy:serve": "npm run deploy:prepare && cd deploy && python3 -m http.server 8080"
     },
     "type": "module",
     "author": "",
@@ -17,7 +24,9 @@
     "devDependencies": {
         "canvas": "^3.1.0",
         "chai": "^4.5.0",
+        "docdash": "^2.0.2",
         "esbuild": "^0.25.4",
+        "jsdoc": "^4.0.5",
         "jsdom": "^26.0.0",
         "mocha": "^10.0.0",
         "sinon": "^19.0.2",

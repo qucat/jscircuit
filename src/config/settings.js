@@ -1,3 +1,40 @@
+/**
+ * @module Configuration
+ * @description
+ * ⚙️ **Configuration Layer - Application Setup**
+ *
+ * Central configuration and dependency injection for the QuCat Circuit Generator.
+ * This module implements the Registry pattern and provides the main setup
+ * functions that developers need to extend the application.
+ */
+
+/**
+ * @fileoverview Central Configuration Module for QuCat Circuit Generator
+ * @description
+ * This module serves as the application's main configuration hub, handling the registration
+ * and setup of all circuit elements, renderers, and GUI commands. It implements the
+ * Registry pattern to provide centralized management of application components.
+ *
+ * **Key Responsibilities:**
+ * - Element registration (resistors, capacitors, wires, etc.) with their factory functions
+ * - Renderer registration for visual component rendering
+ * - GUI command registration for user interactions
+ * - Dependency injection setup for the application architecture
+ *
+ * **🔧 Primary Extension Points:**
+ * - Add new element types via ElementRegistry
+ * - Register custom renderers via RendererFactory
+ * - Add custom commands via GUICommandRegistry
+ * - Configure application-wide settings
+ *
+ * **Architecture Pattern:**
+ * This file implements the **Registry Pattern** and **Factory Pattern** to enable
+ * dynamic component creation and loose coupling between modules.
+ *
+ * @module settings
+ * @since 1.0.0
+ */
+
 // settings.js
 import { ElementRegistry } from '../domain/factories/ElementRegistry.js';
 import { RendererFactory } from '../gui/renderers/RendererFactory.js';
@@ -18,7 +55,7 @@ import { Properties } from '../domain/valueObjects/Properties.js';
 
 import { GUICommandRegistry } from "../gui/commands/GUICommandRegistry.js";
 
-// Import commands
+// Import commands - These implement the Command Pattern for undo/redo functionality
 import { AddElementCommand } from "../gui/commands/AddElementCommand.js";
 import { DrawWireCommand } from "../gui/commands/DrawWireCommand.js";
 import { DragElementCommand } from "../gui/commands/GUIDragElementCommand.js";
@@ -34,8 +71,31 @@ import { SaveNetlistCommand } from "../gui/commands/SaveNetlistCommand.js";
 import { OpenNetlistCommand } from "../gui/commands/OpenNetlistCommand.js";
 import { WireSplitService } from "../application/WireSplitService.js";
 
-// Register elements once
+/**
+ * Element Registration - Factory Pattern Implementation
+ *
+ * This section demonstrates how to register domain entities using the Factory Pattern.
+ * Each element type is registered with a factory function that creates instances
+ * with proper default values and validation.
+ *
+ * **Extension Pattern:**
+ * To add a new element type:
+ * 1. Create the domain entity class extending Element
+ * 2. Register it here with ElementRegistry.register()
+ * 3. Add the corresponding renderer to the renderer registry
+ * 4. Optionally add specific commands for the element type
+ *
+ * @example
+ * // Adding a new element type
+ * ElementRegistry.register('CustomElement', (id, nodes, label, properties) => {
+ *   const defaultProps = { customProperty: 'default', orientation: 0 };
+ *   const finalProps = properties instanceof Properties
+ *     ? properties : new Properties(defaultProps);
+ *   return new CustomElement(id, nodes, label, finalProps);
+ * });
+ */
 if (ElementRegistry.getTypes().length === 0) {
+    // Resistor factory - demonstrates default property handling
     ElementRegistry.register('Resistor', (id = generateId('R'), nodes, label = null, properties = new Properties({})) => {
         const defaultProps = { resistance: 1.0, orientation: 0 };
         const finalProps = properties instanceof Properties ? properties : new Properties(defaultProps);
@@ -91,7 +151,23 @@ if (ElementRegistry.getTypes().length === 0) {
     });
 }
 
-// Set up renderer factory
+/**
+ * Renderer Registration - Adapter Pattern Implementation
+ *
+ * This section registers visual renderers for each element type using the
+ * Factory and Adapter patterns. Each renderer adapts domain entities to
+ * visual representation on the HTML5 canvas.
+ *
+ * **Extension Pattern:**
+ * To add a new renderer:
+ * 1. Create a renderer class extending ElementRenderer
+ * 2. Register it here with the same key as the element type
+ * 3. The renderer will automatically be used for that element type
+ *
+ * @example
+ * // Adding a renderer for a custom element
+ * rendererFactory.register('customElement', CustomElementRenderer);
+ */
 const rendererFactory = new RendererFactory();
 rendererFactory.register('resistor', ResistorRenderer);
 rendererFactory.register('wire', WireRenderer);
@@ -100,12 +176,40 @@ rendererFactory.register('inductor', InductorRenderer);
 rendererFactory.register('junction', JunctionRenderer);
 rendererFactory.register('ground', GroundRenderer);
 
-// Export everything, and a command setup function
+/**
+ * Registry Exports - Dependency Injection Pattern
+ *
+ * These registries are exported for dependency injection throughout the application.
+ * This implements the Registry Pattern and enables loose coupling between modules.
+ */
 export { ElementRegistry, rendererFactory, GUICommandRegistry };
 
-// Export a function to register commands later
-// This is needed to avoid circular dependencies
-// and to ensure commands are set up after the GUIAdapter is initialized.
+/**
+ * Sets up and registers all GUI commands for the application.
+ *
+ * This function is responsible for registering all available commands in the GUICommandRegistry.
+ * It's called after the GUIAdapter is initialized to avoid circular dependencies and ensure
+ * that all required services (CircuitService, CircuitRenderer) are available.
+ *
+ * **Dependency Injection Pattern:**
+ * Commands are registered with factory functions that receive the necessary dependencies
+ * at runtime, enabling proper dependency injection and loose coupling.
+ *
+ * **Command Categories:**
+ * - Element manipulation: add, delete, rotate, drag
+ * - Selection: select single, multi-select, select all
+ * - Wire operations: draw wires with splitting logic
+ * - File operations: save/load netlist files
+ * - Clipboard: copy/paste operations
+ *
+ * @param {CircuitService} circuitService - The circuit service for domain operations
+ * @param {CircuitRenderer} circuitRenderer - The renderer for UI operations
+ *
+ * @example
+ * const circuitService = new CircuitService(circuit);
+ * const circuitRenderer = new CircuitRenderer(canvas, circuitService);
+ * setupCommands(circuitService, circuitRenderer);
+ */
 export function setupCommands(circuitService, circuitRenderer) {
     const wireSplitService = new WireSplitService(circuitService, ElementRegistry);
 

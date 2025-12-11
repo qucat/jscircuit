@@ -1,4 +1,35 @@
+/**
+ * @class Circuit
+ * @description
+ * Domain aggregate representing a complete circuit design in the QuCat Circuit Generator.
+ *
+ * This is the core aggregate in our Domain-Driven Design architecture that maintains
+ * the integrity of a circuit by managing elements and their connections. It enforces
+ * business rules such as element uniqueness and connection validity.
+ *
+ * **Key Responsibilities:**
+ * - Manage circuit elements (resistors, capacitors, wires, etc.)
+ * - Validate element additions and connections
+ * - Maintain connection mapping between elements
+ * - Enforce domain business rules and constraints
+ *
+ * **Aggregate Root Pattern:**
+ * As an aggregate root, Circuit is the only way to access and modify circuit elements.
+ * All mutations must go through this aggregate to maintain consistency.
+ *
+ * @example
+ * const circuit = new Circuit();
+ * const resistor = new Resistor('R1', [pos1, pos2], null, new Properties({resistance: 1000}));
+ * circuit.validateAddElement(resistor);
+ * circuit.addElement(resistor);
+ */
 export class Circuit {
+    /**
+     * Creates a new empty circuit.
+     *
+     * Initializes the circuit with empty collections for elements and connections.
+     * The circuit starts in a valid state with no elements or connections.
+     */
     constructor() {
         this.elements = []; // List of all elements in the circuit
         this.connections = new Map(); // Map of node positions to connected elements
@@ -118,9 +149,22 @@ export class Circuit {
     }
 
     /**
-     * Serializes the circuit elements into a format suitable for export.
-     * @returns {Object[]} Serialized elements in the circuit.
-     * Each element is represented as an object with properties
+     * Serializes the circuit elements into a format suitable for export or persistence.
+     *
+     * This method converts all circuit elements into a plain JavaScript object format
+     * that can be easily serialized to JSON or other data formats. It's primarily used
+     * by export adapters like QucatNetlistAdapter for file operations.
+     *
+     * @returns {Object[]} Array of serialized element objects, each containing:
+     *   - {string} id - The unique element identifier
+     *   - {string} type - The element type (resistor, capacitor, wire, etc.)
+     *   - {Object[]} nodes - Array of node positions as {x, y} objects
+     *   - {Object} properties - Element properties as key-value pairs
+     *   - {string|null} label - Element label text or null if no label
+     *
+     * @example
+     * const serialized = circuit.getSerializedElements();
+     * console.log(serialized[0]); // { id: 'R1', type: 'resistor', nodes: [{x: 10, y: 20}], ... }
      */
     getSerializedElements() {
         return this.elements.map(el => ({

@@ -3,7 +3,32 @@ import { Properties } from '../valueObjects/Properties.js';
 import { Resistance } from '../valueObjects/Resistance.js';
 
 /**
- * Represents a Resistor in the circuit.
+ * @class Resistor
+ * @extends Element
+ * @description
+ * Represents a resistor component in the circuit, providing electrical resistance
+ * between two connection points.
+ *
+ * A resistor is a passive two-terminal electrical component that implements electrical
+ * resistance as a circuit element. In the QuCat circuit generator, resistors are
+ * fundamental components used for impedance control and signal conditioning.
+ *
+ * **Physical Properties:**
+ * - Resistance value in ohms (Ω)
+ * - Orientation for visual representation
+ * - Two connection nodes (start and end points)
+ *
+ * **Usage in QuCat:**
+ * Resistors are commonly used in quantum circuit analysis for modeling
+ * dissipative elements and coupling mechanisms.
+ *
+ * @example
+ * const resistor = new Resistor(
+ *   'R1',
+ *   [new Position(0, 0), new Position(50, 0)],
+ *   new Label('R1'),
+ *   new Properties({ resistance: 1000 })  // 1kΩ
+ * );
  */
 export class Resistor extends Element {
     /**
