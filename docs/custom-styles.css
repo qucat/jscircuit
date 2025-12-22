@@ -1,4 +1,4 @@
-/* QuCat Circuit Generator - Custom Styles */
+/* JSCircuit Editor - Custom Styles */
 
 /* 
    User Request: "I appreciate the blue headers" 
@@ -24,3 +24,81 @@ div[align="center"] h1 {
 div[align="center"] img[alt="QuCat Logo"] {
   margin-bottom: 0 !important;
 }
+
+/* Sidebar Logo Styles */
+.sidebar-logo-container {
+    text-align: left;
+    margin-bottom: 5px;
+    padding-bottom: 0;
+    border-bottom: none;
+    /* padding-left: 15px;  Align with menu items usually - let's check if needed, usually nav has padding */
+}
+
+.sidebar-logo {
+    max-width: 80px;
+    display: block;
+    margin: 0 0 0 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.sidebar-title {
+    font-size: 1.4em;
+    font-weight: bold;
+    font-family: "Source Sans Pro", sans-serif;
+    letter-spacing: 1px;
+    
+    /* Dark Grey Text Style (Matching Markdown) */
+    color: #4d4e53;
+    background: none;
+    -webkit-text-fill-color: initial;
+    
+    margin-bottom: 5px;
+    display: inline-block;
+}
+
+/* Sidebar Background & Adjustments */
+nav {
+    background-color: #f0f4f8; /* Light gray blueish */
+}
+
+/* Fix for white background on logo if present */
+.sidebar-logo {
+    mix-blend-mode: multiply;
+}
+
+/* Reduce space between logo text and search bar */
+.sidebar-logo-container {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+#nav-search {
+    margin-top: 5px !important;
+    margin-bottom: 10px !important;
+}
+
+/* Fix for white gap on the left side of the sidebar - Desktop only */
+@media only screen and (min-width: 681px) {
+    body {
+        padding: 0 !important; /* Remove body padding on desktop to fix sidebar gap */
+    }
+    
+    /* Add padding to the main content area instead */
+    #main {
+        padding: 0 20px;
+    }
+}
+
+/* Ensure nav has correct padding */
+nav {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Adjust footer to align with content */
+footer {
+    padding-left: 20px;
+}
+
+

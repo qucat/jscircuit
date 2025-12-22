@@ -38,16 +38,13 @@
     "idInHeadings": true
   },
   "metadata": {
-    "title": "QuCat Circuit Generator - Extension API",
-    "description": "Extension API documentation for developers extending the QuCat Circuit Generator with custom elements, renderers, and commands"
+    "title": "JSCircuit Editor - Extension API",
+    "description": "Extension API documentation for developers extending the JSCircuit Editor with custom elements, renderers, and commands"
   },
   "docdash": {
     "static": true,
     "sort": true,
     "sectionOrder": [
-      "Getting Started",
-      "Architecture Guide",
-      "Extension API",
       "Modules",
       "Classes",
       "Interfaces",
@@ -56,15 +53,15 @@
     ],
     "disqus": false,
     "openGraph": {
-      "title": "QuCat Circuit Generator - Extension API",
+      "title": "JSCircuit Editor - Extension API",
       "type": "website",
       "image": "https://raw.githubusercontent.com/jurra/qucat-circuit-generator/main/docs/qucat-logo.png",
-      "site_name": "QuCat Circuit Generator Extension API",
+      "site_name": "JSCircuit Editor Documentation",
       "url": "https://jurra.github.io/qucat-circuit-generator/"
     },
     "meta": {
-      "title": "QuCat Circuit Generator - Professional Extension API",
-      "description": "Modern, professional API documentation for extending the QuCat Circuit Generator with custom elements, renderers, and commands using hexagonal architecture patterns. Build quantum circuit design tools with confidence.",
+      "title": "JSCircuit Editor - Professional Extension API",
+      "description": "Modern, professional API documentation for extending the JSCircuit Editor with custom elements, renderers, and commands using hexagonal architecture patterns. Build quantum circuit design tools with confidence.",
       "keyword": "circuit generator extension, quantum circuits API, JavaScript extensions, domain-driven design, hexagonal architecture, quantum simulation, circuit design, JSDoc API"
     },
     "search": true,
@@ -77,38 +74,28 @@
     "scripts": [],
     "css": ["custom-styles.css"],
     "theme": "dark",
-    "title": "QuCat Circuit Generator",
-    "logo": "assets/logo.png",
+    "title": "JSCircuit Editor",
+    "logo": "qucat-logo.png",
     "menu": {
       "Getting Started": {
         "href": "tutorial-getting-started.html",
-        "target": "_self",
-        "class": "menu-item primary-menu",
-        "id": "getting-started"
+        "target": "_self"
       },
       "Extension Guide": {
         "href": "tutorial-extension-guide.html",
-        "target": "_self",
-        "class": "menu-item primary-menu",
-        "id": "extension-guide"
+        "target": "_self"
       },
       "Architecture": {
         "href": "tutorial-overview.html",
-        "target": "_self",
-        "class": "menu-item primary-menu",
-        "id": "architecture"
+        "target": "_self"
       },
       "Live Demo": {
         "href": "app/jscircuit.html",
-        "target": "_blank",
-        "class": "menu-item demo-menu",
-        "id": "live-demo"
+        "target": "_blank"
       },
       "GitHub": {
         "href": "https://github.com/qucat/gui-circuit-generator",
-        "target": "_blank",
-        "class": "menu-item github-menu",
-        "id": "github-link"
+        "target": "_blank"
       }
     }
   }
