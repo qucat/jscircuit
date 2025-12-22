@@ -1,10 +1,8 @@
-# QuCat Circuit Generator - C4 Model Architecture Documentation
-
-This directory contains the complete C4 model documentation for the QuCat Circuit Generator, showing the software architecture from high-level system context down to detailed code structure.
+This directory contains the complete C4 model documentation for the JSCircuit Editor, showing the software architecture from high-level system context down to detailed code structure.
 
 ## Overview
 
-The C4 model provides a hierarchical set of software architecture diagrams for the QuCat Circuit Generator:
+The C4 model provides a hierarchical set of software architecture diagrams for the JSCircuit Editor:
 
 1. **System Context** - Shows the big picture
 2. **Containers** - Shows the high-level technology choices  

@@ -1,6 +1,4 @@
-# Extension Guide
-
-The QuCat Circuit Generator is designed to be **extensible**. You can add custom elements, renderers, and commands.
+The JSCircuit Editor is designed to be **extensible**. You can add custom elements, renderers, and commands.
 
 ## Extension Points
 

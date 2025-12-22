@@ -1,15 +1,13 @@
-# C4 Level 1: System Context Diagram
-
-This diagram shows the overall system context for the QuCat Circuit Generator, including users and external systems.
+This diagram shows the overall system context for the JSCircuit Editor, including users and external systems.
 
 ```mermaid
 C4Context
-    title System Context diagram for QuCat Circuit Generator
+    title System Context diagram for JSCircuit Editor
 
     Person(circuitDesigner, "Circuit Designer", "Quantum circuit researchers and engineers who design superconducting quantum circuits")
     Person(physicsResearcher, "Physics Researcher", "Scientists working with quantum electronics and Josephson junction circuits")
 
-    System(qucatGenerator, "QuCat Circuit Generator", "Web-based application for designing, visualizing, and analyzing quantum superconducting circuits")
+    System(qucatGenerator, "JSCircuit Editor", "Web-based application for designing, visualizing, and analyzing quantum superconducting circuits")
 
     System_Ext(qucatLibrary, "QuCat Python Library", "Quantum circuit analysis tool for eigenfrequency calculations, Hamiltonian generation, and circuit analysis")
     System_Ext(webBrowser, "Web Browser", "Renders HTML5 canvas-based GUI and handles user interactions")
@@ -34,7 +32,7 @@ C4Context
 - **Physics Researcher**: Secondary user who uses the tool for quantum electronics modeling
 
 ### System Purpose
-The QuCat Circuit Generator enables graphical design of quantum superconducting circuits with components like Josephson junctions, capacitors, inductors, and resistors.
+The JSCircuit Editor enables graphical design of quantum superconducting circuits with components like Josephson junctions, capacitors, inductors, and resistors.
 
 ### External Dependencies
 - **QuCat Python Library**: Target system for circuit analysis

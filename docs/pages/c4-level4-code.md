@@ -1,6 +1,5 @@
-# C4 Level 4: Code Diagram
 
-This diagram shows the key classes and their relationships in the QuCat Circuit Generator.
+This diagram shows the key classes and their relationships in the JSCircuit Editor.
 
 ```mermaid
 classDiagram

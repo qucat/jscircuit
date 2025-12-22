@@ -1,5 +1,3 @@
-# Architecture & JSCircuit Concepts
-
 <div align="center">
   <img src="qucat-logo.png" alt="JSCircuit Logo" height="60"/>
   <h2>System Architecture & Design Principles</h2>

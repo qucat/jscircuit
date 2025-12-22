@@ -1,14 +1,12 @@
-# C4 Level 2: Container Diagram
-
-This diagram shows the high-level containers that make up the QuCat Circuit Generator and how they interact.
+This diagram shows the high-level containers that make up the JSCircuit Editor and how they interact.
 
 ```mermaid
 C4Container
-    title Container diagram for QuCat Circuit Generator
+    title Container diagram for JSCircuit Editor
 
     Person(user, "Circuit Designer", "Designs quantum superconducting circuits")
 
-    Container_Boundary(qucatSystem, "QuCat Circuit Generator") {
+    Container_Boundary(qucatSystem, "JSCircuit Editor") {
         Container(webApp, "Web Application", "JavaScript, HTML5 Canvas", "Single-page application providing circuit design interface with real-time editing")
         
         Container(domainCore, "Domain Core", "JavaScript, DDD", "Business logic and domain entities for circuit modeling, validation, and relationships")

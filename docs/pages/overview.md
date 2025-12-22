@@ -1,6 +1,4 @@
-# Architecture Overview
-
-The QuCat Circuit Generator follows **Domain-Driven Design (DDD)** with **Hexagonal Architecture** principles.
+The JSCircuit Editor follows **Domain-Driven Design (DDD)** with **Hexagonal Architecture** principles.
 
 ## Layered Architecture
 

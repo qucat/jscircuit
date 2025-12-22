@@ -1,6 +1,4 @@
-# Interactive Demo
-
-Test the QuCat Circuit Generator directly in your browser.
+Test the JSCircuit Editor directly in your browser.
 
 ## Challenge: The LC Tank Circuit
 

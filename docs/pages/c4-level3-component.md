@@ -1,10 +1,8 @@
-# C4 Level 3: Component Diagram
-
 This diagram shows the internal components within each container and their relationships.
 
 ```mermaid
 C4Component
-    title Component diagram for QuCat Circuit Generator
+    title Component diagram for JSCircuit Editor
 
     Container_Boundary(gui, "GUI Layer") {
         Component(guiAdapter, "GUIAdapter", "JavaScript", "Central coordinator bridging UI events to domain commands")
