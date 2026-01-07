@@ -1,7 +1,7 @@
 // Test PropertyPanel with different component types
 import { CircuitService } from '../src/application/CircuitService.js';
 import { Circuit } from '../src/domain/aggregates/Circuit.js';
-import { ElementRegistry } from '../src/config/settings.js';
+import { ElementRegistry } from '../src/config/registry.js';
 import { PropertyPanel } from '../src/gui/property_panel/PropertyPanel.js';
 import { CommandHistory } from '../src/gui/commands/CommandHistory.js';
 import { Position } from '../src/domain/valueObjects/Position.js';

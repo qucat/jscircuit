@@ -4,7 +4,7 @@ import { Circuit } from '../../src/domain/aggregates/Circuit.js';
 import { CircuitService } from '../../src/application/CircuitService.js';
 import { MockElement } from './MockElement.js'; // A mock element class for testing
 import { Position } from '../../src/domain/valueObjects/Position.js';
-import { ElementRegistry } from '../../src/config/settings.js';
+import { ElementRegistry } from '../../src/config/registry.js';
 
 describe('CircuitService Tests', () => {
     let circuit;

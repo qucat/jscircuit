@@ -12,7 +12,7 @@ import { EventEmitter } from "../utils/EventEmitter.js";
 import { Circuit } from "../domain/aggregates/Circuit.js";
 import { Element } from "../domain/entities/Element.js";
 import { generateId } from "../utils/idGenerator.js";
-import { ElementRegistry } from "../config/settings.js";
+import { ElementRegistry } from "../config/registry.js";
 import { Position } from "../domain/valueObjects/Position.js";
 import { Properties } from "../domain/valueObjects/Properties.js";
 import { Label } from "../domain/valueObjects/Label.js";

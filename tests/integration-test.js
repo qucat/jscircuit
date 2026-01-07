@@ -12,7 +12,7 @@
 import { expect } from 'chai';
 import { Circuit } from '../src/domain/aggregates/Circuit.js';
 import { CircuitService } from '../src/application/CircuitService.js';
-import { ElementRegistry } from '../src/config/settings.js';
+import { ElementRegistry } from '../src/config/registry.js';
 import { Resistor } from '../src/domain/entities/Resistor.js';
 import { Properties } from '../src/domain/valueObjects/Properties.js';
 import { Position } from '../src/domain/valueObjects/Position.js';

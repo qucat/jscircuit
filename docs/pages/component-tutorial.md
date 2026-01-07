@@ -52,7 +52,7 @@ src/
 │   └── renderers/
 │       └── VariableCapacitorRenderer.js  # Visual representation
 └── config/
-    └── settings.js                  # Registration
+    └── registry.js                  # Registration
 ```
 
 ---
@@ -419,7 +419,7 @@ export class VariableCapacitorRenderer extends Renderer {
 
 Now register both the entity and renderer:
 
-**File**: `src/config/settings.js` (add to existing registrations)
+**File**: `src/config/registry.js` (add to existing registrations)
 
 ```javascript
 import { VariableCapacitor } from '../domain/entities/VariableCapacitor.js';

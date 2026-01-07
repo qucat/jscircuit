@@ -5,7 +5,7 @@ import { CircuitService } from "../../src/application/CircuitService.js";
 import { CircuitRenderer } from "../../src/gui/renderers/CircuitRenderer.js";
 import { DeleteElementCommand } from "../../src/gui/commands/DeleteElementCommand.js";
 import { Position } from "../../src/domain/valueObjects/Position.js";
-import { rendererFactory } from "../../src/config/settings.js";
+import { rendererFactory } from "../../src/config/registry.js";
 
 describe("DeleteElementCommand Tests", function () {
   let canvas;

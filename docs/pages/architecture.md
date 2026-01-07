@@ -273,7 +273,7 @@ export class ElementFactory {
     }
 }
 
-// Registration in src/config/settings.js
+// Registration in src/config/registry.js
 ElementFactory.register('Resistor', Resistor);
 ElementFactory.register('Capacitor', Capacitor);
 ```

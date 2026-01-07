@@ -99,7 +99,7 @@ src/
 │   └── adapters/        # File I/O, netlist format
 │
 └── config/             # Registration & settings
-    ├── settings.js     # Central config
+    ├── registry.js     # Central registry
     └── menu.config.yaml # UI configuration
 ```
 

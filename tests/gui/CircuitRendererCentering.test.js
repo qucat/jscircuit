@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { CircuitRenderer } from '../../src/gui/renderers/CircuitRenderer.js';
 import { CircuitService } from '../../src/application/CircuitService.js';
 import { Circuit } from '../../src/domain/aggregates/Circuit.js';
-import { ElementRegistry } from '../../src/config/settings.js';
+import { ElementRegistry } from '../../src/config/registry.js';
 import { RendererFactory } from '../../src/gui/renderers/RendererFactory.js';
 
 describe('CircuitRenderer Coordinate Centering', () => {

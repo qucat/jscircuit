@@ -3,7 +3,7 @@
 import { expect } from 'chai';
 import { Circuit } from '../../src/domain/aggregates/Circuit.js';
 import { CircuitService } from '../../src/application/CircuitService.js';
-import { ElementRegistry } from '../../src/config/settings.js';
+import { ElementRegistry } from '../../src/config/registry.js';
 import { AddElementCommand } from '../../src/gui/commands/AddElementCommand.js';
 
 describe('Grid & Snapping (UI/Command layer)', function() {

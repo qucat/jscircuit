@@ -7,7 +7,7 @@ import { ElementFactory } from '../../src/domain/factories/ElementFactory.js';
 import { Position } from '../../src/domain/valueObjects/Position.js';
 import { Properties } from '../../src/domain/valueObjects/Properties.js';
 import { Label } from '../../src/domain/valueObjects/Label.js';
-import { ElementRegistry } from '../../src/config/settings.js';
+import { ElementRegistry } from '../../src/config/registry.js';
 
 describe('Copy-Paste Commands', () => {
   let circuit;

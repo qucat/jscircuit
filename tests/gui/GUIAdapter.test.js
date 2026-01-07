@@ -7,7 +7,7 @@ import {
   ElementRegistry,
   GUICommandRegistry,
   rendererFactory,
-} from '../../src/config/settings.js';
+} from '../../src/config/registry.js';
 
 import { Circuit } from '../../src/domain/aggregates/Circuit.js';
 import { CircuitService } from '../../src/application/CircuitService.js';

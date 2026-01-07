@@ -1,7 +1,7 @@
 {
   "source": {
     "include": [
-      "./src/config/settings.js",
+      "./src/config/registry.js",
       "./src/gui/main.js", 
       "./src/application/CircuitService.js",
       "./src/domain/aggregates/Circuit.js",

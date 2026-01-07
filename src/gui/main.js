@@ -55,7 +55,7 @@ import {
   rendererFactory,
   GUICommandRegistry,
   setupCommands
-} from "../config/settings.js";
+} from "../config/registry.js";
 import { initMenu } from "./menu/initMenu.js";
 import { Logger } from "../utils/Logger.js";
 import { globalPerformanceMonitor } from "../utils/PerformanceUtils.js";
