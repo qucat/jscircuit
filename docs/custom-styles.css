@@ -101,4 +101,12 @@ footer {
     padding-left: 20px;
 }
 
+/* Hide JSDoc's auto-generated tutorial titles to avoid duplicates with markdown H1 */
+.page-title {
+    display: none !important;
+}
 
+/* Hide the header section title that JSDoc generates from filename */
+section > header h2 {
+    display: none !important;
+}

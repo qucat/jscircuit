@@ -1,3 +1,5 @@
+# Installation
+
 ## Prerequisites
 
 - Modern web browser (Chrome, Firefox, Safari, or Edge)

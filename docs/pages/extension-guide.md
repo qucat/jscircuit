@@ -1,3 +1,5 @@
+# Extension Guide
+
 The JSCircuit Editor is designed to be **extensible**. You can add custom elements, renderers, and commands.
 
 ## Extension Points

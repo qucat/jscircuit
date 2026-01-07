@@ -1,3 +1,5 @@
+# Interactive Demo
+
 Test the JSCircuit Editor directly in your browser.
 
 ## Replicate the circuit shown in the image bellow

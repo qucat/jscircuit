@@ -1,3 +1,5 @@
+# C4 Level 2: Containers
+
 This diagram shows the high-level containers that make up the JSCircuit Editor and how they interact.
 
 ```mermaid

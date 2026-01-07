@@ -1,3 +1,5 @@
+# C4 Level 3: Components
+
 This diagram shows the internal components within each container and their relationships.
 
 ```mermaid

@@ -1,3 +1,5 @@
+# C4 Level 1: System Context
+
 This diagram shows the overall system context for the JSCircuit Editor, including users and external systems.
 
 ```mermaid

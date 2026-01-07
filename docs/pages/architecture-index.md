@@ -1,3 +1,5 @@
+# C4 Architecture Index
+
 This directory contains the complete C4 model documentation for the JSCircuit Editor, showing the software architecture from high-level system context down to detailed code structure.
 
 ## Overview

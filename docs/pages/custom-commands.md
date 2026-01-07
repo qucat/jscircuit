@@ -1,3 +1,5 @@
+# Custom Commands
+
 Commands implement user interactions with undo/redo support. This guide shows you how to create custom commands.
 
 ## Command Pattern

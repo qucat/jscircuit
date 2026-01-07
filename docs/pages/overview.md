@@ -1,3 +1,5 @@
+# Architecture
+
 The JSCircuit Editor follows **Domain-Driven Design (DDD)** with **Hexagonal Architecture** principles.
 
 ## Layered Architecture

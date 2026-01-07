@@ -1,3 +1,5 @@
+# Custom Elements
+
 Custom elements allow you to extend the circuit generator with new components beyond the built-in capacitors, inductors, and junctions.
 
 ## Element Basics
