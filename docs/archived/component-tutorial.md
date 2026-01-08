@@ -602,7 +602,25 @@ You've successfully created a custom Variable Capacitor component with:
 ✅ **Menu Integration** with keyboard shortcut  
 ✅ **Testing** with unit tests  
 
+---
+
+## 🔗 Complete Integration Guide
+
+This tutorial covered the basics of creating a component. For a comprehensive understanding of how components integrate into the full framework architecture, including:
+
+- **GUIAdapter coordination** - How the framework discovers and uses your component
+- **Command system integration** - Bidirectional GUIAdapter ↔ Command relationships  
+- **Value object requirements** - Proper use of Position, Label, and Properties
+- **Open-Closed Principle** - Extending without modifying core framework code
+- **Custom commands** - Creating specialized behaviors beyond standard operations
+- **Architecture validation** - Ensuring hexagonal principles are maintained
+
+👉 **See the [Extend JSCircuit Tutorial](../extension-integration-tutorial.md)** for the complete architecture walkthrough from domain to GUI.
+
+---
+
 ### Next Steps:
+- **📚 [Extend JSCircuit Tutorial](../extension-integration-tutorial.md)** - Complete architecture guide
 - **🔧 [API Documentation](./dist/extension-api/)** - Deep dive into extension APIs
 - **🏗️ [Architecture Guide](./architecture/)** - Understand the full system design
 - **🎮 [Try JSCircuit](./live-demo.html)** - Test your component in action
