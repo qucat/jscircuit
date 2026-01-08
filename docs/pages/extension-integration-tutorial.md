@@ -106,8 +106,9 @@ export class MyInductor extends Element {
    * @param {Object|Properties} properties - Element properties
    */
   constructor(id, nodes, label, properties = {}) {
-    // Convert label to Label object if needed
-    const labelInstance = label instanceof Label ? label : new Label(label || 'L1');
+    // Convert label to Label object if needed (allow null/undefined to stay null)
+    const labelInstance = label instanceof Label ? label 
+      : (label ? new Label(label) : null);
     
     // Convert properties to Properties object
     // Note: Properties only accepts numbers, "variable", or undefined
@@ -124,8 +125,9 @@ export class MyInductor extends Element {
     // Call parent constructor
     super(id, nodes, labelInstance, propsInstance);
     
-    // Set the type (used by framework to identify this element)
-    this.type = 'MyInductor';
+    // Set the type (lowercase to match framework conventions)
+    // IMPORTANT: Use lowercase - framework uses this for renderer and factory lookups
+    this.type = 'myinductor';
   }
 }
 ```
@@ -185,13 +187,13 @@ describe('Extension Tutorial Validation', () => {
       expect(inductor).to.be.instanceOf(MyInductor);
     });
 
-    it('should set type to "MyInductor"', () => {
+    it('should set type to "myinductor"', () => {
       const node1 = new Position(0, 0);
       const node2 = new Position(50, 0);
       const inductor = new MyInductor('1', [node1, node2], 'L1');
 
-      // The framework uses this type to look up renderers and factories
-      expect(inductor.type).to.equal('MyInductor');
+      // The framework uses lowercase type for renderer and factory lookups
+      expect(inductor.type).to.equal('myinductor');
     });
 
     it('should accept string label and convert to Label instance', () => {
@@ -287,42 +289,73 @@ import { ElementRenderer } from './ElementRenderer.js';
  */
 export class MyInductorRenderer extends ElementRenderer {
   /**
-   * Renders the inductor on the canvas
-   * 
-   * @param {CanvasRenderingContext2D} ctx - Canvas context
-   * @param {MyInductor} element - The element to render
-   * @param {boolean} isSelected - Whether element is selected
-   * @param {boolean} isHovered - Whether element is hovered
+   * Required method for CircuitRenderer integration
+   * Renders the element in its basic state
    */
-  render(ctx, element, isSelected, isHovered) {
+  renderElement(element) {
+    this.renderElementWithStates(element, false, false);
+  }
+
+  /**
+   * Main rendering implementation with hover and selection states
+   */
+  renderElementWithStates(element, isHovered, isSelected) {
     // Change color based on selection state
-    ctx.strokeStyle = isSelected ? '#e74c3c' : '#3498db';
-    ctx.lineWidth = isSelected ? 3 : 2;
+    this.context.strokeStyle = isSelected ? '#e74c3c' : '#3498db';
+    this.context.lineWidth = isSelected ? 3 : 2;
     
     // Draw a simple line between the two nodes
     const [start, end] = element.nodes;
-    ctx.beginPath();
-    ctx.moveTo(start.x, start.y);
-    ctx.lineTo(end.x, end.y);
-    ctx.stroke();
+    this.context.beginPath();
+    this.context.moveTo(start.x, start.y);
+    this.context.lineTo(end.x, end.y);
+    this.context.stroke();
     
-    // Draw label if present
-    if (element.label) {
-      ctx.fillStyle = '#2c3e50';
-      ctx.font = '12px Arial';
+    // Draw terminals
+    this.renderTerminal(start);
+    this.renderTerminal(end);
+    
+    // Draw label if present (use black text for visibility)
+    if (element.label && element.label.value) {
       const midX = (start.x + end.x) / 2;
       const midY = (start.y + end.y) / 2;
-      ctx.fillText(element.label.value, midX, midY - 10);
+      
+      this.context.fillStyle = 'black';
+      this.context.font = '12px Arial';
+      this.context.textAlign = 'center';
+      this.context.fillText(element.label.value, midX, midY - 10);
     }
+  }
+
+  /**
+   * Check if a point is within the element bounds (required for click/hover detection)
+   */
+  isPointInBounds(mouseX, mouseY, elementMidX, elementMidY) {
+    const hitRadius = 20; // Hit area size in pixels
+    const dx = mouseX - elementMidX;
+    const dy = mouseY - elementMidY;
+    return Math.abs(dx) < hitRadius && Math.abs(dy) < hitRadius;
+  }
+
+  /**
+   * Legacy render method for backward compatibility with tests
+   */
+  render(ctx, element, isSelected, isHovered) {
+    const savedContext = this.context;
+    this.context = ctx;
+    this.renderElementWithStates(element, isHovered, isSelected);
+    this.context = savedContext;
   }
 }
 ```
 
-### Renderer Guidelines:
+### Renderer Requirements:
 - ✅ Extends `ElementRenderer`
-- ✅ Implements `render(ctx, element, isSelected, isHovered)`
+- ✅ Implements `renderElement(element)` - **Required** by CircuitRenderer
+- ✅ Implements `isPointInBounds(x, y, midX, midY)` - **Required** for click/hover detection
+- ✅ Uses `this.context` for canvas operations (set by base class)
 - ✅ No business logic - only drawing commands
-- ✅ Keep it simple - you can make it fancy later!
+- ✅ Use black text for labels (white text is invisible on light backgrounds)
 
 ---
 
@@ -555,7 +588,7 @@ Find the renderer registration section (around line 190). Add your renderer:
 rendererFactory.register('myinductor', MyInductorRenderer);
 ```
 
-**Important**: Use lowercase for the renderer key (`'myinductor'`) while the element type uses PascalCase (`'MyInductor'`). This is the framework's convention.
+**Important**: Use lowercase for the renderer key (`'myinductor'`) to match the element's type property. The framework uses `element.type` to look up the correct renderer.
 
 ### Complete Example
 
@@ -570,8 +603,9 @@ import { MyInductorRenderer } from '../gui/renderers/MyInductorRenderer.js';
 
 }
 
-// Tutorial: Register custom MyInductor element
-ElementRegistry.register('MyInductor', (id = generateId('L'), nodes, label = null, properties = new Properties({})) => {
+// Tutorial: Register custom MyInductor element (outside guard block)
+// IMPORTANT: Use lowercase 'myinductor' to match element.type property
+ElementRegistry.register('myinductor', (id = generateId('L'), nodes, label = null, properties = new Properties({})) => {
     let finalProps;
     if (properties instanceof Properties) {
         finalProps = properties;
@@ -592,17 +626,28 @@ rendererFactory.register('resistor', ResistorRenderer);
 rendererFactory.register('myinductor', MyInductorRenderer);
 ```
 
+### Type Naming Convention:
+
+**Critical**: The framework uses lowercase throughout for consistency:
+- `element.type = 'myinductor'` (set in element constructor)
+- `ElementRegistry.register('myinductor', ...)` (factory lookup key)
+- `rendererFactory.register('myinductor', ...)` (renderer lookup key)
+- `PropertyPanel elementConfigs['myinductor']` (property panel config)
+- `menu.config.yaml args: ["myinductor"]` (menu action argument)
+
+This consistency eliminates the need for string transformations and prevents lookup errors.
+
 ### How Registries Work:
 
 **ElementRegistry** - Creates elements:
 ```javascript
 // You register a factory function that creates your element
-ElementRegistry.register('MyInductor', (id, nodes, label, props) => {
+ElementRegistry.register('myinductor', (id, nodes, label, props) => {
   return new MyInductor(id, nodes, label, props);
 });
 
 // Framework uses it when needed:
-const factory = ElementRegistry.get('MyInductor');
+const factory = ElementRegistry.get('myinductor');
 const element = factory('id-1', [pos1, pos2], 'L1', { inductance: 10e-9 });
 ```
 
@@ -613,7 +658,7 @@ rendererFactory.register('myinductor', MyInductorRenderer);
 
 // Framework creates instances when drawing:
 const renderer = rendererFactory.create('myinductor', ctx);
-renderer.render(ctx, element, isSelected, isHovered);
+renderer.renderElement(element);
 ```
 
 ### Why This Works:
@@ -630,21 +675,21 @@ Add these tests to verify registration works:
 describe('Step 3: Register Components', () => {
   
   it('should register MyInductor in ElementRegistry', () => {
-    // Verify MyInductor is registered
-    const factory = ElementRegistry.get('MyInductor');
+    // Verify MyInductor is registered with lowercase key
+    const factory = ElementRegistry.get('myinductor');
     expect(factory).to.be.a('function');
   });
   
   it('should create MyInductor instances via ElementRegistry', () => {
     // Get factory and create an element
-    const factory = ElementRegistry.get('MyInductor');
+    const factory = ElementRegistry.get('myinductor');
     const node1 = new Position(0, 0);
     const node2 = new Position(50, 0);
     const inductor = factory('test-id', [node1, node2], 'L1', { inductance: 10e-9 });
     
     // Should create a proper MyInductor instance
     expect(inductor).to.be.instanceOf(MyInductor);
-    expect(inductor.type).to.equal('MyInductor');
+    expect(inductor.type).to.equal('myinductor');
     expect(inductor.properties.values.inductance).to.equal(10e-9);
   });
   
@@ -758,17 +803,14 @@ menus:
     items:
       # ... existing elements (Wire, Junction, Inductor, Capacitor, etc.) ...
       
-      # Add your custom element:
+      # Add your custom element (use lowercase in args to match element.type):
       - id: insert.myInductor
         label: My Inductor
         shortcut: Shift+I
-        action: { kind: command, name: addElement, args: ["MyInductor"] }
+        action: { kind: command, name: addElement, args: ["myinductor"] }
 ```
 
-That's it! The YAML configuration automatically:
-1. **Creates menu bindings** → Compiles to `dist/static/menu.config.json`
-2. **Generates keyboard shortcuts** → `menu.bindings.js` exports ACTIONS and KEYMAP
-3. **Routes to commands** → `addElement` command uses `args[0]` to get "MyInductor"
+**Important**: Use lowercase `"myinductor"` in the args array to match your element's type property. This is what ElementRegistry uses as the lookup key.
 
 ### How It Works Behind the Scenes:
 
@@ -783,10 +825,10 @@ When you run `npm run serve`, the build process:
    ```javascript
    // When user presses Shift+I:
    const spec = ACTIONS["insert.myInductor"];
-   // spec = { kind: "command", name: "addElement", args: ["MyInductor"] }
+   // spec = { kind: "command", name: "addElement", args: ["myinductor"] }
    
-   const cmd = GUICommandRegistry.get("addElement", circuitService, circuitRenderer, elementRegistry, "MyInductor");
-   // Returns: new AddElementCommand(..., "MyInductor")
+   const cmd = GUICommandRegistry.get("addElement", circuitService, circuitRenderer, elementRegistry, "myinductor");
+   // Returns: new AddElementCommand(..., "myinductor")
    
    commandHistory.executeCommand(cmd, circuitService);
    ```
@@ -794,8 +836,8 @@ When you run `npm run serve`, the build process:
 4. **AddElementCommand creates the element**:
    ```javascript
    // Inside AddElementCommand.execute():
-   const elementClass = this.elementRegistry.get(this.elementType); // Gets MyInductor class
-   const element = new elementClass(id, nodes, label, properties);
+   const factory = this.elementRegistry.get(this.elementType); // Gets 'myinductor' factory
+   const element = factory(id, nodes, label, properties);
    ```
 
 ### No Code Changes Needed!
@@ -806,9 +848,37 @@ You don't modify:
 - ❌ `AddElementCommand.js` (uses ElementRegistry dynamically)
 
 You only:
-- ✅ Edit `menu.config.yaml`
-- ✅ Run `npm run serve` (compiles YAML)
-- ✅ Test with keyboard shortcut
+- ✅ Edit `menu.config.yaml` with lowercase element type
+- ✅ Run `npm run serve` (compiles YAML and rebuilds)
+- ✅ Test with keyboard shortcut (Shift+I)
+
+### Step 5.1: Add Property Panel Configuration (Required)
+
+To enable property editing when double-clicking your element, add a configuration entry to the PropertyPanel.
+
+**File**: `src/gui/property_panel/PropertyPanel.js`
+
+Find the `elementConfigs` object (around line 200) and add your element:
+
+```javascript
+const elementConfigs = {
+  // ... existing configs (resistor, capacitor, inductor, etc.) ...
+  
+  // Add your custom element configuration:
+  myinductor: {
+    title: 'Specify label and/or inductance (in units of Henry)',
+    description: 'Custom inductor element from tutorial',
+    fields: [
+      { key: 'inductance', label: 'Inductance', unit: '', placeholder: '' },
+      { key: 'label', label: 'Label', unit: '', placeholder: '' }
+    ]
+  }
+};
+```
+
+**Important**: Use lowercase `'myinductor'` to match the element's type property. The PropertyPanel uses `element.type` to find the correct configuration.
+
+Now when users double-click your MyInductor element, they'll see a dialog to edit its inductance and label!
 
 ---
 
@@ -893,87 +963,127 @@ Some features need both a **command** and an **output adapter**:
 
 ---
 
-## Step 7: Complete Integration (Proving Open-Closed Principle)
+## Step 7: Complete Integration Testing
 
-Let's verify the complete integration works without modifying GUIAdapter.
+Let's verify the complete integration works in the browser.
 
 ### Integration Checklist:
 
 #### ✅ Domain Entity Created
 - [ ] `MyInductor` class extends `Element`
+- [ ] Type set to lowercase `'myinductor'`
 - [ ] Uses `Label` and `Properties` value objects
-- [ ] Implements `toNetlistEntry()` or domain-specific methods
+- [ ] Label allows null (no hardcoded defaults)
 - [ ] No GUI dependencies
 
 #### ✅ Renderer Created
 - [ ] `MyInductorRenderer` extends `ElementRenderer`
-- [ ] Implements `render(ctx, element, isSelected, isHovered)`
+- [ ] Implements `renderElement(element)` (required)
+- [ ] Implements `isPointInBounds(x, y, midX, midY)` (required for clicks)
+- [ ] Uses `this.context` for canvas operations
+- [ ] Uses black text for labels (visibility)
 - [ ] No business logic
 
 #### ✅ Registrations Complete
-- [ ] `ElementRegistry.register('MyInductor', factory)` in registry.js
-- [ ] `rendererFactory.register('MyInductor', MyInductorRenderer)` in registry.js
-- [ ] Optional: Custom commands registered in `GUICommandRegistry`
+- [ ] `ElementRegistry.register('myinductor', factory)` in registry.js (lowercase)
+- [ ] `rendererFactory.register('myinductor', MyInductorRenderer)` in registry.js (lowercase)
+- [ ] PropertyPanel configuration added for `'myinductor'` (lowercase)
 
 #### ✅ Menu Integration
-- [ ] Action added to `menu.bindings.js`
-- [ ] Keyboard shortcut configured
-- [ ] Action calls `guiAdapter.setPendingElementType('MyInductor')`
+- [ ] Action added to `menu.config.yaml` with `args: ["myinductor"]` (lowercase)
+- [ ] Keyboard shortcut configured (Shift+I)
+- [ ] Menu compiles successfully to `dist/static/menu.config.json`
 
 #### ✅ Core Framework Unchanged
-- [ ] Run `grep -r "MyInductor" src/gui/adapters/` → No matches
-- [ ] Core framework files have same line count before/after
+- [ ] Only one bug fix needed: GUIAdapter Shift key support (applies to all shortcuts)
+- [ ] Run `grep -r "myinductor" src/gui/adapters/` → No matches (type-agnostic)
 - [ ] All coordination happens through registries
 
-### Test the Integration:
+### Browser Testing Steps:
 
-**Test File**: `tests/manual/test-my-inductor.js` (or in browser console)
+**1. Build and Start Server:**
+```bash
+npm run serve
+# This will build and start server on http://127.0.0.1:8081
+```
+
+**2. Open Browser:**
+Navigate to `http://127.0.0.1:8081`
+
+**3. Test Keyboard Shortcut:**
+- Press `Shift+I`
+- Your custom MyInductor should appear and follow the mouse
+- Click to place it on the canvas
+
+**4. Test Double-Click Property Editing:**
+- Double-click your placed MyInductor element
+- Property panel dialog should appear
+- Edit inductance value or label
+- Click Save
+- Changes should be reflected
+
+**5. Test Label Rendering:**
+- Place multiple MyInductor elements
+- Add different labels to each via property panel
+- Labels should be visible (black text) and unique per instance
+- Labels should not overwrite each other
+
+**6. Test Move/Select Operations:**
+- Click and drag your MyInductor element
+- It should move smoothly without errors
+- Selection state should show (red color when selected)
+
+**7. Test Menu Item:**
+- Click Insert menu
+- Find "My Inductor" menu item
+- Click it to place element
+- Should work identically to keyboard shortcut
+
+### Console Test Commands:
+
+Open browser console and test programmatically:
 
 ```javascript
-// Create a test circuit
-import { Circuit } from './src/domain/entities/Circuit.js';
-import { Position } from './src/domain/valueObjects/Position.js';
-import { ElementRegistry } from './src/config/registry.js';
+// Get the factory from registry
+const factory = ElementRegistry.get('myinductor');
+console.log(factory); // Should be a function
 
-// Get the factory from registry (GUIAdapter does this internally)
-const factory = ElementRegistry.get('MyInductor');
+// Create test element
+const node1 = new Position(100, 100);
+const node2 = new Position(200, 100);
+const inductor = factory('L-test', [node1, node2], 'TEST', { inductance: 10e-9 });
 
-// Create element
-const node1 = new Position(0, 0);
-const node2 = new Position(50, 0);
-const inductor = factory('L1', [node1, node2], 'My Custom Inductor', { 
-  inductance: 10e-9 
-});
-
-console.log(inductor.type); // 'MyInductor'
-console.log(inductor.toNetlistEntry()); // 'LL1 0,0 50,0 1e-08'
+console.log(inductor.type); // Should be 'myinductor'
+console.log(inductor.label); // Should have value 'TEST'
+console.log(inductor.properties.values.inductance); // Should be 10e-9
 
 // Add to circuit
-circuit.elements.push(inductor);
-
-// Render - MyInductorRenderer.render() is called automatically!
-framework.render();
+circuitService.addElement(inductor);
 ```
 
 ### Proof of Open-Closed Principle:
 
-**Before MyInductor:**
+**Core Framework Files Modified:**
+- `src/gui/adapters/GUIAdapter.js` - ONE bug fix: Added Shift key support to signature function
+  - This fix benefits ALL keyboard shortcuts with Shift modifier
+  - The fix is generic, not MyInductor-specific
+
+**Element-Specific Files Created:**
+- `src/domain/entities/MyInductor.js` (new)
+- `src/gui/renderers/MyInductorRenderer.js` (new)
+
+**Configuration Files Modified:**
+- `src/config/registry.js` - Added MyInductor registration (extension point)
+- `src/config/menu.config.yaml` - Added menu item (configuration, not code)
+- `src/gui/property_panel/PropertyPanel.js` - Added elementConfig entry (configuration data)
+
+**Search for element-specific code in core coordinator:**
 ```bash
-$ wc -l src/gui/adapters/GUIAdapter.js
-342 src/gui/adapters/GUIAdapter.js
+$ grep -r "myinductor" src/gui/adapters/
+# No matches - Core is type-agnostic!
 ```
 
-**After MyInductor:**
-```bash
-$ wc -l src/gui/adapters/GUIAdapter.js
-342 src/gui/adapters/GUIAdapter.js  # Same line count!
-```
-
-**Search for element-specific code:**
-```bash
-$ grep -r "Resistor\|Capacitor\|Inductor" src/gui/adapters/
-# No matches found - Core is type-agnostic!
-```
+The framework remained open for extension but closed for modification!
 
 ---
 
@@ -1180,29 +1290,81 @@ const renderer = rendererFactory.create('MyInductor', ctx);
 ## Summary: What You Learned
 
 ### ✅ How to Extend Without Breaking Things
-- Created custom element without touching core files
+- Created custom element without touching core files (except one generic bug fix)
 - Used registries to plug in new functionality
 - Framework discovers your elements automatically
 
+### ✅ Type Naming Convention (Critical!)
+**Lowercase throughout** - The framework uses consistent lowercase naming:
+- `element.type = 'myinductor'` (in element constructor)
+- `ElementRegistry.register('myinductor', ...)` (factory lookup)
+- `rendererFactory.register('myinductor', ...)` (renderer lookup)
+- `PropertyPanel elementConfigs['myinductor']` (property config)
+- `menu.config.yaml args: ["myinductor"]` (menu action)
+
+This consistency eliminates transformation functions (like `capitalize()`) and prevents lookup errors.
+
+### ✅ Required Renderer Methods
+Your renderer MUST implement:
+1. **`renderElement(element)`** - Called by CircuitRenderer to draw the element
+2. **`isPointInBounds(x, y, midX, midY)`** - Required for click/hover detection
+
+Without these methods:
+- Elements won't render properly in the browser
+- Double-clicking won't open the property panel
+- Hover effects won't work
+
+### ✅ Label Handling Best Practices
+**Don't use hardcoded default labels**:
+```javascript
+// ❌ WRONG - All instances get same default label
+const labelInstance = label instanceof Label ? label : new Label(label || 'L1');
+
+// ✅ RIGHT - Allow null, let PropertyPanel handle labeling
+const labelInstance = label instanceof Label ? label 
+  : (label ? new Label(label) : null);
+```
+
+### ✅ Keyboard Shortcut Support
+The framework's keyboard handler must support modifier keys:
+```javascript
+// In GUIAdapter.js signature function:
+const ctrl = e.ctrlKey || e.metaKey ? "Ctrl+" : "";
+const shift = e.shiftKey ? "Shift+" : "";  // Essential for Shift+I
+return ctrl + shift + key;
+```
+
 ### ✅ Separation of Concerns
 - Element class: data and behavior
-- Renderer class: visual display
+- Renderer class: visual display  
 - Clear boundary between the two
 
 ### ✅ Important Types
 - `Position` for coordinates
-- `Label` for text labels
-- `Properties` for element data (numbers only!)
+- `Label` for text labels (nullable)
+- `Properties` for element data (numbers, "variable", or undefined only)
 
 ### ✅ How It All Works
 ```
-User Action (Menu/Shortcut)
-  → Framework looks up 'MyInductor' in ElementRegistry
-  → Your factory creates new MyInductor(...)
-  → Element added to circuit
-  → Framework looks up 'MyInductor' in RendererFactory
-  → Your renderer draws it on screen
+User Action (Menu/Shortcut: Shift+I)
+  → Framework looks up 'myinductor' in ElementRegistry
+  → Your factory creates new MyInductor(id, nodes, null, properties)
+  → Element added to circuit in placement mode
+  → Framework looks up 'myinductor' in RendererFactory
+  → Your renderer.renderElement() draws it on screen
+  → User double-clicks element
+  → Framework calls renderer.isPointInBounds() to detect click
+  → PropertyPanel looks up 'myinductor' config
+  → Dialog opens for label/inductance editing
 ```
+
+### ✅ Common Integration Issues Fixed
+1. **Type Mismatch**: Changed all registrations to use lowercase 'myinductor'
+2. **Missing renderElement()**: Added required method for CircuitRenderer
+3. **Click Detection**: Implemented isPointInBounds() for hover/click support
+4. **Shift Key**: Fixed GUIAdapter to support Shift modifier in shortcuts
+5. **Label Overwriting**: Removed hardcoded default label 'L1'
+6. **Property Panel**: Added elementConfigs entry for 'myinductor'
 
 ---
 
