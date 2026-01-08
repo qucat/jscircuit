@@ -64,10 +64,9 @@ describe('Extension Integration: Building MyInductor', () => {
     document.body.innerHTML = '';
     sinon.restore();
     
-    // Unregister test components to avoid pollution
-    if (ElementRegistry._registry && ElementRegistry._registry['MyInductor']) {
-      delete ElementRegistry._registry['MyInductor'];
-    }
+    // Note: MyInductor is now part of the framework (in registry.js for the tutorial),
+    // so we don't delete it from ElementRegistry to avoid breaking other tests.
+    // ExtensionIntegration tests will skip re-registration if it already exists.
     if (rendererFactory.registry && rendererFactory.registry.has('MyInductor')) {
       rendererFactory.registry.delete('MyInductor');
     }

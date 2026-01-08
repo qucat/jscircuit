@@ -44,12 +44,14 @@ import { Capacitor } from '../domain/entities/Capacitor.js';
 import { Inductor } from '../domain/entities/Inductor.js';
 import { Junction } from '../domain/entities/Junction.js';
 import { Ground } from '../domain/entities/Ground.js';
+import { MyInductor } from '../domain/entities/MyInductor.js';
 import { ResistorRenderer } from '../gui/renderers/ResistorRenderer.js';
 import { WireRenderer } from '../gui/renderers/WireRenderer.js';
 import { CapacitorRenderer } from '../gui/renderers/CapacitorRenderer.js';
 import { InductorRenderer } from '../gui/renderers/InductorRenderer.js';
 import { JunctionRenderer } from '../gui/renderers/JunctionRenderer.js';
 import { GroundRenderer } from '../gui/renderers/GroundRenderer.js';
+import { MyInductorRenderer } from '../gui/renderers/MyInductorRenderer.js';
 import { generateId } from '../utils/idGenerator.js';
 import { Properties } from '../domain/valueObjects/Properties.js';
 
@@ -151,6 +153,24 @@ if (ElementRegistry.getTypes().length === 0) {
     });
 }
 
+// Tutorial: Register custom MyInductor element (outside guard to ensure it's always registered)
+ElementRegistry.register('MyInductor', (id = generateId('L'), nodes, label = null, properties = new Properties({})) => {
+    // Handle both Properties instances and plain objects
+    let finalProps;
+    if (properties instanceof Properties) {
+        finalProps = properties;
+    } else {
+        // Plain object - merge with defaults
+        const propsObject = typeof properties === 'object' && properties !== null ? properties : {};
+        finalProps = new Properties({ inductance: propsObject.inductance || 5e-9 });
+    }
+    // Ensure inductance is set
+    if (finalProps.values.inductance === undefined) {
+        finalProps.values.inductance = 5e-9;
+    }
+    return new MyInductor(id, nodes, label, finalProps);
+});
+
 /**
  * Renderer Registration - Adapter Pattern Implementation
  *
@@ -175,6 +195,7 @@ rendererFactory.register('capacitor', CapacitorRenderer);
 rendererFactory.register('inductor', InductorRenderer);
 rendererFactory.register('junction', JunctionRenderer);
 rendererFactory.register('ground', GroundRenderer);
+rendererFactory.register('myinductor', MyInductorRenderer);
 
 /**
  * Registry Exports - Dependency Injection Pattern
