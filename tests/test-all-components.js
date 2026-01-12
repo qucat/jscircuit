@@ -17,28 +17,28 @@ const propertyPanel = new PropertyPanel(circuitService, commandHistory);
 // Test different element types
 const elementTypes = [
     {
-        name: 'Resistor',
-        factory: ElementRegistry.get('Resistor'),
+        name: 'resistor',
+        factory: ElementRegistry.get('resistor'),
         properties: { resistance: 1000, orientation: 0 }
     },
     {
         name: 'Capacitor', 
-        factory: ElementRegistry.get('Capacitor'),
+        factory: ElementRegistry.get('capacitor'),
         properties: { capacitance: 1e-12, orientation: 0 }
     },
     {
         name: 'Inductor',
-        factory: ElementRegistry.get('Inductor'), 
+        factory: ElementRegistry.get('inductor'), 
         properties: { inductance: 1e-9, orientation: 0 }
     },
     {
         name: 'Wire',
-        factory: ElementRegistry.get('Wire'),
+        factory: ElementRegistry.get('wire'),
         properties: {}
     },
     {
         name: 'Ground',
-        factory: ElementRegistry.get('Ground'),
+        factory: ElementRegistry.get('ground'),
         properties: { orientation: 0 }
     }
 ];

@@ -96,28 +96,27 @@ menus:
       - id: insert.junction
         label: Junction
         shortcut: J
-        action: { kind: command, name: addElement, args: ["Junction"] }
+        action: { kind: command, name: addElement, args: ["junction"] }
 
       - id: insert.inductor
         label: Inductor
         shortcut: L
-        action: { kind: command, name: addElement, args: ["Inductor"] }
+        action: { kind: command, name: addElement, args: ["inductor"] }
 
       - id: insert.capacitor
         label: Capacitor
         shortcut: C
-        action: { kind: command, name: addElement, args: ["Capacitor"] }
+        action: { kind: command, name: addElement, args: ["capacitor"] }
 
       - id: insert.resistor
         label: Resistor
         shortcut: R
-        action: { kind: command, name: addElement, args: ["Resistor"] }
+        action: { kind: command, name: addElement, args: ["resistor"] }
 
       - id: insert.ground
         label: Ground
         shortcut: G
-        action: { kind: command, name: addElement, args: ["Ground"] }
-
+        action: { kind: command, name: addElement, args: ["ground"] }
 
   - label: View
     items:

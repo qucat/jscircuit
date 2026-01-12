@@ -14,7 +14,7 @@ const circuitService = new CircuitService(circuit, ElementRegistry);
 const commandHistory = new CommandHistory(circuitService);
 
 // Create a test resistor
-const resistorFactory = ElementRegistry.get('Resistor');
+const resistorFactory = ElementRegistry.get('resistor');
 const testResistor = resistorFactory(
     'TEST_R1',
     [new Position(10, 20), new Position(30, 20)],

@@ -79,7 +79,9 @@ We'll build a custom `MyInductor` element through these steps:
 
 ## Step 1: Create Element Class
 
-**Create this file in the following path**: `src/domain/entities/MyInductor.js`
+**Example implementation**: See `docs/examples/tutorial/MyInductor.js` for a complete working example.
+
+When creating your own element, you would create a similar file (e.g., `src/domain/entities/CustomElement.js`).
 
 The element class contains the data and behavior of your component. It doesn't know anything about how it's displayed.
 
@@ -161,11 +163,13 @@ Since JSCircuit is highly modular, each component can be tested independently. Y
 
 ### Create Test File
 
-**File**: `tests/integration/TutorialValidation.test.js`
+**Example test file**: See `docs/examples/tutorial/TutorialValidation.test.js` for the complete test suite.
+
+When creating your own tests, create a file like `tests/integration/YourElementValidation.test.js`.
 
 ```javascript
 import { expect } from 'chai';
-import { MyInductor } from '../../src/domain/entities/MyInductor.js';
+import { MyInductor } from './MyInductor.js';
 import { Position } from '../../src/domain/valueObjects/Position.js';
 import { Label } from '../../src/domain/valueObjects/Label.js';
 import { Properties } from '../../src/domain/valueObjects/Properties.js';
@@ -275,7 +279,9 @@ Extension Tutorial Validation
 
 ## Step 2: Create Renderer
 
-**Create this file in the following path**: `src/gui/renderers/MyInductorRenderer.js`
+**Example implementation**: See `docs/examples/tutorial/MyInductorRenderer.js` for a complete working example.
+
+When creating your own renderer, you would create a similar file (e.g., `src/gui/renderers/CustomElementRenderer.js`).
 
 The renderer handles how your element looks on screen. It's completely separate from the element's data.
 
@@ -296,55 +302,38 @@ export class MyInductorRenderer extends ElementRenderer {
     this.renderElementWithStates(element, false, false);
   }
 
+/**
+ * MyInductorRenderer - Renders MyInductor elements on canvas
+ * 
+ * Keep it simple: Just draw lines representing the element
+ */
+export class MyInductorRenderer extends ElementRenderer {
   /**
-   * Main rendering implementation with hover and selection states
+   * Renders the inductor element (required by framework)
+   * 
+   * @param {MyInductor} element - The element to render
    */
-  renderElementWithStates(element, isHovered, isSelected) {
-    // Change color based on selection state
-    this.context.strokeStyle = isSelected ? '#e74c3c' : '#3498db';
-    this.context.lineWidth = isSelected ? 3 : 2;
+  renderElement(element) {
+    const ctx = this.context;
     
     // Draw a simple line between the two nodes
+    ctx.strokeStyle = '#3498db'; // Blue color
+    ctx.lineWidth = 2;
+    
     const [start, end] = element.nodes;
-    this.context.beginPath();
-    this.context.moveTo(start.x, start.y);
-    this.context.lineTo(end.x, end.y);
-    this.context.stroke();
+    ctx.beginPath();
+    ctx.moveTo(start.x, start.y);
+    ctx.lineTo(end.x, end.y);
+    ctx.stroke();
     
-    // Draw terminals
-    this.renderTerminal(start);
-    this.renderTerminal(end);
-    
-    // Draw label if present (use black text for visibility)
-    if (element.label && element.label.value) {
+    // Draw label if present
+    if (element.label) {
+      ctx.fillStyle = '#2c3e50';
+      ctx.font = '12px Arial';
       const midX = (start.x + end.x) / 2;
       const midY = (start.y + end.y) / 2;
-      
-      this.context.fillStyle = 'black';
-      this.context.font = '12px Arial';
-      this.context.textAlign = 'center';
-      this.context.fillText(element.label.value, midX, midY - 10);
+      ctx.fillText(element.label.value, midX, midY - 10);
     }
-  }
-
-  /**
-   * Check if a point is within the element bounds (required for click/hover detection)
-   */
-  isPointInBounds(mouseX, mouseY, elementMidX, elementMidY) {
-    const hitRadius = 20; // Hit area size in pixels
-    const dx = mouseX - elementMidX;
-    const dy = mouseY - elementMidY;
-    return Math.abs(dx) < hitRadius && Math.abs(dy) < hitRadius;
-  }
-
-  /**
-   * Legacy render method for backward compatibility with tests
-   */
-  render(ctx, element, isSelected, isHovered) {
-    const savedContext = this.context;
-    this.context = ctx;
-    this.renderElementWithStates(element, isHovered, isSelected);
-    this.context = savedContext;
   }
 }
 ```
@@ -352,10 +341,8 @@ export class MyInductorRenderer extends ElementRenderer {
 ### Renderer Requirements:
 - ✅ Extends `ElementRenderer`
 - ✅ Implements `renderElement(element)` - **Required** by CircuitRenderer
-- ✅ Implements `isPointInBounds(x, y, midX, midY)` - **Required** for click/hover detection
 - ✅ Uses `this.context` for canvas operations (set by base class)
 - ✅ No business logic - only drawing commands
-- ✅ Use black text for labels (white text is invisible on light backgrounds)
 
 ---
 
@@ -390,11 +377,11 @@ describe('Step 2: Create Renderer', () => {
     expect(renderer).to.be.instanceOf(ElementRenderer);
   });
   
-  it('should have a render method', () => {
+  it('should have a renderElement method', () => {
     const renderer = new MyInductorRenderer();
     
-    // Render method is required by the framework
-    expect(renderer.render).to.be.a('function');
+    // renderElement method is required by the framework
+    expect(renderer.renderElement).to.be.a('function');
   });
   
   it('should change stroke style based on selection state', () => {
@@ -540,6 +527,8 @@ Extension Tutorial Validation
 ---
 
 ## Step 3: Register Your Components
+
+> **Note**: The example MyInductor implementation in `docs/examples/tutorial/` is **not registered** in the production codebase. It exists purely as a reference implementation for this tutorial. When creating your own custom elements, you would follow these registration steps in `src/config/registry.js`.
 
 **Add the new component to the registry**: `src/config/registry.js` (This is where you plug everything in)
 
@@ -854,7 +843,9 @@ You only:
 
 ### Step 5.1: Add Property Panel Configuration (Required)
 
-To enable property editing when double-clicking your element, add a configuration entry to the PropertyPanel.
+**⚠️ Current Limitation**: This step requires modifying core framework code, which violates the Open/Closed Principle of extensibility. The PropertyPanel currently uses a hardcoded configuration object instead of a registry pattern. This architectural issue will be addressed in future versions by implementing a PropertyPanelRegistry similar to ElementRegistry and RendererFactory.
+
+To enable property editing when double-clicking your element, you must add a configuration entry to the PropertyPanel.
 
 **File**: `src/gui/property_panel/PropertyPanel.js`
 
@@ -866,17 +857,39 @@ const elementConfigs = {
   
   // Add your custom element configuration:
   myinductor: {
-    title: 'Specify label and/or inductance (in units of Henry)',
-    description: 'Custom inductor element from tutorial',
+    title: 'My Inductor Properties',
+    description: 'Tutorial custom inductor element',
+    helpText: 'Configurable inductance value',
     fields: [
-      { key: 'inductance', label: 'Inductance', unit: '', placeholder: '' },
-      { key: 'label', label: 'Label', unit: '', placeholder: '' }
+      { key: 'inductance', label: 'Inductance (H)', type: 'number' },
+      { key: 'label', label: 'Label', type: 'text' }
     ]
   }
 };
 ```
 
 **Important**: Use lowercase `'myinductor'` to match the element's type property. The PropertyPanel uses `element.type` to find the correct configuration.
+
+**Why This Is Not Ideal**:
+- ❌ Requires modifying core framework code (`PropertyPanel.js`)
+- ❌ Extensions cannot add property configurations independently
+- ❌ Violates the Open/Closed Principle (open for extension, closed for modification)
+- ❌ Risk of merge conflicts when multiple developers add extensions
+- ❌ Cannot dynamically add/remove property panels at runtime
+
+**Future Solution**: 
+A `PropertyPanelRegistry` will be implemented to allow property panel configurations to be registered without modifying core files, similar to how ElementRegistry and RendererFactory work:
+
+```javascript
+// Future pattern (not yet implemented):
+PropertyPanelRegistry.register('myinductor', {
+  title: 'My Inductor Properties',
+  description: 'Tutorial custom inductor element',
+  fields: [...]
+});
+```
+
+Until this is implemented, you must edit `PropertyPanel.js` directly to add property configurations for custom elements.
 
 Now when users double-click your MyInductor element, they'll see a dialog to edit its inductance and label!
 

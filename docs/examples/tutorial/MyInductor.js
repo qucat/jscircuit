@@ -1,6 +1,6 @@
-import { Element } from '../entities/Element.js';
-import { Label } from '../valueObjects/Label.js';
-import { Properties } from '../valueObjects/Properties.js';
+import { Element } from '../../../src/domain/entities/Element.js';
+import { Label } from '../../../src/domain/valueObjects/Label.js';
+import { Properties } from '../../../src/domain/valueObjects/Properties.js';
 
 /**
  * MyInductor - A custom inductor element
@@ -33,7 +33,7 @@ export class MyInductor extends Element {
     // Call parent constructor
     super(id, nodes, labelInstance, propsInstance);
     
-    // Set the type (used by framework to identify this element)
-    this.type = 'MyInductor';
+    // Set the type (lowercase to match registry registration key)
+    this.type = 'myinductor';
   }
 }

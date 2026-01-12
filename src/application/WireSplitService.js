@@ -108,7 +108,7 @@ export class WireSplitService {
     // Delete the original wire before creating new ones to avoid ID conflicts.
     this.circuitService.deleteElement(wire.id);
 
-    const wireFactory = this.elementRegistry.get("Wire");
+    const wireFactory = this.elementRegistry.get("wire");
 
     // Create two new wires split at `splitPoint`
     const wire1 = wireFactory(undefined, [wire.nodes[0], splitPoint], null, {});

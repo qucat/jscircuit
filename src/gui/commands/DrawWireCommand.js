@@ -45,7 +45,7 @@ export class DrawWireCommand extends GUICommand {
     }
 
     // 2) Create a new wire with both nodes at the same place
-    const wireFactory = this.elementRegistry.get("Wire");
+    const wireFactory = this.elementRegistry.get("wire");
     if (!wireFactory) {
       console.error("No wire factory registered.");
       return;

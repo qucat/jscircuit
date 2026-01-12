@@ -24,7 +24,7 @@ describe('Grid & Snapping (UI/Command layer)', function() {
       circuitService,
       /* circuitRenderer = */ null, 
       ElementRegistry, 
-      /* elementType = */ 'Resistor'
+      /* elementType = */ 'resistor'
     );
   });
 

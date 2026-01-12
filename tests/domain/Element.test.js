@@ -22,7 +22,7 @@ describe('Element Class Tests', () => {
     /**
      * Parameterized test function to validate Element subclasses.
      *
-     * @param {string} type - The type of the Element subclass (e.g., 'Resistor', 'Wire', 'MockElement').
+     * @param {string} type - The type of the Element subclass (e.g., 'resistor', 'Wire', 'MockElement').
      * @param {Function} ElementClass - The Element subclass to test.
      * @param {Object} defaultProperties - Default properties for the Element subclass.
      */
@@ -88,7 +88,7 @@ describe('Element Class Tests', () => {
     testElementSubclass('MockElement', MockElement, { mockProperty: 42 });
 
     // Tests for Resistor
-    testElementSubclass('Resistor', Resistor, { resistance: 100 });
+    testElementSubclass('resistor', Resistor, { resistance: 100 });
 
     // Tests for Wire
     testElementSubclass('Wire', Wire, {});

@@ -63,10 +63,9 @@ export class PasteElementsCommand extends GUICommand {
         } while (existingIds.includes(newId));
         
         // Create new element with ElementFactory using the unique ID
-        // Capitalize the type since ElementFactory expects capitalized names
-        const capitalizedType = originalElement.type.charAt(0).toUpperCase() + originalElement.type.slice(1);
+        // Direct type lookup - element.type matches registry key (both lowercase)
         const newElement = ElementFactory.create(
-          capitalizedType,
+          originalElement.type,
           newId, // Use our generated unique ID
           offsetNodes,
           properties,

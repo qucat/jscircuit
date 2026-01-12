@@ -75,12 +75,12 @@ describe('Copy-Paste Commands', () => {
   describe('CopyElementsCommand', () => {
     it('should copy selected elements to clipboard', () => {
       // Create and add test elements
-      const resistor = ElementFactory.create('Resistor', 'R1', 
+      const resistor = ElementFactory.create('resistor', 'R1', 
         [new Position(100, 100), new Position(150, 100)], 
         new Properties({ resistance: 1000 }),
         new Label('Test Resistor')
       );
-      const capacitor = ElementFactory.create('Capacitor', 'C1',
+      const capacitor = ElementFactory.create('capacitor', 'C1',
         [new Position(200, 100), new Position(250, 100)],
         new Properties({ capacitance: 100e-6 }),
         new Label('Test Capacitor')
@@ -124,7 +124,7 @@ describe('Copy-Paste Commands', () => {
   describe('PasteElementsCommand', () => {
     it('should paste elements from clipboard with new IDs and offset positions', () => {
       // Create original element
-      const originalResistor = ElementFactory.create('Resistor', 'R1', 
+      const originalResistor = ElementFactory.create('resistor', 'R1', 
         [new Position(100, 100), new Position(150, 100)], 
         new Properties({ resistance: 1000 }),
         new Label('Original')
@@ -163,11 +163,11 @@ describe('Copy-Paste Commands', () => {
 
     it('should paste multiple elements', () => {
       // Create and copy multiple elements
-      const resistor = ElementFactory.create('Resistor', 'R1', 
+      const resistor = ElementFactory.create('resistor', 'R1', 
         [new Position(100, 100), new Position(150, 100)], 
         new Properties({ resistance: 1000 })
       );
-      const capacitor = ElementFactory.create('Capacitor', 'C1',
+      const capacitor = ElementFactory.create('capacitor', 'C1',
         [new Position(200, 100), new Position(250, 100)],
         new Properties({ capacitance: 100e-6 })
       );
@@ -207,7 +207,7 @@ describe('Copy-Paste Commands', () => {
 
     it('should be undoable', () => {
       // Setup: copy an element
-      const resistor = ElementFactory.create('Resistor', 'R1', 
+      const resistor = ElementFactory.create('resistor', 'R1', 
         [new Position(100, 100), new Position(150, 100)]
       );
       circuitService.addElement(resistor);
@@ -227,7 +227,7 @@ describe('Copy-Paste Commands', () => {
 
     it('should preserve element properties and labels during paste', () => {
       // Create element with complex properties (use valid properties only)
-      const inductor = ElementFactory.create('Inductor', 'L1',
+      const inductor = ElementFactory.create('inductor', 'L1',
         [new Position(300, 200), new Position(350, 200)],
         new Properties({ 
           inductance: 1e-3, 
@@ -257,7 +257,7 @@ describe('Copy-Paste Commands', () => {
   describe('Copy-Paste Integration', () => {
     it('should support copy-paste workflow with undo/redo', () => {
       // Create original circuit
-      const resistor = ElementFactory.create('Resistor', 'R1', 
+      const resistor = ElementFactory.create('resistor', 'R1', 
         [new Position(100, 100), new Position(150, 100)]
       );
       circuitService.addElement(resistor);

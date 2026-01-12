@@ -315,10 +315,6 @@ export class CircuitService extends EventEmitter {
    * @param {string} snapshot - A JSON string created by exportState().
    */
   importState(snapshot) {
-    function capitalize(str) {
-      return str.charAt(0).toUpperCase() + str.slice(1);
-    }
-
     const data = JSON.parse(snapshot);
 
     // Reset circuit state
@@ -328,7 +324,8 @@ export class CircuitService extends EventEmitter {
     const elementsById = {};
     for (const elData of data.elements) {
 
-      const factory = this.elementRegistry.get(capitalize(elData.type));
+      // Direct lookup - element.type matches registry key (both lowercase)
+      const factory = this.elementRegistry.get(elData.type);
       if (!factory) throw new Error(`No factory for type ${elData.type}`);
 
       const nodes = elData.nodes.map((n) => new Position(n.x, n.y));

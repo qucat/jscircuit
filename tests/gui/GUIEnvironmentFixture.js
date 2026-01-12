@@ -25,7 +25,8 @@ export async function createGUIEnvironmentFixture() {
   const elementTypes = ['resistor', 'wire', 'mockelement'];
   elementTypes.forEach((type) => {
     const button = document.createElement('button');
-    button.id = `add${capitalize(type)}`;
+    // Button ID uses PascalCase for legacy button naming (addResistor, addWire)
+    button.id = `add${type.charAt(0).toUpperCase() + type.slice(1)}`;
     document.body.appendChild(button);
   });
 
@@ -48,11 +49,7 @@ export async function createGUIEnvironmentFixture() {
         circuitService,
         guiAdapter.circuitRenderer,
         ElementRegistry,
-        capitalize(elementType)
+        elementType // Use lowercase type directly
       ),
   };
-}
-
-function capitalize(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
 }

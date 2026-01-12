@@ -92,8 +92,13 @@ export class AddElementCommand extends GUICommand {
     // Create Properties instance with default orientation for all elements
     const properties = new Properties({ orientation: 0 });
     
+    // Normalize element type for registry lookup
+    // Special case: "Wire" (capital) is used as a flag in GUIAdapter for wire drawing mode,
+    // but the registry key is lowercase "wire"
+    const normalizedType = this.elementType === "Wire" ? "wire" : this.elementType;
+    
     // Use ElementFactory.create with correct parameter order
-    const element = ElementFactory.create(this.elementType, undefined, positions, properties, null);
+    const element = ElementFactory.create(normalizedType, undefined, positions, properties, null);
 
 
     // Add the element in "placement mode" (so it follows the mouse)

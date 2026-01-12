@@ -11,12 +11,12 @@ import { GridCoordinate } from '../../domain/valueObjects/GridCoordinate.js';
  * and full element type with expected property name.
  */
 const typeMap = {
-    R: { fullType: 'Resistor', propertyKey: 'resistance' },
-    C: { fullType: 'Capacitor', propertyKey: 'capacitance' },
-    L: { fullType: 'Inductor', propertyKey: 'inductance' },
-    J: { fullType: 'Junction', propertyKey: 'value' },
-    G: { fullType: 'Ground', propertyKey: 'value' },
-    W: { fullType: 'Wire', propertyKey: 'value' }
+    R: { fullType: 'resistor', propertyKey: 'resistance' },
+    C: { fullType: 'capacitor', propertyKey: 'capacitance' },
+    L: { fullType: 'inductor', propertyKey: 'inductance' },
+    J: { fullType: 'junction', propertyKey: 'value' },
+    G: { fullType: 'ground', propertyKey: 'value' },
+    W: { fullType: 'wire', propertyKey: 'value' }
 };
 
 /**

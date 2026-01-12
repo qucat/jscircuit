@@ -31,10 +31,12 @@ class MockCanvas {
     }
 }
 
-// Register elements for testing
-ElementRegistry.register('resistor', (id, nodes, label, properties) => {
-    return new Resistor(id, nodes, label, properties || new Properties({}));
-});
+// Register elements for testing only if not already registered
+if (!ElementRegistry.get('resistor')) {
+    ElementRegistry.register('resistor', (id, nodes, label, properties) => {
+        return new Resistor(id, nodes, label, properties || new Properties({}));
+    });
+}
 
 describe('Performance Benchmarks', function() {
     this.timeout(10000); // 10 second timeout for performance tests

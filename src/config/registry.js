@@ -44,14 +44,12 @@ import { Capacitor } from '../domain/entities/Capacitor.js';
 import { Inductor } from '../domain/entities/Inductor.js';
 import { Junction } from '../domain/entities/Junction.js';
 import { Ground } from '../domain/entities/Ground.js';
-import { MyInductor } from '../domain/entities/MyInductor.js';
 import { ResistorRenderer } from '../gui/renderers/ResistorRenderer.js';
 import { WireRenderer } from '../gui/renderers/WireRenderer.js';
 import { CapacitorRenderer } from '../gui/renderers/CapacitorRenderer.js';
 import { InductorRenderer } from '../gui/renderers/InductorRenderer.js';
 import { JunctionRenderer } from '../gui/renderers/JunctionRenderer.js';
 import { GroundRenderer } from '../gui/renderers/GroundRenderer.js';
-import { MyInductorRenderer } from '../gui/renderers/MyInductorRenderer.js';
 import { generateId } from '../utils/idGenerator.js';
 import { Properties } from '../domain/valueObjects/Properties.js';
 
@@ -98,7 +96,7 @@ import { WireSplitService } from "../application/WireSplitService.js";
  */
 if (ElementRegistry.getTypes().length === 0) {
     // Resistor factory - demonstrates default property handling
-    ElementRegistry.register('Resistor', (id = generateId('R'), nodes, label = null, properties = new Properties({})) => {
+    ElementRegistry.register('resistor', (id = generateId('R'), nodes, label = null, properties = new Properties({})) => {
         const defaultProps = { resistance: 1.0, orientation: 0 };
         const finalProps = properties instanceof Properties ? properties : new Properties(defaultProps);
         // Ensure orientation is set
@@ -108,12 +106,12 @@ if (ElementRegistry.getTypes().length === 0) {
         return new Resistor(id, nodes, label, finalProps);
     });
 
-    ElementRegistry.register('Wire', (id = generateId('W'), nodes, label = null, properties = new Properties({})) => {
+    ElementRegistry.register('wire', (id = generateId('W'), nodes, label = null, properties = new Properties({})) => {
         const finalProps = properties instanceof Properties ? properties : new Properties({});
         return new Wire(id, nodes, label, finalProps);
     });
 
-    ElementRegistry.register('Capacitor', (id = generateId('C'), nodes, label = null, properties = new Properties({})) => {
+    ElementRegistry.register('capacitor', (id = generateId('C'), nodes, label = null, properties = new Properties({})) => {
         const defaultProps = { capacitance: 1e-12, orientation: 0 }; // 1 pF default
         const finalProps = properties instanceof Properties ? properties : new Properties(defaultProps);
         // Ensure orientation is set
@@ -123,7 +121,7 @@ if (ElementRegistry.getTypes().length === 0) {
         return new Capacitor(id, nodes, label, finalProps);
     });
 
-    ElementRegistry.register('Inductor', (id = generateId('L'), nodes, label = null, properties = new Properties({})) => {
+    ElementRegistry.register('inductor', (id = generateId('L'), nodes, label = null, properties = new Properties({})) => {
         const defaultProps = { inductance: 1e-9, orientation: 0 }; // 1 nH default
         const finalProps = properties instanceof Properties ? properties : new Properties(defaultProps);
         // Ensure orientation is set
@@ -133,7 +131,7 @@ if (ElementRegistry.getTypes().length === 0) {
         return new Inductor(id, nodes, label, finalProps);
     });
 
-    ElementRegistry.register('Junction', (id = generateId('J'), nodes, label = null, properties = new Properties({})) => {
+    ElementRegistry.register('junction', (id = generateId('J'), nodes, label = null, properties = new Properties({})) => {
         const finalProps = properties instanceof Properties ? properties : new Properties({ orientation: 0 });
         // Ensure orientation is set
         if (finalProps.values.orientation === undefined) {
@@ -142,7 +140,7 @@ if (ElementRegistry.getTypes().length === 0) {
         return new Junction(id, nodes, label, finalProps);
     });
 
-    ElementRegistry.register('Ground', (id = generateId('G'), nodes, label = null, properties = new Properties({})) => {
+    ElementRegistry.register('ground', (id = generateId('G'), nodes, label = null, properties = new Properties({})) => {
         const finalProps = properties instanceof Properties ? properties : new Properties({ orientation: 0 });
         // Ensure orientation is set
         if (finalProps.values.orientation === undefined) {
@@ -152,24 +150,6 @@ if (ElementRegistry.getTypes().length === 0) {
         return new Ground(id, nodes, null, finalProps);
     });
 }
-
-// Tutorial: Register custom MyInductor element (outside guard to ensure it's always registered)
-ElementRegistry.register('MyInductor', (id = generateId('L'), nodes, label = null, properties = new Properties({})) => {
-    // Handle both Properties instances and plain objects
-    let finalProps;
-    if (properties instanceof Properties) {
-        finalProps = properties;
-    } else {
-        // Plain object - merge with defaults
-        const propsObject = typeof properties === 'object' && properties !== null ? properties : {};
-        finalProps = new Properties({ inductance: propsObject.inductance || 5e-9 });
-    }
-    // Ensure inductance is set
-    if (finalProps.values.inductance === undefined) {
-        finalProps.values.inductance = 5e-9;
-    }
-    return new MyInductor(id, nodes, label, finalProps);
-});
 
 /**
  * Renderer Registration - Adapter Pattern Implementation
@@ -195,7 +175,6 @@ rendererFactory.register('capacitor', CapacitorRenderer);
 rendererFactory.register('inductor', InductorRenderer);
 rendererFactory.register('junction', JunctionRenderer);
 rendererFactory.register('ground', GroundRenderer);
-rendererFactory.register('myinductor', MyInductorRenderer);
 
 /**
  * Registry Exports - Dependency Injection Pattern

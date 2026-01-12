@@ -200,6 +200,7 @@ export class PropertyPanel {
                 description: 'Reference point (0V)',
                 helpText: 'Ground has no configurable electrical parameters', 
                 fields: []
+
             }
         };
 
