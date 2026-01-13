@@ -75,6 +75,32 @@ We'll build a custom `MyInductor` element through these steps:
 6. **Custom Commands** (Optional) - Advanced features
 7. **Test Integration** - Make sure it works
 
+## Complete File Structure for this project
+
+```
+src/
+├── domain/
+│   ├── entities/
+│   │   ├── Element.js          (Base class)
+│   │   └── MyInductor.js       ← YOU CREATE THIS
+│   └── valueObjects/
+│       ├── Position.js         (Framework provided)
+│       ├── Label.js            (Framework provided)
+│       └── Properties.js       (Framework provided)
+├── gui/
+│   ├── adapters/
+│   │   └── GUIAdapter.js       ← DON'T MODIFY (framework handles this)
+│   ├── renderers/
+│   │   ├── ElementRenderer.js  (Base class)
+│   │   └── MyInductorRenderer.js  ← YOU CREATE THIS
+│   └── commands/
+│       ├── GUICommand.js       (Base class)
+│       └── CustomInductorCommand.js  ← OPTIONAL
+└── config/
+    ├── registry.js             ← YOU MODIFY THIS (registrations)
+    └── menu.bindings.js        ← YOU MODIFY THIS (UI actions)
+```
+
 ---
 
 ## Step 1: Create Element Class
@@ -841,57 +867,228 @@ You only:
 - ✅ Run `npm run serve` (compiles YAML and rebuilds)
 - ✅ Test with keyboard shortcut (Shift+I)
 
-### Step 5.1: Add Property Panel Configuration (Required)
+### Step 3: Configure Property Panel (NEW!)
 
-**⚠️ Current Limitation**: This step requires modifying core framework code, which violates the Open/Closed Principle of extensibility. The PropertyPanel currently uses a hardcoded configuration object instead of a registry pattern. This architectural issue will be addressed in future versions by implementing a PropertyPanelRegistry similar to ElementRegistry and RendererFactory.
+To enable property editing when double-clicking your element, add a configuration entry to the menu and property panel configuration.
 
-To enable property editing when double-clicking your element, you must add a configuration entry to the PropertyPanel.
+**File**: `src/config/menu.config.yaml`
 
-**File**: `src/gui/property_panel/PropertyPanel.js`
+Add your element's property configuration under its menu entry. Update your menu configuration to include property panel metadata:
 
-Find the `elementConfigs` object (around line 200) and add your element:
-
-```javascript
-const elementConfigs = {
-  // ... existing configs (resistor, capacitor, inductor, etc.) ...
-  
-  // Add your custom element configuration:
-  myinductor: {
-    title: 'My Inductor Properties',
-    description: 'Tutorial custom inductor element',
-    helpText: 'Configurable inductance value',
-    fields: [
-      { key: 'inductance', label: 'Inductance (H)', type: 'number' },
-      { key: 'label', label: 'Label', type: 'text' }
-    ]
-  }
-};
+```yaml
+menus:
+  - label: Insert
+    items:
+      - id: insert.myInductor
+        label: My Inductor
+        shortcut: Shift+I
+        action: { kind: command, name: addElement, args: ["myinductor"] }
+        propertyPanel:
+          title: "My Inductor Properties"
+          description: "Tutorial custom inductor element"
+          fields:
+            - key: inductance
+              label: Inductance
+              type: number
+              unit: H
+            - key: label
+              label: Label
+              type: text
 ```
 
-**Important**: Use lowercase `'myinductor'` to match the element's type property. The PropertyPanel uses `element.type` to find the correct configuration.
+**How It Works**:
+1. **Build Process**: `npm run serve` compiles `menu.config.yaml` → `dist/static/menu.config.json`
+2. **PropertyPanel Loads**: Reads config and auto-generates form fields from field definitions
+3. **Runtime Lookup**: When user double-clicks element, PropertyPanel uses `element.type` to find configuration
+4. **Type Consistency**: Uses lowercase `'myinductor'` throughout (matching `element.type`)
 
-**Why This Is Not Ideal**:
-- ❌ Requires modifying core framework code (`PropertyPanel.js`)
-- ❌ Extensions cannot add property configurations independently
-- ❌ Violates the Open/Closed Principle (open for extension, closed for modification)
-- ❌ Risk of merge conflicts when multiple developers add extensions
-- ❌ Cannot dynamically add/remove property panels at runtime
+**Configuration Options**:
 
-**Future Solution**: 
-A `PropertyPanelRegistry` will be implemented to allow property panel configurations to be registered without modifying core files, similar to how ElementRegistry and RendererFactory work:
+Each property panel field supports:
 
-```javascript
-// Future pattern (not yet implemented):
-PropertyPanelRegistry.register('myinductor', {
-  title: 'My Inductor Properties',
-  description: 'Tutorial custom inductor element',
-  fields: [...]
-});
+```yaml
+fields:
+  - key: propertyKey          # Must match Properties object key
+    label: "Display Label"    # Shown in UI
+    type: number|text|boolean # Field type for validation/rendering
+    unit: H|F|Ω              # Optional: unit display
+    min: 1e-9                # Optional: minimum value
+    max: 1e-3                # Optional: maximum value
+    default: 5e-9            # Optional: default value
 ```
 
-Until this is implemented, you must edit `PropertyPanel.js` directly to add property configurations for custom elements.
+**Why This Approach Is Better**:
+- ✅ No modification of core framework code needed
+- ✅ Configuration-driven extensibility per Open/Closed Principle
+- ✅ Extensions are completely self-contained in `menu.config.yaml`
+- ✅ No merge conflicts in core files (`PropertyPanel.js`, registry.js)
+- ✅ Support for dynamic property panels at runtime
+- ✅ Clear separation of concerns (data/domain vs presentation)
 
 Now when users double-click your MyInductor element, they'll see a dialog to edit its inductance and label!
+
+---
+
+## Step 5.5: Property Panel - Open-Closed Principle in Action
+
+To deeply understand how JSCircuit achieves extensibility without modification, let's trace what happens when a user double-clicks an element to edit its properties.
+
+### The User Action (Browser):
+
+1. **User Double-Clicks** → `MyInductor` element on canvas
+2. **GUIAdapter Detects** → Double-click event at element position
+3. **CircuitRenderer Identifies** → Which element was clicked (`element.type = 'myinductor'`)
+4. **PropertyPanel Opens** → Dialog appears with editable fields
+
+### Runtime Flow - How PropertyPanel Finds Your Configuration:
+
+```
+PropertyPanel.onElementDoubleClick(element)
+  ↓
+type = element.type  // 'myinductor'
+  ↓
+config = this.elementConfigs[type]  // Looks up 'myinductor' in configuration
+  ↓
+fields = config.fields  // Gets field definitions from menu.config.json
+  ↓
+renderForm(fields)  // Auto-generates form inputs:
+  - Inductance: <number input>
+  - Label: <text input>
+  ↓
+onSave()  // User clicks Save
+  ↓
+updateElement()  // Updates element.properties with new values
+```
+
+### The Configuration Structure (After Build):
+
+Your `menu.config.yaml` gets compiled during build to `dist/static/menu.config.json`:
+
+```json
+{
+  "menus": [
+    {
+      "label": "Insert",
+      "items": [
+        {
+          "id": "insert.myInductor",
+          "label": "My Inductor",
+          "shortcut": "Shift+I",
+          "action": { "kind": "command", "name": "addElement", "args": ["myinductor"] },
+          "propertyPanel": {
+            "title": "My Inductor Properties",
+            "description": "Tutorial custom inductor element",
+            "fields": [
+              { "key": "inductance", "label": "Inductance", "type": "number", "unit": "H" },
+              { "key": "label", "label": "Label", "type": "text" }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Why This Maintains Open-Closed Principle:
+
+**For each new element type you add:**
+
+1. **Closed for Modification**:
+   - ✅ `PropertyPanel.js` doesn't change
+   - ✅ `GUIAdapter.js` doesn't change
+   - ✅ Core framework files stay untouched
+
+2. **Open for Extension**:
+   - ✅ Add entry to `menu.config.yaml` with propertyPanel section
+   - ✅ PropertyPanel reads configuration at runtime
+   - ✅ Auto-generates form from field definitions
+   - ✅ Supports unlimited element types without modification
+
+**Comparison - Before This Architecture**:
+
+Old way (hardcoded):
+```javascript
+// In PropertyPanel.js - added for EVERY new element type:
+if (element.type === 'myinductor') {
+  showMyInductorForm();
+}
+if (element.type === 'mycapacitor') {
+  showMycapacitorForm();
+}
+if (element.type === 'mycustom') {
+  showMycustomForm();
+}
+// ... 30 more if statements ...
+```
+
+**Problem**: Open-Closed Principle violated. Must modify PropertyPanel.js for each extension.
+
+**New way (configuration-driven)**:
+```yaml
+# menu.config.yaml - ONE file for all elements:
+components:
+  myinductor:
+    propertyPanel: { title: ..., fields: [...] }
+  mycapacitor:
+    propertyPanel: { title: ..., fields: [...] }
+  mycustom:
+    propertyPanel: { title: ..., fields: [...] }
+  # ... 30 more entries - same format ...
+```
+
+**Benefit**: Open-Closed Principle maintained. Zero modifications to PropertyPanel.js.
+
+### Type Consistency Requirement:
+
+For the property panel to find your element's configuration, the type must match exactly:
+
+| Location | Type Value | Purpose |
+|----------|-----------|---------|
+| `MyInductor` class | `this.type = 'myinductor'` | Element identity |
+| `ElementRegistry` | `.register('myinductor', factory)` | Element factory lookup |
+| `RendererFactory` | `.register('myinductor', Renderer)` | Renderer lookup |
+| `menu.config.yaml` | `components: myinductor:` | Configuration lookup |
+| `menu.config.yaml` | `args: ["myinductor"]` | Command argument |
+| `PropertyPanel` | `elementConfigs['myinductor']` | Property field definitions |
+
+**All use lowercase `'myinductor'`** - This consistency eliminates string transformation overhead and prevents lookup bugs.
+
+### Dynamic Field Types Supported:
+
+PropertyPanel supports multiple field types out of the box:
+
+```yaml
+fields:
+  - key: inductance
+    type: number        # Numeric inputs with min/max validation
+    min: 1e-9
+    max: 1e-3
+    unit: H            # Display unit suffix
+  
+  - key: label
+    type: text         # Text inputs with length validation
+    maxLength: 20
+  
+  - key: enabled
+    type: boolean      # Checkbox
+  
+  - key: material
+    type: select       # Dropdown (values specified)
+    options:
+      - { label: "Copper", value: "cu" }
+      - { label: "Aluminum", value: "al" }
+```
+
+### Extensibility Pattern:
+
+To add support for new field types (e.g., date, color picker):
+
+1. **Extend PropertyPanel** - Add rendering logic for new type
+2. **No Breaking Changes** - Existing configurations unaffected
+3. **Backward Compatible** - Old field types still work
+
+The configuration-driven approach enables this gracefully.
 
 ---
 
@@ -1000,7 +1197,7 @@ Let's verify the complete integration works in the browser.
 #### ✅ Registrations Complete
 - [ ] `ElementRegistry.register('myinductor', factory)` in registry.js (lowercase)
 - [ ] `rendererFactory.register('myinductor', MyInductorRenderer)` in registry.js (lowercase)
-- [ ] PropertyPanel configuration added for `'myinductor'` (lowercase)
+- [ ] PropertyPanel configuration added to `menu.config.yaml` with `propertyPanel` section (lowercase)
 
 #### ✅ Menu Integration
 - [ ] Action added to `menu.config.yaml` with `args: ["myinductor"]` (lowercase)
@@ -1394,33 +1591,6 @@ User Action (Menu/Shortcut: Shift+I)
 
 ---
 
-## Reference: Complete File Structure
-
-```
-src/
-├── domain/
-│   ├── entities/
-│   │   ├── Element.js          (Base class)
-│   │   └── MyInductor.js       ← YOU CREATE THIS
-│   └── valueObjects/
-│       ├── Position.js         (Framework provided)
-│       ├── Label.js            (Framework provided)
-│       └── Properties.js       (Framework provided)
-├── gui/
-│   ├── adapters/
-│   │   └── GUIAdapter.js       ← DON'T MODIFY (framework handles this)
-│   ├── renderers/
-│   │   ├── ElementRenderer.js  (Base class)
-│   │   └── MyInductorRenderer.js  ← YOU CREATE THIS
-│   └── commands/
-│       ├── GUICommand.js       (Base class)
-│       └── CustomInductorCommand.js  ← OPTIONAL
-└── config/
-    ├── registry.js             ← YOU MODIFY THIS (registrations)
-    └── menu.bindings.js        ← YOU MODIFY THIS (UI actions)
-```
-
----
 
 **Congratulations!** 🎉 
 

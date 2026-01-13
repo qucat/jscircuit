@@ -20,6 +20,29 @@ export class PropertyPanel {
         this.panelElement = null;
         this.overlayElement = null;
         this.boundKeyDownHandler = null; // Store bound handler for cleanup
+        this.guiConfig = null; // Will be loaded from gui.config.json
+    }
+
+    /**
+     * Load GUI configuration from static JSON
+     * @private
+     */
+    async loadConfig() {
+        if (this.guiConfig) return this.guiConfig;
+        
+        try {
+            const response = await fetch('./static/gui.config.json');
+            if (!response.ok) {
+                throw new Error(`Failed to load GUI config: ${response.statusText}`);
+            }
+            this.guiConfig = await response.json();
+            return this.guiConfig;
+        } catch (error) {
+            console.error('[PropertyPanel] Error loading GUI config:', error);
+            // Fallback to empty config
+            this.guiConfig = { components: {} };
+            return this.guiConfig;
+        }
     }
 
     /**
@@ -28,10 +51,13 @@ export class PropertyPanel {
      * @param {Function} onSave - Callback when properties are saved (element, newProperties) => void
      * @param {Function} onCancel - Callback when editing is cancelled
      */
-    show(element, onSave, onCancel) {
+    async show(element, onSave, onCancel) {
         if (this.isVisible) {
             this.hide();
         }
+
+        // Load config if not already loaded
+        await this.loadConfig();
 
         this.currentElement = element;
         this.onSave = onSave;
@@ -96,126 +122,24 @@ export class PropertyPanel {
      * @private
      */
     generateContentForElement(element) {
-        // Use element.type instead of constructor.name to avoid minification issues
-        const elementType = element.type || element.constructor.name;
+        // Use element.type to get the component configuration
+        const elementType = element.type || element.constructor.name.toLowerCase();
         const properties = element.getProperties();
         const currentLabel = element.label ? element.label.value || element.label : '';
         
+        // Get configuration from loaded GUI config
+        const config = this.guiConfig?.components?.[elementType]?.propertyPanel;
         
-        // Simple hardcoded configurations for each element type
-        const elementConfigs = {
-            // Use both constructor names and type property names
-            Junction: {
-                title: 'Specify label and/or Josephson inductance (in units of Henry)',
-                description: 'Note that L = (hbar/2e)**2/[Josephson Energy in Joules]',
-                helpText: '',
-                fields: [
-                    { key: 'inductance', label: 'Inductance', unit: '', placeholder: '' },
-                    { key: 'label', label: 'Label', unit: '', placeholder: '' }
-                ]
-            },
-            junction: {  // lowercase version
-                title: 'Specify label and/or Josephson inductance (in units of Henry)',
-                description: 'Note that L = (hbar/2e)**2/[Josephson Energy in Joules]',
-                helpText: '',
-                fields: [
-                    { key: 'inductance', label: 'Inductance', unit: '', placeholder: '' },
-                    { key: 'label', label: 'Label', unit: '', placeholder: '' }
-                ]
-            },
-            Resistor: {
-                title: 'Specify label and/or resistance (in units of Ohm)',
-                description: '',
-                helpText: '',
-                fields: [
-                    { key: 'resistance', label: 'Resistance', unit: '', placeholder: '' },
-                    { key: 'label', label: 'Label', unit: '', placeholder: '' }
-                ]
-            },
-            resistor: {  // lowercase version
-                title: 'Specify label and/or resistance (in units of Ohm)',
-                description: '',
-                helpText: '',
-                fields: [
-                    { key: 'resistance', label: 'Resistance', unit: '', placeholder: '' },
-                    { key: 'label', label: 'Label', unit: '', placeholder: '' }
-                ]
-            },
-            Capacitor: {
-                title: 'Specify label and/or capacitance (in units of Farad)',
-                description: '',
-                helpText: '',
-                fields: [
-                    { key: 'capacitance', label: 'Capacitance', unit: '', placeholder: '' },
-                    { key: 'label', label: 'Label', unit: '', placeholder: '' }
-                ]
-            },
-            capacitor: {  // lowercase version
-                title: 'Specify label and/or capacitance (in units of Farad)',
-                description: '',
-                helpText: '',
-                fields: [
-                    { key: 'capacitance', label: 'Capacitance', unit: '', placeholder: '' },
-                    { key: 'label', label: 'Label', unit: '', placeholder: '' }
-                ]
-            },
-            Inductor: {
-                title: 'Specify label and/or inductance (in units of Henry)',
-                description: 'Note that L = (hbar/2e)**2/[Josephson Energy in Joules]',
-                helpText: '',
-                fields: [
-                    { key: 'inductance', label: 'Inductance', unit: '', placeholder: '' },
-                    { key: 'label', label: 'Label', unit: '', placeholder: '' }
-                ]
-            },
-            inductor: {  // lowercase version
-                title: 'Specify label and/or inductance (in units of Henry)',
-                description: 'Note that L = (hbar/2e)**2/[Josephson Energy in Joules]',
-                helpText: '',
-                fields: [
-                    { key: 'inductance', label: 'Inductance', unit: '', placeholder: '' },
-                    { key: 'label', label: 'Label', unit: '', placeholder: '' }
-                ]
-            },
-            Wire: {
-                title: 'Wire Properties',
-                description: 'Ideal conducting wire',
-                helpText: 'Wires have no configurable electrical parameters',
-                fields: []
-            },
-            wire: {  // lowercase version
-                title: 'Wire Properties',
-                description: 'Ideal conducting wire',
-                helpText: 'Wires have no configurable electrical parameters',
-                fields: []
-            },
-            Ground: {
-                title: 'Ground Properties',
-                description: 'Reference point (0V)',
-                helpText: 'Ground has no configurable electrical parameters', 
-                fields: []
-            },
-            ground: {  // lowercase version
-                title: 'Ground Properties',
-                description: 'Reference point (0V)',
-                helpText: 'Ground has no configurable electrical parameters', 
-                fields: []
-
-            }
-        };
-
-        const config = elementConfigs[elementType];
         if (!config) {
             console.warn(`[PropertyPanel] No configuration found for element type: "${elementType}"`);
-            console.warn(`[PropertyPanel] Available configurations:`, Object.keys(elementConfigs));
+            console.warn(`[PropertyPanel] Available configurations:`, Object.keys(this.guiConfig?.components || {}));
             return this.generateFallbackContent(elementType, currentLabel);
         }
 
-        
-        // Generate property fields
+        // Generate property fields from config
         const propertyFields = config.fields.map(field => {
-            const currentValue = properties.values[field.key] || '';
-            const inputType = field.key === 'label' ? 'text' : 'number';
+            const currentValue = field.key === 'label' ? currentLabel : (properties.values[field.key] || '');
+            const inputType = field.type === 'text' ? 'text' : 'number';
             const stepAttribute = inputType === 'number' ? 'step="any"' : '';
             
             return `
@@ -226,7 +150,7 @@ export class PropertyPanel {
                            name="${field.key}"
                            value="${currentValue}"
                            ${stepAttribute}
-                           placeholder="${field.placeholder}">
+                           placeholder="${field.placeholder || ''}">
                 </div>
             `;
         }).join('');

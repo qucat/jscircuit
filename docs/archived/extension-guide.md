@@ -66,11 +66,12 @@ We'll build a custom `MyInductor` element through these steps:
 
 1. **Create Element Class** - The data and behavior
 2. **Create Renderer** - How it looks on screen
-3. **Register Components** - Tell the framework about them
-4. **Behind the Scenes** - How it all works
-5. **Menu Integration** - Add it to the UI
-6. **Custom Commands** (Optional) - Advanced features
-7. **Test Integration** - Make sure it works
+3. **Configure Property Panel** - How users edit properties (configuration-driven!)
+4. **Register Components** - Tell the framework about them
+5. **Behind the Scenes** - How it all works
+6. **Menu Integration** - Add it to the UI
+7. **Custom Commands** (Optional) - Advanced features
+8. **Test Integration** - Make sure it works
 
 ---
 
@@ -78,7 +79,7 @@ We'll build a custom `MyInductor` element through these steps:
 
 **Create this file in the following path**: `src/domain/entities/MyInductor.js`
 
-The element class contains the data and behavior of your component. It doesn't know anything about how it's displayed.
+The element class contains the data for a specific element, such as resistor, capacitor, or inductor. It doesn't know anything about how it's displayed.
 
 ### Key Requirements:
 - Extend the `Element` base class
@@ -122,7 +123,8 @@ export class MyInductor extends Element {
     super(id, nodes, labelInstance, propsInstance);
     
     // Set the type (used by framework to identify this element)
-    this.type = 'MyInductor';
+    // IMPORTANT: Use lowercase - framework uses this for renderer and factory lookups
+    this.type = 'myinductor';
   }
 }
 ```
@@ -203,7 +205,50 @@ export class MyInductorRenderer extends ElementRenderer {
 
 ---
 
-## Step 3: Register Your Components
+## Step 3: Configure Property Panel (NEW!)
+
+**Configure property editing in YAML**: `src/config/gui.config.yaml`
+
+The property panel now uses configuration decoupling to support extensibility. Add your element's property configuration:
+
+```yaml
+components:
+  myinductor:
+    menuLabel: My Inductor
+    shortcut: Shift+I
+    propertyPanel:
+      title: "My Inductor Properties"
+      description: "Custom inductor with configurable inductance"
+      helpText: "Set inductance in Henry"
+      fields:
+        - key: inductance
+          label: Inductance
+          type: number
+          unit: H
+          placeholder: "5e-9"
+        - key: label
+          label: Label
+          type: text
+          unit: ""
+          placeholder: ""
+```
+
+**How it works**:
+- PropertyPanel loads `gui.config.yaml` (compiled to `gui.config.json` during build)
+- When editing an element, it looks up the configuration by element type
+- Fields are automatically generated as input fields with labels and units
+- No code changes needed - pure configuration!
+
+**Key field properties**:
+- `key` - Property name in element.properties.values
+- `type` - `"number"` or `"text"` 
+- `label` - Display label in the property panel
+- `unit` - Unit suffix shown after label (e.g., "H", "Ω", "F")
+- `placeholder` - Hint text for input fields
+
+---
+
+## Step 4: Register Your Components
 
 **Add the new component to the registry**: `src/config/registry.js` (This is where you plug everything in)
 
@@ -220,12 +265,14 @@ import { MyInductorRenderer } from '../gui/renderers/MyInductorRenderer.js';
  */
 
 // Tell the framework how to create your element
-ElementRegistry.register('MyInductor', (id, nodes, label, props) => {
+// IMPORTANT: Use lowercase key to match element.type property
+ElementRegistry.register('myinductor', (id, nodes, label, props) => {
   return new MyInductor(id, nodes, label, props);
 });
 
 // Tell the framework how to draw your element
-rendererFactory.register('MyInductor', MyInductorRenderer);
+// IMPORTANT: Use lowercase key to match element.type property
+rendererFactory.register('myinductor', MyInductorRenderer);
 
 // That's it! Your element is now integrated.
 ```
@@ -235,22 +282,22 @@ rendererFactory.register('MyInductor', MyInductorRenderer);
 **ElementRegistry** - Creates elements:
 ```javascript
 // You register a function that creates your element
-ElementRegistry.register('MyInductor', (id, nodes, label, props) => {
+ElementRegistry.register('myinductor', (id, nodes, label, props) => {
   return new MyInductor(id, nodes, label, props);
 });
 
 // Framework uses it when needed:
-const factory = ElementRegistry.get('MyInductor');
+const factory = ElementRegistry.get('myinductor');
 const element = factory('id-1', [pos1, pos2], 'L1', { inductance: 10e-9 });
 ```
 
 **RendererFactory** - Draws elements:
 ```javascript
 // You register your renderer class
-rendererFactory.register('MyInductor', MyInductorRenderer);
+rendererFactory.register('myinductor', MyInductorRenderer);
 
 // Framework creates instances when drawing:
-const renderer = rendererFactory.create('MyInductor', ctx);
+const renderer = rendererFactory.create('myinductor', ctx);
 renderer.render(ctx, element, isSelected, isHovered);
 ```
 
@@ -262,7 +309,7 @@ renderer.render(ctx, element, isSelected, isHovered);
 
 ---
 
-## Step 4: Behind the Scenes - How It Works
+## Step 5: Behind the Scenes - How It Works
 
 Now that you've created your element, renderer, and registered them, let's see what happens when someone uses it.
 
@@ -270,12 +317,12 @@ Now that you've created your element, renderer, and registered them, let's see w
 
 When a user clicks "Add Inductor" in the menu:
 
-1. **User Action** → Menu sets the pending element type to `'MyInductor'`
+1. **User Action** → Menu sets the pending element type to `'myinductor'`
 2. **User Clicks Nodes** → Framework collects the connection points
-3. **Element Creation** → Framework looks up `'MyInductor'` in `ElementRegistry`
+3. **Element Creation** → Framework looks up `'myinductor'` in `ElementRegistry`
 4. **Your Factory Runs** → Creates `new MyInductor(...)`
 5. **Element Added** → Added to the circuit
-6. **Rendering** → Framework looks up `'MyInductor'` in `rendererFactory`
+6. **Rendering** → Framework looks up `'myinductor'` in `rendererFactory`
 7. **Your Renderer Runs** → `MyInductorRenderer.render()` draws it
 
 **The key point**: The framework discovers your extension automatically through registries.
@@ -295,89 +342,244 @@ You register your components once, and the framework handles everything.
 
 Search core files for your element:
 ```bash
-grep -r "MyInductor" src/gui/adapters/ src/gui/renderers/CircuitRenderer.js
-# Result: No matches! Core files don't know about MyInductor
+grep -r "myinductor" src/gui/adapters/ src/gui/renderers/CircuitRenderer.js
+# Result: No matches! Core files don't know about myinductor
 ```
 
 Your extension only exists in:
-- ✅ `src/domain/entities/MyInductor.js` (your element)
-- ✅ `src/gui/renderers/MyInductorRenderer.js` (your renderer)
-- ✅ `src/config/registry.js` (your registration)
-- ✅ `src/config/menu.config.yaml` (your menu entry)
+- ✅ `src/domain/entities/MyInductor.js` (your element class - PascalCase)
+- ✅ `src/gui/renderers/MyInductorRenderer.js` (your renderer class - PascalCase)
+- ✅ `src/config/registry.js` (registrations with lowercase `'myinductor'`)
+- ✅ `src/config/gui.config.yaml` (config with lowercase `myinductor:` key)
+- ✅ `src/config/menu.config.yaml` (menu entry with lowercase key)
 
 ---
 
-## Step 5: Menu Integration
+## Step 5.5: Property Panel - The Open-Closed Principle in Action
+
+The PropertyPanel system demonstrates how to extend functionality without modifying core code through **configuration decoupling**. This section explains how it works so you can leverage it for your custom elements.
+
+### How PropertyPanel Works
+
+When a user double-clicks an element to edit its properties:
+
+1. **ElementSelected** → User double-clicks element of type `MyInductor`
+2. **PropertyPanel.show()** → Called with element instance
+3. **loadConfig()** → Fetches compiled `gui.config.json`
+4. **generateContentForElement()** → Looks up `components.myInductor` in config
+5. **createPanelHTML()** → Generates form fields from `propertyPanel.fields` array
+6. **Form Rendered** → User sees input fields for `inductance` and `label`
+7. **User edits** → Changes values
+8. **onSave Callback** → Updates element properties via `UpdateElementPropertiesCommand`
+
+**No PropertyPanel code changes required!** The component is completely configuration-driven.
+
+### Configuration Structure
+
+Your `gui.config.yaml` entry defines:
+
+```yaml
+components:
+  myInductor:
+    # Menu integration
+    menuLabel: My Inductor         # Display name in menu
+    shortcut: Shift+I              # Keyboard shortcut
+    
+    # Property panel configuration
+    propertyPanel:
+      title: "My Inductor Properties"           # Modal title
+      description: "Custom inductor element"    # Help text
+      helpText: "Set inductance in Henry"       # Additional info
+      
+      fields:  # Array of editable properties
+        - key: inductance           # Must match element.properties.values[key]
+          label: Inductance         # Displayed to user
+          type: number              # "number" or "text"
+          unit: H                   # Unit suffix (optional)
+          placeholder: "5e-9"       # Input hint text (optional)
+          
+        - key: label
+          label: Label
+          type: text
+          unit: ""
+          placeholder: ""
+```
+
+### Build Process: YAML to JSON
+
+During `npm run build`, this happens automatically:
+
+1. **YAML parsed** → `src/config/gui.config.yaml` read
+2. **JSON compiled** → `dist/static/gui.config.json` created
+3. **Menu generated** → `menu.config.json` created from same YAML
+4. **Assets bundled** → All JSON files included in bundle
+
+When PropertyPanel loads at runtime:
+```javascript
+// In PropertyPanel.loadConfig()
+const response = await fetch('./static/gui.config.json');
+const config = await response.json();
+
+// PropertyPanel looks up your element's config:
+const myInductorConfig = config.components.myInductor;
+// Gets: { menuLabel, shortcut, propertyPanel: { ... } }
+```
+
+### Important: Type Naming Convention
+
+**Framework uses lowercase throughout for consistency:**
+
+```javascript
+// In your element class:
+export class MyInductor extends Element {
+  constructor(id, nodes, label, properties = {}) {
+    // ...
+    this.type = 'myinductor';  // ← Lowercase (must match config key!)
+  }
+}
+```
+
+```yaml
+components:
+  myinductor:  # ← Lowercase (must match element.type)
+    propertyPanel: { ... }
+```
+
+```javascript
+// In registry.js:
+ElementRegistry.register('myinductor', factory);  // ← Lowercase
+rendererFactory.register('myinductor', MyInductorRenderer);  // ← Lowercase
+```
+
+**Lookup process**:
+```javascript
+const elementType = element.type;  // 'myinductor'
+const config = guiConfig.components[elementType];  // ← Exact lowercase match
+const renderer = rendererFactory.create(elementType, ctx);  // ← Exact lowercase match
+```
+
+**Summary**:
+- **Class names**: PascalCase (`MyInductor`, `MyInductorRenderer`)
+- **Type/key everywhere else**: lowercase (`'myinductor'`)
+
+### Allowed Field Types
+
+PropertyPanel automatically generates appropriate HTML inputs:
+
+```yaml
+fields:
+  # Number input - HTML5 number type, supports decimals
+  - key: inductance
+    type: number
+    # Renders: <input type="number" step="any">
+    
+  # Text input - any text value
+  - key: label
+    type: text
+    # Renders: <input type="text">
+```
+
+**Important**: Your element's `properties` must only store:
+- Numbers (integers, floats, scientific notation)
+- `"variable"` (special string for symbolic parameters)
+- `undefined` (unset values)
+
+Cannot store colors, booleans, or arbitrary strings!
+
+### Validation: PropertyPanel → Element
+
+When user saves:
+
+```javascript
+// PropertyPanel.savePanelProperties()
+const values = {
+  inductance: parseFloat(document.getElementById('inductance').value),
+  label: document.getElementById('label').value
+};
+
+// Called with callback:
+this.onSave(element, newProperties);
+
+// Which calls UpdateElementPropertiesCommand:
+command.execute();
+// → Validates properties in element
+// → Updates element.properties via Properties class
+// → Validates element.label via Label class
+```
+
+Both `Properties` and `Label` classes validate input automatically!
+
+### Error Handling
+
+If configuration is missing:
+
+```javascript
+// PropertyPanel.generateContentForElement()
+const config = guiConfig.components[elementType];
+
+if (!config) {
+  console.warn(`No configuration found for: "${elementType}"`);
+  console.warn(`Available:`, Object.keys(guiConfig.components));
+  
+  // Falls back to:
+  return this.generateFallbackContent(elementType, currentLabel);
+  // Shows basic label editor with no property fields
+}
+```
+
+---
+
+## Step 6: Menu Integration
 
 Now let's add a menu item so users can insert your element with a keyboard shortcut.
 
 ### Edit the Menu Configuration
 
-**File**: `src/config/menu.config.yaml`
+**File**: `src/config/gui.config.yaml`
 
-Add your element to the Insert menu:
+The menu configuration is **already defined** in Step 3 when you configured the property panel! The same YAML entry that configures properties also defines menu integration:
 
 ```yaml
-menus:
-  - label: Insert
-    items:
-      # ... existing elements (Wire, Junction, Inductor, Capacitor, etc.) ...
-      
-      # Add your custom element:
-      - id: insert.myInductor
-        label: My Inductor
-        shortcut: Shift+I
-        action: { kind: command, name: addElement, args: ["MyInductor"] }
+components:
+  myInductor:
+    menuLabel: My Inductor      # ← Used for menu display
+    shortcut: Shift+I           # ← Keyboard shortcut
+    propertyPanel:
+      # ... property panel config ...
 ```
 
-That's it! The YAML configuration automatically:
-1. **Creates menu bindings** → Compiles to `dist/static/menu.config.json`
-2. **Generates keyboard shortcuts** → `menu.bindings.js` exports ACTIONS and KEYMAP
-3. **Routes to commands** → `addElement` command uses `args[0]` to get "MyInductor"
+**No additional menu configuration file needed!** Both menu and property panel settings come from the same `gui.config.yaml`.
 
 ### How It Works Behind the Scenes:
 
 When you run `npm run serve`, the build process:
 
-1. **Compiles YAML** → Creates `dist/static/menu.config.json`
-2. **Auto-generates `menu.bindings.js`** → Imports the JSON and exports:
-   - `ACTIONS`: Maps IDs like `insert.myInductor` to action specs
-   - `KEYMAP`: Maps shortcuts like `Shift+I` to action IDs
+1. **Compiles YAML** → `src/config/gui.config.yaml` read
+2. **Creates two outputs**:
+   - `dist/static/gui.config.json` → Loaded by PropertyPanel at runtime
+   - `dist/static/menu.config.json` → Loaded by menu system at runtime
+3. **Both files use the same source** → Your configuration automatically applies to both menu and property panel
 
-3. **GUIAdapter handles the action**:
-   ```javascript
-   // When user presses Shift+I:
-   const spec = ACTIONS["insert.myInductor"];
-   // spec = { kind: "command", name: "addElement", args: ["MyInductor"] }
-   
-   const cmd = GUICommandRegistry.get("addElement", circuitService, circuitRenderer, elementRegistry, "MyInductor");
-   // Returns: new AddElementCommand(..., "MyInductor")
-   
-   commandHistory.executeCommand(cmd, circuitService);
-   ```
+### Testing Your Menu Entry
 
-4. **AddElementCommand creates the element**:
-   ```javascript
-   // Inside AddElementCommand.execute():
-   const elementClass = this.elementRegistry.get(this.elementType); // Gets MyInductor class
-   const element = new elementClass(id, nodes, label, properties);
-   ```
+After building (`npm run serve`), test with:
+- **Mouse**: Find "My Inductor" in Insert menu → Click → Draw element
+- **Keyboard**: Press `Shift+I` → Click nodes to place element
+- **Property Editing**: Double-click element → Property panel shows fields from config
 
-### No Code Changes Needed!
-
-You don't modify:
-- ❌ `menu.bindings.js` (auto-generated)
-- ❌ `GUIAdapter.js` (generic command handler)
-- ❌ `AddElementCommand.js` (uses ElementRegistry dynamically)
-
-You only:
-- ✅ Edit `menu.config.yaml`
-- ✅ Run `npm run serve` (compiles YAML)
-- ✅ Test with keyboard shortcut
+**That's it!** Configuration in one place, menu + property panel automatically synchronized.
 
 ---
 
-## Step 6: Custom Commands (Optional)
+### Previous Step 6 Content (for reference)
+
+The original tutorial had this section before the unified config:
+
+
+
+---
+
+## Step 7: Custom Commands (Optional)
 
 For features beyond element creation (like export/import), create custom commands that may use adapters.
 
@@ -496,7 +698,7 @@ The framework automatically:
 
 ---
 
-## Step 7: Complete Integration (Proving Open-Closed Principle)
+## Step 8: Complete Integration (Proving Open-Closed Principle)
 
 Let's verify the complete integration works without modifying GUIAdapter.
 
@@ -513,20 +715,27 @@ Let's verify the complete integration works without modifying GUIAdapter.
 - [ ] Implements `render(ctx, element, isSelected, isHovered)`
 - [ ] No business logic
 
+#### ✅ Property Panel Configured
+- [ ] Added `myinductor` component to `src/config/gui.config.yaml` (lowercase key)
+- [ ] Defined `propertyPanel` section with `title`, `description`, `helpText`
+- [ ] Configured all editable `fields` with `key`, `label`, `type`, `unit`
+- [ ] Run `npm run build` to compile YAML to JSON
+
 #### ✅ Registrations Complete
-- [ ] `ElementRegistry.register('MyInductor', factory)` in registry.js
-- [ ] `rendererFactory.register('MyInductor', MyInductorRenderer)` in registry.js
+- [ ] `ElementRegistry.register('myinductor', factory)` in registry.js (lowercase key)
+- [ ] `rendererFactory.register('myinductor', MyInductorRenderer)` in registry.js (lowercase key)
 - [ ] Optional: Custom commands registered in `GUICommandRegistry`
 
 #### ✅ Menu Integration
-- [ ] Action added to `menu.bindings.js`
+- [ ] Action added to `gui.config.yaml` with menuLabel, shortcut
 - [ ] Keyboard shortcut configured
-- [ ] Action calls `guiAdapter.setPendingElementType('MyInductor')`
+- [ ] Action passes lowercase element type (`'myinductor'`) to framework
 
 #### ✅ Core Framework Unchanged
-- [ ] Run `grep -r "MyInductor" src/gui/adapters/` → No matches
+- [ ] Run `grep -r "myinductor" src/gui/adapters/` → No matches in core files
+- [ ] Run `grep -r "MyInductor" src/gui/adapters/` → No matches (class is only in your files)
 - [ ] Core framework files have same line count before/after
-- [ ] All coordination happens through registries
+- [ ] All coordination happens through registries and config files
 
 ### Test the Integration:
 
@@ -837,6 +1046,8 @@ src/
 ├── gui/
 │   ├── adapters/
 │   │   └── GUIAdapter.js       ← DON'T MODIFY (framework handles this)
+│   ├── property_panel/
+│   │   └── PropertyPanel.js    ← DON'T MODIFY (configuration-driven)
 │   ├── renderers/
 │   │   ├── ElementRenderer.js  (Base class)
 │   │   └── MyInductorRenderer.js  ← YOU CREATE THIS
@@ -845,8 +1056,23 @@ src/
 │       └── CustomInductorCommand.js  ← OPTIONAL
 └── config/
     ├── registry.js             ← YOU MODIFY THIS (registrations)
-    └── menu.bindings.js        ← YOU MODIFY THIS (UI actions)
+    ├── gui.config.yaml         ← YOU MODIFY THIS (property panel + menu config)
+    └── menu.config.yaml        ← AUTO-GENERATED (from gui.config.yaml)
 ```
+
+### Configuration-Driven Architecture
+
+**Key files you modify**:
+1. **`src/domain/entities/MyInductor.js`** - Element data & behavior
+2. **`src/gui/renderers/MyInductorRenderer.js`** - Visual representation
+3. **`src/config/registry.js`** - Register element & renderer
+4. **`src/config/gui.config.yaml`** - Property panel + menu config
+
+**Key files you DON'T modify**:
+- `PropertyPanel.js` - Completely configuration-driven
+- `GUIAdapter.js` - Generic command handler
+- `CircuitRenderer.js` - Generic rendering coordinator
+- `menu.config.yaml` - Auto-generated from gui.config.yaml
 
 ---
 
