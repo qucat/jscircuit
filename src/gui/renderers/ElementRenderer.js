@@ -68,9 +68,10 @@ export class ElementRenderer {
    * @param {number} y - Y-coordinate.
    */
   renderLabel(text, x, y) {
-    this.context.fillStyle = "white";
-    this.context.font = "12px Arial";
+    this.context.fillStyle = "black";
+    this.context.font = "9px Arial";
     this.context.textAlign = "center";
+    this.context.textBaseline = "middle";
     this.context.fillText(text, x, y);
   }
 
@@ -177,7 +178,7 @@ export class ElementRenderer {
     // Render the text
     this.context.save();
     this.context.fillStyle = "black";
-    this.context.font = "12px Arial";
+    this.context.font = "9px Arial";
     this.context.textAlign = textAlign;
     this.context.textBaseline = "middle";
     this.context.fillText(displayText, textX, textY);
@@ -207,7 +208,8 @@ export class ElementRenderer {
    * @returns {Object} Text positioning info {textX, textY, textAlign}
    */
   calculateTextPosition(centerX, centerY, angle) {
-    const offsetDistance = 25; // Distance from component center
+    const verticalOffsetDistance = 18; // Closer for vertical components
+    const horizontalOffsetDistance = 18; // Smaller offset for horizontal components
     
     // Normalize angle to 0-2π range
     const normalizedAngle = ((angle % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI);
@@ -217,17 +219,17 @@ export class ElementRenderer {
                       (normalizedAngle > 5*Math.PI/4 && normalizedAngle < 7*Math.PI/4);
     
     if (isVertical) {
-      // For vertical components: label to the right
+      // For vertical components: label to the right, closer positioning
       return {
-        textX: centerX + offsetDistance,
+        textX: centerX + verticalOffsetDistance,
         textY: centerY,
         textAlign: 'left'
       };
     } else {
-      // For horizontal components: label below
+      // For horizontal components: label below, smaller offset
       return {
         textX: centerX,
-        textY: centerY + offsetDistance,
+        textY: centerY + horizontalOffsetDistance,
         textAlign: 'center'
       };
     }
