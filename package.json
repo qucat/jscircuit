@@ -1,7 +1,7 @@
 {
-    "name": "qucat-circuit-generator",
-    "version": "1.0.0",
-    "description": "A project for generating and testing circuits",
+    "name": "jscircuit",
+    "version": "1.1.0",
+    "description": "A web-based circuit editor for designing circuits and exporting netlists.",
     "main": "src/gui/main.js",
     "scripts": {
         "test": "npx mocha 'tests/**/*.test.js' --require ./tests/setup.js",
