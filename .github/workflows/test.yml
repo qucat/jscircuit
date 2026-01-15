@@ -1,0 +1,40 @@
+name: Run Tests
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+  pull_request:
+    branches:
+      - develop
+      - main
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Checkout the repository
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # Set up Node.js
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20' # Updated to Node.js 20 LTS for better compatibility
+        cache: 'npm' # Cache npm dependencies for faster builds
+
+    # Install dependencies
+    - name: Install dependencies
+      run: npm ci # Use npm ci for faster, reliable builds in CI
+
+    # Build menu configuration (required for tests)
+    - name: Build menu configuration
+      run: npm run menu:build
+
+    # Run tests
+    - name: Run tests
+      run: npm test

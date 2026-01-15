@@ -1,16 +1,32 @@
 {
-    "name": "qucat-circuit-generator",
-    "version": "1.0.0",
-    "description": "A project for generating and testing circuits",
-    "main": "main.js",
+    "name": "jscircuit",
+    "version": "1.1.0",
+    "description": "A web-based circuit editor for designing circuits and exporting netlists.",
+    "main": "src/gui/main.js",
     "scripts": {
-        "test": "mocha 'tests/**/*.test.js'"
+        "test": "npx mocha 'tests/**/*.test.js' --require ./tests/setup.js",
+        "bundle": "esbuild src/gui/main.js --minify --format=esm --bundle --outdir=dist/static --asset-names=assets/[name] --loader:.png=dataurl --loader:.jpg=dataurl",
+        "copy": "cp -r assets dist/assets && cp src/gui/gui.html dist/jscircuit.html && rm -f dist/gui.html",
+        "menu:build": "node scripts/build-menu-config.mjs",
+        "build": "npm run menu:build && npm run bundle && npm run copy && npm run menu:build",
+        "serve": "npm run build && http-server -c-1",
+        "docs:clean": "rm -rf docs/dist dist/docs_temp",
+        "docs:build": "npm run docs:clean && npm run build && node scripts/sync-readme.mjs && jsdoc -c docs/jsdoc.conf.json -t node_modules/docdash && mkdir -p docs/dist && cp -r dist/docs_temp/* docs/dist/ && rm -rf dist/docs_temp && cp -r dist docs/dist/app && cp docs/custom-styles.css docs/dist/ && cp docs/qucat-logo.png docs/dist/ && cp docs/scripts/insert-logo.js docs/dist/scripts/ && cp -r assets docs/dist/assets && node scripts/inject-css.mjs",
+        "docs:serve": "npm run docs:build && http-server -c-1 docs/dist"
+
     },
     "type": "module",
     "author": "",
     "license": "ISC",
     "devDependencies": {
+        "canvas": "^3.1.0",
         "chai": "^4.5.0",
-        "mocha": "^10.0.0"
+        "docdash": "^2.0.2",
+        "esbuild": "^0.25.4",
+        "jsdoc": "^4.0.5",
+        "jsdom": "^26.0.0",
+        "mocha": "^10.0.0",
+        "sinon": "^19.0.2",
+        "yaml": "^2.8.1"
     }
 }

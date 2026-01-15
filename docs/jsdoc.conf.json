@@ -1,0 +1,98 @@
+{
+  "source": {
+    "include": [
+      "./src/config/registry.js",
+      "./src/gui/main.js", 
+      "./src/application/CircuitService.js",
+      "./src/domain/aggregates/Circuit.js",
+      "./src/domain/entities/Element.js",
+      "./src/gui/adapters/GUIAdapter.js",
+      "./src/gui/renderers/ElementRenderer.js",
+      "./src/gui/commands/GUICommand.js",
+      "./src/domain/factories/ElementRegistry.js",
+      "./src/gui/renderers/RendererFactory.js",
+      "./src/gui/commands/GUICommandRegistry.js"
+    ],
+    "includePattern": "\\.(js|jsx|md)$",
+    "excludePattern": "(node_modules/|docs/dist/|dist/|build/|tests/)"
+  },
+  "opts": {
+    "destination": "./dist/docs_temp",
+    "recurse": false,
+    "readme": "./docs/pages/index.md",
+    "tutorials": "./docs/pages"
+  },
+  "plugins": [
+    "plugins/markdown",
+    "plugins/summarize"
+  ],
+  "templates": {
+    "cleverLinks": true,
+    "monospaceLinks": true,
+    "useLongnameInNav": false,
+    "showInheritedInNav": true
+  },
+  "markdown": {
+    "parser": "gfm",
+    "hardwrap": false,
+    "idInHeadings": true
+  },
+  "metadata": {
+    "title": "JSCircuit Editor - Extension API",
+    "description": "Extension API documentation for developers extending the JSCircuit Editor with custom elements, renderers, and commands"
+  },
+  "docdash": {
+    "static": true,
+    "sort": true,
+    "sectionOrder": [
+      "Modules",
+      "Classes",
+      "Interfaces",
+      "Events",
+      "Namespaces"
+    ],
+    "disqus": false,
+    "openGraph": {
+      "title": "JSCircuit Editor - Extension API",
+      "type": "website",
+      "image": "https://raw.githubusercontent.com/jurra/qucat-circuit-generator/main/docs/qucat-logo.png",
+      "site_name": "JSCircuit Editor Documentation",
+      "url": "https://jurra.github.io/qucat-circuit-generator/"
+    },
+    "meta": {
+      "title": "JSCircuit Editor - Professional Extension API",
+      "description": "Modern, professional API documentation for extending the JSCircuit Editor with custom elements, renderers, and commands using hexagonal architecture patterns. Build quantum circuit design tools with confidence.",
+      "keyword": "circuit generator extension, quantum circuits API, JavaScript extensions, domain-driven design, hexagonal architecture, quantum simulation, circuit design, JSDoc API"
+    },
+    "search": true,
+    "collapse": false,
+    "wrap": true,
+    "typedefs": true,
+    "navLevel": 3,
+    "private": false,
+    "removeQuotes": "none",
+    "scripts": [],
+    "css": ["custom-styles.css"],
+    "theme": "dark",
+    "title": "JSCircuit Editor",
+    "logo": "qucat-logo.png",
+    "menu": {
+      "Getting Started": {
+        "href": "tutorial-getting-started.html",
+        "target": "_self"
+      },
+      "Extension Guide": {
+        "href": "tutorial-extension-integration-tutorial.html",
+        "target": "_self"
+      },
+      "Application": {
+        "href": "app/jscircuit.html",
+        "target": "_blank"
+      },
+      "GitHub": {
+        "href": "https://github.com/qucat/gui-circuit-generator",
+        "target": "_blank"
+      }
+    }
+  }
+}

@@ -1,0 +1,228 @@
+# GUI Configuration
+# Unified configuration for circuit editor components, menus, and property panels
+
+components:
+  wire:
+    menuLabel: Wire
+    shortcut: W
+    menuArg: Wire  # Special case: Wire flag for drawing mode
+    propertyPanel:
+      title: "Wire Properties"
+      description: "Ideal conducting wire"
+      helpText: "Wires have no configurable electrical parameters"
+      fields: []
+
+  junction:
+    menuLabel: Junction
+    shortcut: J
+    propertyPanel:
+      title: "Specify label and/or Josephson inductance (in units of Henry)"
+      description: "Note that L = (hbar/2e)**2/[Josephson Energy in Joules]"
+      helpText: ""
+      fields:
+        - key: inductance
+          label: Inductance
+          type: number
+          unit: H
+          placeholder: ""
+        - key: label
+          label: Label
+          type: text
+          unit: ""
+          placeholder: ""
+
+  inductor:
+    menuLabel: Inductor
+    shortcut: L
+    propertyPanel:
+      title: "Specify label and/or inductance (in units of Henry)"
+      description: "Note that L = (hbar/2e)**2/[Josephson Energy in Joules]"
+      helpText: ""
+      fields:
+        - key: inductance
+          label: Inductance
+          type: number
+          unit: H
+          placeholder: ""
+        - key: label
+          label: Label
+          type: text
+          unit: ""
+          placeholder: ""
+
+  capacitor:
+    menuLabel: Capacitor
+    shortcut: C
+    propertyPanel:
+      title: "Specify label and/or capacitance (in units of Farad)"
+      description: ""
+      helpText: ""
+      fields:
+        - key: capacitance
+          label: Capacitance
+          type: number
+          unit: F
+          placeholder: ""
+        - key: label
+          label: Label
+          type: text
+          unit: ""
+          placeholder: ""
+
+  resistor:
+    menuLabel: Resistor
+    shortcut: R
+    propertyPanel:
+      title: "Specify label and/or resistance (in units of Ohm)"
+      description: ""
+      helpText: ""
+      fields:
+        - key: resistance
+          label: Resistance
+          type: number
+          unit: Ω
+          placeholder: ""
+        - key: label
+          label: Label
+          type: text
+          unit: ""
+          placeholder: ""
+
+  ground:
+    menuLabel: Ground
+    shortcut: G
+    propertyPanel:
+      title: "Ground Properties"
+      description: "Reference point (0V)"
+      helpText: "Ground has no configurable electrical parameters"
+      fields: []
+
+menus:
+  - label: File
+    items:
+      - id: openNetlist
+        label: "Open Netlist..."
+        shortcut: Ctrl+O
+        action: { kind: command, name: openNetlist }
+
+      - id: saveNetlist
+        label: "Save Netlist..."
+        shortcut: Ctrl+S
+        action: { kind: command, name: saveNetlist }
+
+      - id: copyNetlistToClipboard
+        label: "Copy Netlist"
+        shortcut: Ctrl+Shift+C
+        action: { kind: command, name: copyNetlistToClipboard }
+
+      - type: separator
+
+      - id: deleteAll
+        label: "Clear All"
+        shortcut: Ctrl+Shift+Del
+        action: { kind: command, name: deleteAll }
+
+  - label: Edit
+    items:
+      - id: selectAll
+        label: "Select All"
+        shortcut: Ctrl+A
+        action: { kind: command, name: selectAll }
+
+      - id: deselectAll
+        label: "Deselect All"
+        shortcut: Ctrl+D
+        action: { kind: command, name: deselectAll }
+
+      - type: separator
+
+      - id: copyElements
+        label: Copy
+        shortcut: Ctrl+C
+        action: { kind: command, name: copyElements }
+
+      - id: pasteElements
+        label: Paste
+        shortcut: Ctrl+V
+        action: { kind: command, name: pasteElements }
+
+      - type: separator
+
+      - id: edit.undo
+        label: Undo
+        shortcut: Ctrl+Z
+        action: { kind: history, op: undo }
+
+      - id: edit.redo
+        label: Redo
+        shortcut: Ctrl+Y
+        action: { kind: history, op: redo }
+
+      - type: separator
+
+      - id: deleteSelection
+        label: Delete
+        shortcut: Del
+        action: { kind: command, name: deleteSelection }
+
+      - id: rotateElement
+        label: "Rotate Element"
+        shortcut: Ctrl+E
+        action: { kind: command, name: rotateElement }
+
+      - id: rotateElementRight
+        label: "Rotate Right"
+        shortcut: Ctrl+Right
+        action: { kind: command, name: rotateRight }
+
+      - id: rotateElementLeft
+        label: "Rotate Left"
+        shortcut: Ctrl+Left
+        action: { kind: command, name: rotateLeft }
+
+      - id: rotateElementUp
+        label: "Rotate Up"
+        shortcut: Ctrl+Up
+        action: { kind: command, name: rotateUp }
+
+      - id: rotateElementDown
+        label: "Rotate Down"
+        shortcut: Ctrl+Down
+        action: { kind: command, name: rotateDown }
+
+  - label: Insert
+    items:
+      - id: insert.wire
+        component: wire
+
+      - id: insert.junction
+        component: junction
+
+      - id: insert.inductor
+        component: inductor
+
+      - id: insert.capacitor
+        component: capacitor
+
+      - id: insert.resistor
+        component: resistor
+
+      - id: insert.ground
+        component: ground
+
+  - label: View
+    items:
+      - id: view.zoomIn
+        label: Zoom in
+        shortcut: Ctrl+scroll
+        action: { kind: renderer, op: zoomStep, args: [-1] }
+
+      - id: view.zoomOut
+        label: Zoom out
+        shortcut: Ctrl+scroll
+        action: { kind: renderer, op: zoomStep, args: [1] }
+
+      - id: view.recenter
+        label: Re-center
+        shortcut: Ctrl+R
+        action: { kind: renderer, op: recenter }

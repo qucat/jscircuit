@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuCat Performance Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        
+        .performance-panel {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .metric {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 4px solid #007acc;
+        }
+        
+        .metric-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #007acc;
+        }
+        
+        .metric-label {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .controls {
+            margin: 20px 0;
+        }
+        
+        button {
+            padding: 8px 16px;
+            margin-right: 10px;
+            border: none;
+            background: #007acc;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #005a99;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .circuit-stage {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        #circuitCanvas {
+            display: block;
+            cursor: crosshair;
+        }
+        
+        .debug-info {
+            background: #fffbf0;
+            border: 1px solid #ffd700;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <h1>JSCircuit Editor - Performance Test</h1>
+    
+    <div class="performance-panel">
+        <h3>Performance Metrics</h3>
+        <div class="metrics">
+            <div class="metric">
+                <div class="metric-value" id="renderTime">0ms</div>
+                <div class="metric-label">Last Render Time</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="hoverTime">0ms</div>
+                <div class="metric-label">Last Hover Check</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="frameRate">0 FPS</div>
+                <div class="metric-label">Current Frame Rate</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="elementCount">0</div>
+                <div class="metric-label">Element Count</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <button onclick="toggleDebugMode()">Toggle Debug Logging</button>
+        <button onclick="addRandomElements(10)">Add 10 Elements</button>
+        <button onclick="addRandomElements(50)">Add 50 Elements</button>
+        <button onclick="clearCircuit()">Clear Circuit</button>
+        <button onclick="stressTest()">Stress Test</button>
+        <button onclick="addSpecificElement('resistor')">Add Resistor</button>
+        <button onclick="addSpecificElement('capacitor')">Add Capacitor</button>
+    </div>
+    
+    <div class="circuit-stage">
+        <canvas id="circuitCanvas" width="800" height="600"></canvas>
+    </div>
+    
+    <div class="debug-info">
+        <div><strong>Debug Mode:</strong> <span id="debugStatus">OFF</span></div>
+        <div><strong>Console Performance Impact:</strong> Open DevTools to see the difference!</div>
+        <div><strong>Optimization Status:</strong> <span id="optimizationStatus">Loading...</span></div>
+    </div>
+
+    <script type="module">
+        import { Circuit } from '../../src/domain/aggregates/Circuit.js';
+        import { CircuitService } from '../../src/application/CircuitService.js';
+        import { GUIAdapter } from '../../src/gui/adapters/GUIAdapter.js';
+        import { 
+            ElementRegistry, 
+            rendererFactory, 
+            GUICommandRegistry, 
+            setupCommands 
+        } from '../../src/config/registry.js';
+        import { Logger } from '../../src/utils/Logger.js';
+        import { globalPerformanceMonitor, globalRenderScheduler } from '../../src/utils/PerformanceUtils.js';
+        
+        // Initialize the circuit generator
+        const canvas = document.getElementById('circuitCanvas');
+        const circuit = new Circuit();
+        const circuitService = new CircuitService(circuit, ElementRegistry);
+        const guiAdapter = new GUIAdapter(
+            null, // no controls div needed for test
+            canvas, 
+            circuitService, 
+            ElementRegistry, 
+            rendererFactory, 
+            GUICommandRegistry
+        );
+        
+        // Set up commands and initialize
+        await setupCommands(circuitService, guiAdapter.circuitRenderer);
+        guiAdapter.initialize();
+        
+        Logger.info('Performance test app initialized');
+        
+        // Global functions for buttons
+        window.toggleDebugMode = function() {
+            Logger.setDebugMode(!Logger.isDev);
+            document.getElementById('debugStatus').textContent = Logger.isDev ? 'ON' : 'OFF';
+            Logger.info(`Debug mode ${Logger.isDev ? 'enabled' : 'disabled'}`);
+        };
+        
+        window.addRandomElements = function(count) {
+            Logger.info(`Adding ${count} random elements...`);
+            const startTime = performance.now();
+            
+            for (let i = 0; i < count; i++) {
+                const elementTypes = ['resistor', 'capacitor', 'inductor'];
+                const type = elementTypes[Math.floor(Math.random() * elementTypes.length)];
+                
+                // Random position within canvas
+                const x = Math.random() * (canvas.width - 100) + 50;
+                const y = Math.random() * (canvas.height - 100) + 50;
+                
+                try {
+                    // Create element using the circuit service
+                    const elementFactory = ElementRegistry.get(type);
+                    if (elementFactory) {
+                        const element = elementFactory(
+                            undefined, // auto-generate ID
+                            [
+                                { x: x - 30, y: y },
+                                { x: x + 30, y: y }
+                            ],
+                            null, // label
+                            {} // properties
+                        );
+                        circuitService.addElement(element);
+                    }
+                } catch (error) {
+                    Logger.error(`Failed to create ${type}:`, error);
+                }
+            }
+            
+            const duration = performance.now() - startTime;
+            Logger.info(`Added ${count} elements in ${duration.toFixed(2)}ms`);
+            updateElementCount();
+        };
+        
+        window.addSpecificElement = function(type) {
+            Logger.info(`Adding ${type}...`);
+            
+            // Center position
+            const x = canvas.width / 2;
+            const y = canvas.height / 2;
+            
+            try {
+                const elementFactory = ElementRegistry.get(type);
+                if (elementFactory) {
+                    const element = elementFactory(
+                        undefined, // auto-generate ID
+                        [
+                            { x: x - 30, y: y },
+                            { x: x + 30, y: y }
+                        ],
+                        null, // label
+                        {} // properties
+                    );
+                    circuitService.addElement(element);
+                    updateElementCount();
+                } else {
+                    Logger.error(`Unknown element type: ${type}`);
+                }
+            } catch (error) {
+                Logger.error(`Failed to create ${type}:`, error);
+            }
+        };
+        
+        window.clearCircuit = function() {
+            Logger.info('Clearing circuit...');
+            const elements = circuitService.getElements();
+            elements.forEach(element => {
+                circuitService.deleteElement(element.id);
+            });
+            updateElementCount();
+        };
+        
+        window.stressTest = function() {
+            Logger.info('Starting stress test...');
+            const canvas = document.getElementById('circuitCanvas');
+            let moveCount = 0;
+            const maxMoves = 1000;
+            
+            const startTime = performance.now();
+            
+            function simulateMouseMove() {
+                if (moveCount < maxMoves) {
+                    const rect = canvas.getBoundingClientRect();
+                    const event = new MouseEvent('mousemove', {
+                        bubbles: true,
+                        clientX: rect.left + Math.random() * canvas.width,
+                        clientY: rect.top + Math.random() * canvas.height
+                    });
+                    canvas.dispatchEvent(event);
+                    moveCount++;
+                    requestAnimationFrame(simulateMouseMove);
+                } else {
+                    const endTime = performance.now();
+                    const duration = endTime - startTime;
+                    const avgTime = duration / maxMoves;
+                    Logger.info(`Stress test completed: ${maxMoves} mouse moves in ${duration.toFixed(2)}ms (${avgTime.toFixed(3)}ms avg)`);
+                }
+            }
+            
+            simulateMouseMove();
+        };
+        
+        // Performance monitoring
+        let frameCount = 0;
+        let lastFrameTime = performance.now();
+        let renderTimes = [];
+        let hoverTimes = [];
+        
+        function updateMetrics() {
+            const now = performance.now();
+            frameCount++;
+            
+            if (now - lastFrameTime >= 1000) {
+                const fps = Math.round(frameCount * 1000 / (now - lastFrameTime));
+                document.getElementById('frameRate').textContent = `${fps} FPS`;
+                frameCount = 0;
+                lastFrameTime = now;
+            }
+            
+            // Update render time (average of last 10 renders)
+            if (renderTimes.length > 0) {
+                const avgRenderTime = renderTimes.reduce((a, b) => a + b, 0) / renderTimes.length;
+                document.getElementById('renderTime').textContent = `${avgRenderTime.toFixed(2)}ms`;
+            }
+            
+            // Update hover time (average of last 10 hover checks)
+            if (hoverTimes.length > 0) {
+                const avgHoverTime = hoverTimes.reduce((a, b) => a + b, 0) / hoverTimes.length;
+                document.getElementById('hoverTime').textContent = `${avgHoverTime.toFixed(2)}ms`;
+            }
+            
+            requestAnimationFrame(updateMetrics);
+        }
+        
+        function updateElementCount() {
+            const count = circuitService.getElements().length;
+            document.getElementById('elementCount').textContent = count.toString();
+        }
+        
+        // Hook into performance monitoring
+        const originalRender = guiAdapter.circuitRenderer.performRender || guiAdapter.circuitRenderer.render;
+        guiAdapter.circuitRenderer.performRender = function() {
+            const start = performance.now();
+            const result = originalRender.apply(this, arguments);
+            const duration = performance.now() - start;
+            
+            renderTimes.push(duration);
+            if (renderTimes.length > 10) renderTimes.shift();
+            
+            return result;
+        };
+        
+        // Hook into hover detection if available
+        if (guiAdapter.circuitRenderer.checkElementHovers) {
+            const originalHoverCheck = guiAdapter.circuitRenderer.checkElementHovers;
+            guiAdapter.circuitRenderer.checkElementHovers = function() {
+                const start = performance.now();
+                const result = originalHoverCheck.apply(this, arguments);
+                const duration = performance.now() - start;
+                
+                hoverTimes.push(duration);
+                if (hoverTimes.length > 10) hoverTimes.shift();
+                
+                return result;
+            };
+        }
+        
+        updateMetrics();
+        updateElementCount();
+        
+        // Update optimization status
+        document.getElementById('optimizationStatus').textContent = 'Performance optimizations loaded ✓';
+        document.getElementById('debugStatus').textContent = Logger.isDev ? 'ON' : 'OFF';
+        
+        Logger.info('Performance monitoring active');
+    </script>
+</body>
+</html>

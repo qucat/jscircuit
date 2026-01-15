@@ -1,5 +1,16 @@
 dev-notes
 .trunk
+.ipynb_checkpoints/
+.vscode/
 
 # ignore node dependencies
 node_modules
+
+# Ignored build files
+dist/
+docs/dist/
+
+# Auto-generated configuration (built from gui.config.yaml)
+src/config/gui.config.js
+
+compile.txt
