@@ -108,28 +108,11 @@ export class CircuitRenderer {
         this.circuitService.on('elementMoved', () => this.invalidateSpatialIndex());
         this.circuitService.on('circuitCleared', () => this.invalidateSpatialIndex());
 
-        // Attach Event Listeners
-        this.initEventListeners();
+        // NOTE: Canvas event listeners (wheel, mouse*, dblclick) are NOT registered here.
+        // GUIAdapter is the single owner of all canvas event listeners and calls
+        // our methods (zoom, startPan, pan, stopPan, handleMouseMove, etc.) directly.
     }
     
-    /**
-     * Initializes event listeners for zooming, panning, and double-click property editing.
-     */
-    initEventListeners() {
-        this.canvas.addEventListener("wheel", (event) => this.zoom(event));
-        this.canvas.addEventListener("mousedown", (event) => this.startPan(event));
-        this.canvas.addEventListener("mousemove", (event) => {
-            this.pan(event);
-            this.handleMouseMove(event);
-        });
-        this.canvas.addEventListener("mouseup", () => this.stopPan());
-        this.canvas.addEventListener("mouseleave", () => {
-            this.stopPan();
-            this.clearAllHovers();
-        });
-        this.canvas.addEventListener("dblclick", (event) => this.handleDoubleClick(event));
-    }
-
     /**
      * Clears the canvas by resetting its drawing context.
      */
@@ -609,23 +592,14 @@ export class CircuitRenderer {
      * Cleanup method to remove event listeners and prevent memory leaks
      */
     dispose() {
-        // Remove all canvas event listeners
-        this.canvas.removeEventListener("wheel", this.zoom);
-        this.canvas.removeEventListener("mousedown", this.startPan);
-        this.canvas.removeEventListener("mousemove", this.handleMouseMove);
-        this.canvas.removeEventListener("mouseup", this.stopPan);
-        this.canvas.removeEventListener("mouseleave", this.clearAllHovers);
-        this.canvas.removeEventListener("dblclick", this.handleDoubleClick);
-        
         // Clear any scheduled renders
-        globalRenderScheduler.cancelRender(this.performRender);
+        globalRenderScheduler.cancelRender(this._boundPerformRender);
         
         // Clear references
         this.renderers.clear();
         this.selectedElements.clear();
         this.hoveredElement = null;
         this.selectedElement = null;
-        
     }
 
     /**
