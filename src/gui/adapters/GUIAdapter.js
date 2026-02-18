@@ -301,7 +301,6 @@ export class GUIAdapter {
         this.placingElement = null;
         // Clear selection since placement was cancelled
         this.circuitRenderer.setSelectedElements([]);
-        this.circuitRenderer.render();
         e.preventDefault();
         return;
       }
@@ -580,7 +579,6 @@ export class GUIAdapter {
         this.placingElement = null;
         // Keep the placed element selected for user convenience
         this.circuitRenderer.setSelectedElements([placedElement]);
-        this.circuitRenderer.render();
         
         // Open property panel immediately after placing element
         this.handleElementDoubleClick(placedElement, true); // true indicates this is a newly placed element
@@ -809,7 +807,6 @@ export class GUIAdapter {
           this.circuitService.deleteElement(element.id);
           // Clear selections since we deleted the element
           this.circuitRenderer.setSelectedElements([]);
-          this.circuitRenderer.render();
         }
       }
     );
@@ -1136,8 +1133,5 @@ export class GUIAdapter {
       type: 'rotatePlacingElement',
       element: this.placingElement,
     });
-    
-    // Force immediate re-render to show rotation
-    this.circuitRenderer.render();
   }
 }

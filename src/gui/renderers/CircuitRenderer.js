@@ -96,6 +96,12 @@ export class CircuitRenderer {
         this.gridColor = 'gray';        // Color for the grid lines
         this.gridLineWidth = 0.5;         // Line width for grid lines
 
+        // Grid visibility (off by default for performance; toggle with setShowGrid)
+        this.showGrid = false;
+
+        // Stable reference for render scheduling (enables deduplication in RenderScheduler)
+        this._boundPerformRender = () => this.performRender();
+
         // Listen for circuit changes to update spatial index
         this.circuitService.on('elementAdded', () => this.invalidateSpatialIndex());
         this.circuitService.on('elementDeleted', () => this.invalidateSpatialIndex());
@@ -135,10 +141,9 @@ export class CircuitRenderer {
      * Optimized render method with scheduling to prevent excessive re-renders
      */
     render() {
-        // Use render scheduler to batch multiple render requests
-        globalRenderScheduler.scheduleRender(() => {
-            this.performRender();
-        });
+        // Use render scheduler to batch multiple render requests.
+        // _boundPerformRender is a stable reference so the Set deduplicates correctly.
+        globalRenderScheduler.scheduleRender(this._boundPerformRender);
     }
 
     /**
@@ -154,8 +159,10 @@ export class CircuitRenderer {
         this.context.translate(this.offsetX, this.offsetY);
         this.context.scale(this.scale, this.scale);
 
-        // Draw background grid
-        this.drawGrid();
+        // Draw background grid (only when enabled)
+        if (this.showGrid) {
+            this.drawGrid();
+        }
 
         // Iterate over circuit elements and render them
         this.circuitService.getElements().forEach((element) => {
@@ -229,6 +236,14 @@ export class CircuitRenderer {
         }
     }
 
+    /**
+     * Toggle grid visibility.
+     * @param {boolean} visible - Whether the dot-grid should be displayed.
+     */
+    setShowGrid(visible) {
+        this.showGrid = !!visible;
+        this.render();
+    }
 
     /**
      * Optimized zoom handler with batched rendering
