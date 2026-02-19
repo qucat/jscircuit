@@ -115,6 +115,11 @@ menus:
         shortcut: Ctrl+Shift+C
         action: { kind: command, name: copyNetlistToClipboard }
 
+      - id: pasteNetlistFromClipboard
+        label: "Paste Netlist..."
+        shortcut: Ctrl+Shift+V
+        action: { kind: command, name: pasteNetlistFromClipboard }
+
       - type: separator
 
       - id: deleteAll

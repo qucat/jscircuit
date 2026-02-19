@@ -70,7 +70,7 @@ const MENU_CSS = `
 .menubar { position: relative; z-index: 2; }
 .menu-panel {
   position: absolute; top: 100%; left: 0;
-  min-width: 240px;
+  min-width: 280px;
   display: none; pointer-events: none; z-index: 10;
 }
 .menu-button[aria-expanded="true"] .menu-panel {
@@ -84,26 +84,26 @@ const MENU_CSS = `
   --mb-panel-fg:#161616; --mb-sep:#c5d2e2;
   --mb-hover: rgba(0,0,0,.08);
   --mb-shadow: 0 14px 40px rgba(0,0,0,.28), 0 6px 16px rgba(0,0,0,.25);
-  --mb-radius: 14px; --mb-item-h: 32px;
+  --mb-radius: 10px; --mb-item-h: 28px;
   --font: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
 }
 
 /* Menubar strip (relative, not sticky) */
 .menubar{
   position: relative;
-  display:flex; align-items:center; gap:8px;
-  height:34px; padding:0 10px;
+  display:flex; align-items:center; gap:4px;
+  height:30px; padding:0 8px;
   background:var(--mb-dark); color:var(--mb-fg);
-  font-family:var(--font); user-select:none;
+  font-family:var(--font); user-select:none; font-size:13px;
   border:1px solid #d0d0d0; border-bottom:none; border-radius:10px 10px 0 0;
 }
-.menubar .app-name{ font-weight:600; margin-right:6px; opacity:.9; }
+.menubar .app-name{ font-weight:600; margin-right:4px; opacity:.9; }
 
 /* Top-level buttons */
 .menu-button{
   position:relative; height:100%;
-  display:flex; align-items:center; padding:0 10px;
-  border-radius:8px; cursor:default; outline:none;
+  display:flex; align-items:center; padding:0 8px;
+  border-radius:6px; cursor:default; outline:none;
 }
 .menu-button[aria-expanded="true"], .menu-button:focus{ background:rgba(255,255,255,.1); }
 
@@ -111,23 +111,24 @@ const MENU_CSS = `
 .menu-panel{
   background:var(--mb-panel-bg); color:var(--mb-panel-fg);
   border-radius:var(--mb-radius); box-shadow:var(--mb-shadow);
-  padding:8px 0; transform: translateY(6px);
+  padding:5px 0; transform: translateY(4px);
 }
 
 /* Items */
 .menu-item{
   height:var(--mb-item-h); display:grid; grid-template-columns:1fr auto;
-  align-items:center; gap:22px; padding:0 16px; font-size:14px;
+  align-items:center; gap:14px; padding:0 12px; font-size:13px;
+  white-space:nowrap;
 }
 .menu-item[aria-disabled="true"]{ opacity:.45; pointer-events:none; }
-.menu-item[data-type="separator"]{ height:8px; padding:4px 0; }
+.menu-item[data-type="separator"]{ height:6px; padding:3px 0; }
 .menu-item[data-type="separator"]::after{
-  content:""; display:block; height:1px; background:var(--mb-sep); margin:0 12px;
+  content:""; display:block; height:1px; background:var(--mb-sep); margin:0 8px;
 }
 .menu-item:hover, .menu-item[aria-selected="true"]{ background:var(--mb-hover); }
-.menu-item .shortcut{ opacity:.7; font-variant-numeric: tabular-nums; }
-.menu-item .label{ display:flex; align-items:center; gap:8px; }
-.menu-item .check{ width:18px; display:inline-block; text-align:center; }
+.menu-item .shortcut{ opacity:.7; font-variant-numeric: tabular-nums; font-size:12px; }
+.menu-item .label{ display:flex; align-items:center; gap:6px; }
+.menu-item .check{ width:14px; display:inline-block; text-align:center; }
 `;
 
 /** Ensures the component CSS is present once in the document. */

@@ -70,6 +70,7 @@ import { PasteElementsCommand } from "../gui/commands/PasteElementsCommand.js";
 import { SaveNetlistCommand } from "../gui/commands/SaveNetlistCommand.js";
 import { OpenNetlistCommand } from "../gui/commands/OpenNetlistCommand.js";
 import { CopyNetlistToClipboardCommand } from "../gui/commands/CopyNetlistToClipboardCommand.js";
+import { PasteNetlistFromClipboardCommand } from "../gui/commands/PasteNetlistFromClipboardCommand.js";
 import { WireSplitService } from "../application/WireSplitService.js";
 
 /**
@@ -436,6 +437,12 @@ export function setupCommands(circuitService, circuitRenderer) {
     if (!GUICommandRegistry.getTypes().includes("copyNetlistToClipboard")) {
         GUICommandRegistry.register("copyNetlistToClipboard", () =>
             new CopyNetlistToClipboardCommand(circuitService, circuitRenderer)
+        );
+    }
+
+    if (!GUICommandRegistry.getTypes().includes("pasteNetlistFromClipboard")) {
+        GUICommandRegistry.register("pasteNetlistFromClipboard", () =>
+            new PasteNetlistFromClipboardCommand(circuitService, circuitRenderer)
         );
     }
 }
