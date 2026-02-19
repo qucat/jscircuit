@@ -47,17 +47,14 @@ describe("RotateElementCommand Tests", function () {
     command.execute();
     
     // After 90° clockwise rotation from horizontal (50,50)-(100,50):
-    // The first node stays as reference point (50,50)
-    // The second node should rotate from (50,0) relative to (0,-50) relative
-    // So (100,50) should become (50,100) - but let's check the actual logic
+    // Node[0] is the anchor (stays fixed). Node[1] rotates around it.
+    // rel(50,0) → rot(0,50) → abs(50,100) → snap(50,100)
     
-    expect(testResistor.nodes[0].x).to.equal(origNode0.x); // Reference point unchanged
-    expect(testResistor.nodes[0].y).to.equal(origNode0.y);
+    expect(testResistor.nodes[0].x).to.equal(50); // Anchor unchanged
+    expect(testResistor.nodes[0].y).to.equal(50);
     
-    // The second node should have rotated 90° clockwise around the first node
-    // Original relative position: (50, 0) -> After 90° rotation: (0, 50)
-    expect(testResistor.nodes[1].x).to.equal(50); // 50 + 0
-    expect(testResistor.nodes[1].y).to.equal(100); // 50 + 50
+    expect(testResistor.nodes[1].x).to.equal(50);
+    expect(testResistor.nodes[1].y).to.equal(100);
   });
 
   it("should rotate multiple selected elements", function () {

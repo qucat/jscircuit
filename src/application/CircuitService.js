@@ -17,6 +17,7 @@ import { Position } from "../domain/valueObjects/Position.js";
 import { Properties } from "../domain/valueObjects/Properties.js";
 import { Label } from "../domain/valueObjects/Label.js";
 import { Logger } from "../utils/Logger.js";
+import { GRID_SPACING } from "../config/gridConfig.js";
 
 /**
  * @class CircuitService
@@ -353,10 +354,13 @@ export class CircuitService extends EventEmitter {
   }
 
   /**
-   * Rotates a group of elements around the center of their bounding box.
+   * Rotates a group of elements.
+   * - Single element: node[0] is the fixed anchor, node[1] swings around it
+   *   in 90° increments (QuCat convention). Result is snapped to grid.
+   * - Multiple elements: rotates around the centre of their combined bounding box.
    * 
    * @param {string[]} elementIds - Array of element IDs to rotate.
-   * @param {number} rotationAngleDegrees - The rotation angle in degrees (90, 180, 270, etc.).
+   * @param {number} rotationAngleDegrees - The rotation angle in degrees (90, -90, 180, etc.).
    */
   rotateElements(elementIds, rotationAngleDegrees) {
     if (!elementIds || elementIds.length === 0) {
@@ -373,45 +377,54 @@ export class CircuitService extends EventEmitter {
       return;
     }
 
-    // Calculate the bounding box of all selected elements
-    const boundingBox = this.calculateBoundingBox(elements);
-    
-    // Calculate the center of the bounding box
-    const centerX = (boundingBox.minX + boundingBox.maxX) / 2;
-    const centerY = (boundingBox.minY + boundingBox.maxY) / 2;
-    
     // Convert rotation angle to radians
     const rotationAngle = (rotationAngleDegrees * Math.PI) / 180;
-    
-    // Rotate all nodes of all elements around the bounding box center
-    elements.forEach(element => {
-      element.nodes.forEach(node => {
-        // Translate node to origin (relative to bounding box center)
-        const relativeX = node.x - centerX;
-        const relativeY = node.y - centerY;
-        
-        // Apply rotation matrix
-        const cos = Math.cos(rotationAngle);
-        const sin = Math.sin(rotationAngle);
-        
-        const rotatedX = relativeX * cos - relativeY * sin;
-        const rotatedY = relativeX * sin + relativeY * cos;
-        
-        // Translate back to absolute coordinates
-        node.x = centerX + rotatedX;
-        node.y = centerY + rotatedY;
-      });
+    const cos = Math.round(Math.cos(rotationAngle));  // exact for 90° multiples
+    const sin = Math.round(Math.sin(rotationAngle));
 
-      // Update the element's orientation property (for elements that track orientation)
-      const currentOrientation = element.properties?.values?.orientation || 0;
-      const newOrientation = (currentOrientation + rotationAngleDegrees) % 360;
+    if (elements.length === 1 && elements[0].nodes.length >= 2) {
+      // ── Single element: anchor at node[0], rotate node[1] around it ──
+      const el = elements[0];
+      const anchor = el.nodes[0];                       // stays fixed
+
+      for (let i = 1; i < el.nodes.length; i++) {
+        const relX = el.nodes[i].x - anchor.x;
+        const relY = el.nodes[i].y - anchor.y;
+
+        const rotX = relX * cos - relY * sin;
+        const rotY = relX * sin + relY * cos;
+
+        // Snap to grid
+        el.nodes[i].x = Math.round((anchor.x + rotX) / GRID_SPACING) * GRID_SPACING;
+        el.nodes[i].y = Math.round((anchor.y + rotY) / GRID_SPACING) * GRID_SPACING;
+      }
+    } else {
+      // ── Multiple elements: rotate around bounding-box centre ──
+      const bb = this.calculateBoundingBox(elements);
+      const cx = (bb.minX + bb.maxX) / 2;
+      const cy = (bb.minY + bb.maxY) / 2;
+
+      elements.forEach(element => {
+        element.nodes.forEach(node => {
+          const relX = node.x - cx;
+          const relY = node.y - cy;
+
+          node.x = Math.round((cx + relX * cos - relY * sin) / GRID_SPACING) * GRID_SPACING;
+          node.y = Math.round((cy + relX * sin + relY * cos) / GRID_SPACING) * GRID_SPACING;
+        });
+      });
+    }
+
+    // Update orientation property on every rotated element
+    elements.forEach(element => {
+      const cur = element.properties?.values?.orientation || 0;
+      const next = ((cur + rotationAngleDegrees) % 360 + 360) % 360;
       if (element.properties && element.properties.updateProperty) {
-        element.properties.updateProperty('orientation', newOrientation);
+        element.properties.updateProperty('orientation', next);
       }
     });
     
-    // Emit update to trigger immediate re-render
-    this.emit("update", { type: "rotateElements", elementIds, rotationAngleDegrees, centerX, centerY });
+    this.emit("update", { type: "rotateElements", elementIds, rotationAngleDegrees });
   }
 
   /**
@@ -439,50 +452,21 @@ export class CircuitService extends EventEmitter {
   }
 
   /**
-   * Rotates an element to a new orientation.
+   * Rotates a single element to a new absolute orientation.
+   * Rotates around the midpoint of its two nodes and snaps to grid.
    * 
    * @param {string} elementId - The unique identifier of the element to rotate.
-   * @param {number} newOrientation - The new orientation (0, 90, 180, or 270 degrees).
+   * @param {number} newOrientation - The target orientation (0, 90, 180, or 270 degrees).
    */
   rotateElement(elementId, newOrientation) {
     const element = this.circuit.elements.find(el => el.id === elementId);
     if (!element) return;
     
-    // For single element rotation, rotate around first node
     const currentOrientation = element?.properties?.values?.orientation || 0;
-    const rotationAngle = newOrientation - currentOrientation;
+    const rotationAngleDeg = newOrientation - currentOrientation;
     
-    // Calculate rotation in radians
-    const rotationAngleRad = (rotationAngle * Math.PI) / 180;
-    
-    // Use first node as rotation center for single element rotation
-    const centerX = element.nodes[0].x;
-    const centerY = element.nodes[0].y;
-    
-    // Rotate all nodes around the first node
-    element.nodes.forEach(node => {
-      // Translate node to origin (relative to first node)
-      const relativeX = node.x - centerX;
-      const relativeY = node.y - centerY;
-      
-      // Apply rotation matrix
-      const cos = Math.cos(rotationAngleRad);
-      const sin = Math.sin(rotationAngleRad);
-      const rotatedX = relativeX * cos - relativeY * sin;
-      const rotatedY = relativeX * sin + relativeY * cos;
-      
-      // Translate back to absolute coordinates
-      node.x = centerX + rotatedX;
-      node.y = centerY + rotatedY;
-    });
-    
-    // Update orientation property
-    if (element.properties && element.properties.updateProperty) {
-      element.properties.updateProperty('orientation', newOrientation);
-    }
-    
-    // Emit update to trigger immediate re-render
-    this.emit("update", { type: "rotateElement", elementId, rotationAngle });
+    // Delegate to rotateElements (single-element path uses midpoint + grid snap)
+    this.rotateElements([elementId], rotationAngleDeg);
   }
 
   /**

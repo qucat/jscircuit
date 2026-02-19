@@ -515,11 +515,17 @@ export class CircuitRenderer {
     }
 
     /**
-     * Set the selected element with optimized rendering
+     * Set the selected element with optimized rendering.
+     * Also syncs the selectedElements Set so both states are consistent.
      */
     setSelectedElement(element) {
-        if (this.selectedElement !== element) {
-            this.selectedElement = element;
+        const changed = this.selectedElement !== element || this.selectedElements.size > 0;
+        this.selectedElement = element;
+        this.selectedElements.clear();
+        if (element) {
+            this.selectedElements.add(element);
+        }
+        if (changed) {
             this.render();
         }
     }
@@ -614,10 +620,12 @@ export class CircuitRenderer {
     }
 
     /**
-     * Set multiple selected elements
+     * Set multiple selected elements.
+     * Also clears selectedElement (singular) so both states are consistent.
      * @param {Array|Set} elements - The elements to select
      */
     setSelectedElements(elements) {
+        this.selectedElement = null;
         this.selectedElements.clear();
         if (Array.isArray(elements)) {
             elements.forEach(element => this.selectedElements.add(element));

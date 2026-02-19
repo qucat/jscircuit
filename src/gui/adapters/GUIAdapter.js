@@ -600,11 +600,19 @@ export class GUIAdapter {
           // Normal interaction logic when not in wire drawing mode
           const element = this.findElementAt(offsetX, offsetY);
 
-          // If clicking on an element, select it first
+          // If clicking on an element that is already part of a multi-selection,
+          // preserve the selection so all elements can be dragged together.
+          // Only re-select (which clears multi-selection) when clicking an
+          // element that is NOT currently selected.
           if (element) {
-            const selectCommand = this.guiCommandRegistry.get("selectElement");
-            if (selectCommand) {
-              selectCommand.execute(element);
+            const alreadySelected = this.circuitRenderer.isElementSelected(element);
+            const isMultiSelect = this.circuitRenderer.getSelectedElements().length > 1;
+
+            if (!alreadySelected || !isMultiSelect) {
+              const selectCommand = this.guiCommandRegistry.get("selectElement");
+              if (selectCommand) {
+                selectCommand.execute(element);
+              }
             }
           }
 
@@ -1104,44 +1112,30 @@ export class GUIAdapter {
   rotatePlacingElement(angle) {
     if (!this.placingElement) return;
 
-    
     // Initialize properties if they don't exist
     if (!this.placingElement.properties) {
       console.warn("[GUIAdapter] Element missing properties, cannot set orientation");
     } else {
-      // Initialize properties.values if it doesn't exist
       if (!this.placingElement.properties.values) {
         this.placingElement.properties.values = {};
       }
-      
-      // Update element's orientation property
-      const currentOrientation = this.placingElement.properties.values.orientation || 0;
-      this.placingElement.properties.values.orientation = (currentOrientation + angle) % 360;
-      
-      // Normalize negative angles
-      if (this.placingElement.properties.values.orientation < 0) {
-        this.placingElement.properties.values.orientation += 360;
-      }
+      const cur = this.placingElement.properties.values.orientation || 0;
+      this.placingElement.properties.values.orientation = ((cur + angle) % 360 + 360) % 360;
     }
     
-    // Get current element center
-    const centerX = (this.placingElement.nodes[0].x + this.placingElement.nodes[1].x) / 2;
-    const centerY = (this.placingElement.nodes[0].y + this.placingElement.nodes[1].y) / 2;
-    
-    // For most components, rotation changes the node positions
+    // node[0] is the fixed anchor; rotate node[1] around it (QuCat convention)
+    const anchor = this.placingElement.nodes[0];
     const angleRad = (angle * Math.PI) / 180;
-    const currentAngleRad = Math.atan2(
-      this.placingElement.nodes[1].y - this.placingElement.nodes[0].y,
-      this.placingElement.nodes[1].x - this.placingElement.nodes[0].x
-    );
-    const newAngleRad = currentAngleRad + angleRad;
-    
-    // Use grid configuration to calculate proper node positions that align to grid
-    const nodePositions = GRID_CONFIG.calculateNodePositions(centerX, centerY, newAngleRad);
-    this.placingElement.nodes[0].x = nodePositions.start.x;
-    this.placingElement.nodes[0].y = nodePositions.start.y;
-    this.placingElement.nodes[1].x = nodePositions.end.x;
-    this.placingElement.nodes[1].y = nodePositions.end.y;
+    const cos = Math.round(Math.cos(angleRad));
+    const sin = Math.round(Math.sin(angleRad));
+
+    for (let i = 1; i < this.placingElement.nodes.length; i++) {
+      const relX = this.placingElement.nodes[i].x - anchor.x;
+      const relY = this.placingElement.nodes[i].y - anchor.y;
+
+      this.placingElement.nodes[i].x = GRID_CONFIG.snapToGrid(anchor.x + relX * cos - relY * sin);
+      this.placingElement.nodes[i].y = GRID_CONFIG.snapToGrid(anchor.y + relX * sin + relY * cos);
+    }
     
     // Emit update event for rotation
     this.circuitService.emit('update', {
