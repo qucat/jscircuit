@@ -13,4 +13,4 @@ docs/dist/
 # Auto-generated configuration (built from gui.config.yaml)
 src/config/gui.config.js
 
-compile.txt.DS_Store
+.DS_Store

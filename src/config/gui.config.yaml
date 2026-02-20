@@ -170,6 +170,26 @@ menus:
         shortcut: Del
         action: { kind: command, name: deleteSelection }
 
+      - id: nudgeRight
+        label: "Move Right"
+        shortcut: Right
+        action: { kind: command, name: nudgeRight }
+
+      - id: nudgeLeft
+        label: "Move Left"
+        shortcut: Left
+        action: { kind: command, name: nudgeLeft }
+
+      - id: nudgeUp
+        label: "Move Up"
+        shortcut: Up
+        action: { kind: command, name: nudgeUp }
+
+      - id: nudgeDown
+        label: "Move Down"
+        shortcut: Down
+        action: { kind: command, name: nudgeDown }
+
       - id: rotateElement
         label: "Rotate Element"
         shortcut: Ctrl+E

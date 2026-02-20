@@ -1,6 +1,6 @@
 {
     "name": "jscircuit",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "A web-based circuit editor for designing circuits and exporting netlists.",
     "main": "src/gui/main.js",
     "scripts": {

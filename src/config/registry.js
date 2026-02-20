@@ -73,6 +73,7 @@ import { CopyNetlistToClipboardCommand } from "../gui/commands/CopyNetlistToClip
 import { PasteNetlistFromClipboardCommand } from "../gui/commands/PasteNetlistFromClipboardCommand.js";
 import { Notification } from "../gui/components/Notification.js";
 import { WireSplitService } from "../application/WireSplitService.js";
+import { GRID_SPACING } from "./gridConfig.js";
 
 /**
  * Element Registration - Factory Pattern Implementation
@@ -391,6 +392,30 @@ export function setupCommands(circuitService, circuitRenderer) {
                 };
             },
         }));
+    }
+
+    // ── Nudge commands (arrow-key element movement) ──────────────
+    const nudgeFactory = (dx, dy) => (circuitService, circuitRenderer) => ({
+        execute: () => {
+            const selected = circuitRenderer.getSelectedElements();
+            if (!selected || selected.length === 0) return { undo: () => {} };
+
+            const before = circuitService.exportState();
+            const ids = selected.map(el => el.id);
+            circuitService.nudgeElements(ids, dx, dy);
+            return { undo: () => circuitService.importState(before) };
+        },
+    });
+
+    for (const [name, dx, dy] of [
+        ["nudgeRight", GRID_SPACING, 0],
+        ["nudgeLeft",  -GRID_SPACING, 0],
+        ["nudgeUp",    0, -GRID_SPACING],
+        ["nudgeDown",  0,  GRID_SPACING],
+    ]) {
+        if (!GUICommandRegistry.getTypes().includes(name)) {
+            GUICommandRegistry.register(name, nudgeFactory(dx, dy));
+        }
     }
 
     // Register general rotate element command (defaults to 90° clockwise)

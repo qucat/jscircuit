@@ -470,6 +470,25 @@ export class CircuitService extends EventEmitter {
   }
 
   /**
+   * Nudges one or more elements by a delta (dx, dy) in pixel coordinates.
+   * Each element's nodes are shifted by exactly (dx, dy).
+   *
+   * @param {string[]} elementIds - IDs of elements to nudge.
+   * @param {number} dx - Horizontal shift in pixels (positive = right).
+   * @param {number} dy - Vertical shift in pixels (positive = down).
+   */
+  nudgeElements(elementIds, dx, dy) {
+    for (const id of elementIds) {
+      const element = this.circuit.elements.find(el => el.id === id);
+      if (!element) continue;
+      element.nodes = element.nodes.map(
+        node => new Position(node.x + dx, node.y + dy)
+      );
+    }
+    this.emit("update", { type: "nudgeElements", elementIds, dx, dy });
+  }
+
+  /**
    * Moves an element to a new position.
    * 
    * @param {string} elementId - The unique identifier of the element to move.

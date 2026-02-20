@@ -30,7 +30,9 @@ The project was built to solve two key challenges in the quantum circuit simulat
 ## Key Features
 
 -   **Zero Installation**: Runs instantly in any modern web browser.
+-   **Self-Contained**: Ships as a single HTML file— no external dependencies.
 -   **QuCat Compatible**: Generates netlist files ready for QuCat simulations.
+-   **Clipboard Workflow**: Copy netlists out (Ctrl+Shift+C) and paste them in (Ctrl+Shift+V).
 -   **Embeddable**: Designed to work within Jupyter Notebooks and web applications.
 -   **Dependency-Free**: Built with native ES6 JavaScript, requiring no heavy frameworks.
 -   **Extensible**: Professional architecture allowing easy addition of new components.
@@ -52,11 +54,18 @@ To run the project locally for development:
     npm install
     ```
 
-3.  **Build and Serve**:
+3.  **Build and Serve** (development):
     ```bash
     npm run serve
     ```
     This will bundle the application and start a local server at `http://127.0.0.1:8080`.
+
+4.  **Build Standalone** (distribution):
+    ```bash
+    npm run build:standalone
+    ```
+    Produces a single self-contained `dist/jscircuit.html` with all JS and assets inlined.
+    This file can be included in the QuCat Python package or served from any static host.
 
 ### Documentation
 
