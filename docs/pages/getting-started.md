@@ -11,4 +11,4 @@ Explore the menu options to familiarize with the features and the keystrokes to 
 
 ### Live Editor
 
-<iframe src="app/jscircuit.html" width="100%" height="600px" style="border: 1px solid #ccc; border-radius: 4px;"></iframe>
+<iframe src="app/jscircuit.html" width="100%" height="600px" style="border: 1px solid #ccc; border-radius: 4px;" allow="clipboard-write; clipboard-read"></iframe>

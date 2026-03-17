@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "JSCircuit - Web-based Circuit Editor and Netlist Generator"
+abstract: "A web-based circuit editor for designing circuits and exporting netlists to various formats. Built with modern JavaScript, featuring real-time rendering, spatial indexing optimization, and support for multiple circuit types including cavity circuits, couplers, and optomechanical systems."
+authors:
+  - family-names: "Urra Llanusa"
+    given-names: "Jose Carlos"
+    email: "j.c.urrallanusa@tudelft.nl"
+    affiliation: "Delft University of Technology"
+contributors:
+  - family-names: "Steele"
+    given-names: "Gary"
+  - family-names: "Branchet"
+    given-names: "Susan"
+version: "1.1.0"
+date-released: "2025-01-15"
+license: "MIT"
+repository-code: "https://github.com/qucat/jscircuit"
+repository: "https://github.com/qucat/jscircuit"
+keywords:
+  - "circuit editor"
+  - "netlist generation"
+  - "web application"
+  - "quantum circuits"
+  - "circuit design"
+  - "interactive visualization"
+  - "JavaScript"
+documentation: "https://github.com/qucat/jscircuit/blob/main/README.md"

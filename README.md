@@ -6,9 +6,9 @@
 
   **Start designing quantum circuits in your browser right away with jscircuit for your simulations**
   
-  [![GitHub](https://img.shields.io/badge/GitHub-View%20Source-blue?style=for-the-badge&logo=github)](https://github.com/jurra/qucat-circuit-generator)
-  [![App](https://img.shields.io/badge/Demo-Try%20Live-success?style=for-the-badge&logo=codesandbox)](https://jurra.github.io/qucat-circuit-generator/app/jscircuit.html)
-  [![Docs](https://img.shields.io/badge/Docs-Getting%20Started-orange?style=for-the-badge&logo=gitbook)](https://jurra.github.io/qucat-circuit-generator/tutorial-getting-started.html)
+  [![GitHub](https://img.shields.io/badge/GitHub-View%20Source-blue?style=for-the-badge&logo=github)](https://github.com/qucat/jscircuit)
+  [![App](https://img.shields.io/badge/Demo-Try%20Live-success?style=for-the-badge&logo=codesandbox)](https://qucat.github.io/jscircuit/app/jscircuit.html)
+  [![Docs](https://img.shields.io/badge/Docs-Getting%20Started-orange?style=for-the-badge&logo=gitbook)](https://qucat.github.io/jscircuit/tutorial-getting-started.html)
 </div>
 
 
@@ -16,6 +16,8 @@
 ---
 
 **JSCircuit** is a lightweight, web-based circuit editor designed to generate netlists for **QuCat** simulations. It runs entirely in the browser, offering a modern alternative to desktop-based editors.
+
+[**Get started right away with JSCircuit**](https://qucat.github.io/jscircuit/tutorial-getting-started.html)
 
 ### Why JSCircuit?
 
@@ -45,8 +47,8 @@ To run the project locally for development:
 
 1.  **Clone the repository**:
     ```bash
-    git clone https://github.com/jurra/qucat-circuit-generator.git
-    cd qucat-circuit-generator
+    git clone https://github.com/qucat/jscircuit.git
+    cd jscircuit
     ```
 
 2.  **Install dependencies**:
@@ -69,14 +71,19 @@ To run the project locally for development:
 
 ### Documentation
 
--   **[Extension Guide](https://jurra.github.io/qucat-circuit-generator/tutorial-extension-guide.html)**: Learn how to add custom elements.
--   **[Architecture](https://jurra.github.io/qucat-circuit-generator/tutorial-overview.html)**: Understand the system design.
--   **[API Reference](https://jurra.github.io/qucat-circuit-generator/index.html)**: Detailed code documentation.
+-   **[Extension Guide](https://qucat.github.io/jscircuit/tutorial-extension-integration-tutorial.html)**: Learn how to add custom elements.
+-   **[API Reference](https://qucat.github.io/jscircuit/index.html)**: Detailed code documentation.
 
 ##  Build the documentation locally
 ```bash
 npm run docs:serve
 ```
+
+## Acknowledgments
+
+This project builds upon the original QuCat GUI developed by **Mario Gely**, which provided the foundational concepts for circuit visualization and interaction as a reference to develop this application.
+
+We acknowledge the support of the **TU Delft Digital Competence Center** in advancing this project.
 
 ## Licensed under the MIT License.
 
