@@ -170,11 +170,16 @@ export class GroundRenderer extends ImageRenderer {
         const localX = dx * Math.cos(rad) - dy * Math.sin(rad);
         const localY = dx * Math.sin(rad) + dy * Math.cos(rad);
 
-        // In local frame, the image center is at (-SCALED_WIDTH/2, 0).
-        // Match the visual selection box: from image left to the node.
-        const pad = 8;
-        const left   = -this.SCALED_WIDTH - pad;           // image far-left
-        const right  =  pad;                                // just past the node
+        // Match the visual selection box exactly.
+        // drawImage is translated to image center (= -SCALED_WIDTH/2 from node).
+        // Selection box in image-center frame:
+        //   boxLeft  = -(drawWidth * 0.01) - pad    ≈ -pad
+        //   boxRight = SCALED_WIDTH/2 + pad
+        // Convert to node frame by subtracting SCALED_WIDTH/2:
+        const pad = 4;
+        const nodeOffset = this.SCALED_WIDTH / 2; // 20 — distance from image center to node
+        const left   = -(this.SCALED_WIDTH * 0.01) - pad - nodeOffset;  // ≈ -24
+        const right  =  pad;                                             // node + pad
         const top    = -(this.SCALED_HEIGHT / 2) - pad;
         const bottom =  (this.SCALED_HEIGHT / 2) + pad;
 

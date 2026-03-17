@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-03-17
+
+### Fixed
+
+- **Ground selection box** — tightened to match visible symbol bounds instead of oversized PNG frame
+- **Rotation-aware hit-testing** — ground elements now respond correctly to click/drag at all orientations (0°, 90°, 180°, 270°) by inverse-rotating the mouse into local frame
+- **Element-over-wire selection priority** — two-pass scan in `findElementAtPosition` ensures components always win over overlapping wires
+- **Drag-lock contract** — only selected elements can be dragged; `DragElementCommand` skips non-selected elements when renderer is available
+- **Eliminated duplicated hit-test logic** — `GUIAdapter.findElementAt` now delegates to `CircuitRenderer.findElementAtPosition`
+
 ## [1.2.0] - 2026-02-20
 
 > Post-Alpha P1 milestone — all critical items from the Alpha review resolved.  
