@@ -33,32 +33,25 @@ export class GroundRenderer extends ImageRenderer {
             this.context.rotate(rotation);
         }
         
-        // Special selection border positioning for ground
+        // Selection border that includes both the image AND the connection node (dot).
+        // In this local frame (translated to image center), the connection node
+        // sits at (+SCALED_WIDTH/2, 0) — i.e. to the RIGHT of image center.
+        // We draw a box from the image left edge to past the node.
         if (this.isSelected) {
-            const borderWidth = this.SELECTION_BORDER_WIDTH;
-            const padding = this.GROUND_NODE_PADDING;
-            
-            // For ground: selection box should include connection node + ground image
-            // The connection node is at the right end of the ground symbol
-            // The image center is offset leftward from the node
-            const imageLeft = -drawWidth / 2; // Left edge of the PNG image (relative to image center)
-            const imageRight = drawWidth / 2; // Right edge of the PNG image (relative to image center)
-            const nodeToImageCenter = drawWidth / 2; // Distance from node to image center
-            
-            // Selection box should extend from the left edge of image to the connection node
-            const selectionLeft = imageLeft - padding;
-            const selectionRight = imageRight + nodeToImageCenter + padding; // Include connection node
-            const selectionWidth = selectionRight - selectionLeft;
-            
-            const borderX = selectionLeft;
-            const borderY = -drawHeight / 2 - padding;
-            const borderWidthTotal = selectionWidth;
-            const borderHeightTotal = drawHeight + (padding * 2);
-            
+            const nodeOffset = this.SCALED_WIDTH / 2; // distance from image center to node
+            const pad = 4;
+            // The ground symbol content spans from the node (+nodeOffset) to
+            // roughly the image center (x ≈ 0).  Beyond that is transparent PNG
+            // whitespace.  Keep the far-side gap proportional to the node-side
+            // gap (both ≈ pad) so the box hugs the visible icon evenly.
+            const boxLeft  = -(drawWidth * 0.01) - pad;   // trim far-side whitespace
+            const boxRight =  nodeOffset + pad;
+            const boxTop   = -drawHeight / 2 - pad;
+            const boxBot   =  drawHeight / 2 + pad;
             this.context.strokeStyle = this.SELECTION_BORDER_COLOR;
-            this.context.lineWidth = borderWidth;
+            this.context.lineWidth = this.SELECTION_BORDER_WIDTH;
             this.context.setLineDash([]);
-            this.context.strokeRect(borderX, borderY, borderWidthTotal, borderHeightTotal);
+            this.context.strokeRect(boxLeft, boxTop, boxRight - boxLeft, boxBot - boxTop);
         }
         
         // Draw the main image
@@ -149,36 +142,43 @@ export class GroundRenderer extends ImageRenderer {
         // This method is kept for compatibility but does nothing
     }
 
-    // Override isPointInBounds for ground specific positioning
-    isPointInBounds(mouseX, mouseY, elementMidX, elementMidY) {
-        // The elementMidX, elementMidY represents the connection node position (at right end)
-        // The ground image center is offset leftward from the node
-        const nodeX = elementMidX;
-        const nodeY = elementMidY;
-        const imageX = nodeX - (this.SCALED_WIDTH / 2); // Image center is offset left from node
-        const imageY = nodeY; // Image center Y aligns with node Y
-        
-        const selectionPadding = 20; // 15 pixels padding on all sides
-        const halfWidth = this.SCALED_WIDTH / 2 + selectionPadding;
-        const halfHeight = this.SCALED_HEIGHT / 2 + selectionPadding;
-        
-        // Expanded selection bounds with padding around the entire ground element
-        const inExpandedBounds = (
-            mouseX >= imageX - halfWidth &&
-            mouseX <= imageX + halfWidth &&
-            mouseY >= imageY - halfHeight &&
-            mouseY <= imageY + halfHeight
-        );
-        
-        // Also include a larger area around the connection node (increased from 5 to 10 pixels)
-        const nodeRadius = 10;
-        const inNodeBounds = (
-            mouseX >= nodeX - nodeRadius &&
-            mouseX <= nodeX + nodeRadius &&
-            mouseY >= nodeY - nodeRadius &&
-            mouseY <= nodeY + nodeRadius
-        );
-        
-        return inExpandedBounds || inNodeBounds;
+    /**
+     * Rotation-aware hit-test for ground elements.
+     *
+     * The ground image is anchored at the connection node (nodes[0]).
+     * At 0° the image center sits SCALED_WIDTH/2 to the LEFT of the anchor.
+     * We inverse-rotate the mouse into local frame so a single axis-aligned
+     * bounding box works at every orientation.
+     *
+     * @param {number} mouseX
+     * @param {number} mouseY
+     * @param {number} midX   - midpoint fallback
+     * @param {number} midY   - midpoint fallback
+     * @param {Object} [element] - the ground element (for orientation + nodes)
+     */
+    isPointInBounds(mouseX, mouseY, midX, midY, element) {
+        // Anchor = connection node (nodes[0]).
+        const anchorX = element?.nodes?.[0]?.x ?? midX;
+        const anchorY = element?.nodes?.[0]?.y ?? midY;
+
+        const orientation = element?.properties?.values?.orientation || 0;
+        const rad = -(orientation * Math.PI) / 180; // inverse rotation
+
+        // Rotate mouse into local frame (anchor = connection node at origin)
+        const dx = mouseX - anchorX;
+        const dy = mouseY - anchorY;
+        const localX = dx * Math.cos(rad) - dy * Math.sin(rad);
+        const localY = dx * Math.sin(rad) + dy * Math.cos(rad);
+
+        // In local frame, the image center is at (-SCALED_WIDTH/2, 0).
+        // Match the visual selection box: from image left to the node.
+        const pad = 8;
+        const left   = -this.SCALED_WIDTH - pad;           // image far-left
+        const right  =  pad;                                // just past the node
+        const top    = -(this.SCALED_HEIGHT / 2) - pad;
+        const bottom =  (this.SCALED_HEIGHT / 2) + pad;
+
+        return localX >= left && localX <= right &&
+               localY >= top  && localY <= bottom;
     }
 }

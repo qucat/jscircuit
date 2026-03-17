@@ -566,8 +566,18 @@ export class GUIAdapter {
         const currentOrientation = this.placingElement.properties?.values?.orientation || 0;
         const angleRad = (currentOrientation * Math.PI) / 180;
         
+        // For ground: shift the center so the visual icon center (not the
+        // node midpoint) lands under the mouse cursor.
+        let centerX = snappedX;
+        let centerY = snappedY;
+        if (this.placingElement.type === 'ground') {
+          const visualOffset = GRID_CONFIG.componentSpanPixels / 2 + 20; // halfSpan + SCALED_WIDTH/2
+          centerX += visualOffset * Math.cos(angleRad);
+          centerY += visualOffset * Math.sin(angleRad);
+        }
+
         // Use grid configuration to calculate proper node positions that align to grid
-        const nodePositions = GRID_CONFIG.calculateNodePositions(snappedX, snappedY, angleRad);
+        const nodePositions = GRID_CONFIG.calculateNodePositions(centerX, centerY, angleRad);
         this.placingElement.nodes[0].x = nodePositions.start.x;
         this.placingElement.nodes[0].y = nodePositions.start.y;
         this.placingElement.nodes[1].x = nodePositions.end.x;
@@ -606,28 +616,22 @@ export class GUIAdapter {
           // Normal interaction logic when not in wire drawing mode
           const element = this.findElementAt(offsetX, offsetY);
 
-          // If clicking on an element that is already part of a multi-selection,
-          // preserve the selection so all elements can be dragged together.
-          // Only re-select (which clears multi-selection) when clicking an
-          // element that is NOT currently selected.
           if (element) {
             const alreadySelected = this.circuitRenderer.isElementSelected(element);
-            const isMultiSelect = this.circuitRenderer.getSelectedElements().length > 1;
 
-            if (!alreadySelected || !isMultiSelect) {
+            if (!alreadySelected) {
+              // Select this element (replaces any previous selection)
               const selectCommand = this.guiCommandRegistry.get("selectElement");
-              if (selectCommand) {
-                selectCommand.execute(element);
-              }
+              if (selectCommand) selectCommand.execute(element);
             }
-          }
 
-          // Determine which command to start based on context
-          if (element) {
-            // Clicking on an element starts drag
+            // Only allow drag on the element that is selected.
+            // This prevents dragging a non-selected element when something
+            // else was previously selected.
             this.activeCommand = this.guiCommandRegistry.get("dragElement", this.circuitService);
           } else {
-            // Clicking on empty space starts selection box
+            // Clicking on empty space → clear selection and start selection box
+            this.circuitRenderer.clearSelection();
             this.startSelectionBox(offsetX, offsetY);
             this.activeCommand = null;
           }
@@ -664,9 +668,18 @@ export class GUIAdapter {
         // Get current orientation from element properties (preserve rotation)
         const currentOrientation = this.placingElement.properties?.values?.orientation || 0;
         const angleRad = (currentOrientation * Math.PI) / 180;
-        
+
+        // For ground: shift the center so the visual icon center follows the cursor.
+        let centerX = snappedX;
+        let centerY = snappedY;
+        if (this.placingElement.type === 'ground') {
+          const visualOffset = GRID_CONFIG.componentSpanPixels / 2 + 20;
+          centerX += visualOffset * Math.cos(angleRad);
+          centerY += visualOffset * Math.sin(angleRad);
+        }
+
         // Use grid configuration to calculate proper node positions that align to grid
-        const nodePositions = GRID_CONFIG.calculateNodePositions(snappedX, snappedY, angleRad);
+        const nodePositions = GRID_CONFIG.calculateNodePositions(centerX, centerY, angleRad);
         this.placingElement.nodes[0].x = nodePositions.start.x;
         this.placingElement.nodes[0].y = nodePositions.start.y;
         this.placingElement.nodes[1].x = nodePositions.end.x;
@@ -761,9 +774,18 @@ export class GUIAdapter {
       // Get current orientation from element properties (preserve rotation)
       const currentOrientation = element.properties?.values?.orientation || 0;
       const angleRad = (currentOrientation * Math.PI) / 180;
-      
+
+      // For ground: shift the center so the visual icon center appears at the cursor.
+      let centerX = snappedX;
+      let centerY = snappedY;
+      if (element.type === 'ground') {
+        const visualOffset = GRID_CONFIG.componentSpanPixels / 2 + 20;
+        centerX += visualOffset * Math.cos(angleRad);
+        centerY += visualOffset * Math.sin(angleRad);
+      }
+
       // Use grid configuration to calculate proper node positions that align to grid
-      const nodePositions = GRID_CONFIG.calculateNodePositions(snappedX, snappedY, angleRad);
+      const nodePositions = GRID_CONFIG.calculateNodePositions(centerX, centerY, angleRad);
       element.nodes[0].x = nodePositions.start.x;
       element.nodes[0].y = nodePositions.start.y;
       element.nodes[1].x = nodePositions.end.x;
@@ -897,45 +919,8 @@ export class GUIAdapter {
    * }
    */
   findElementAt(worldX, worldY) {
-    const elements = this.circuitService.getElements();
-    const nodeProximityThreshold = 15; // Distance to prioritize node-based selection
-
-    let bestElement = null;
-    let bestScore = -1;
-
-    for (const element of elements) {
-      if (!this.isInsideElement(worldX, worldY, element)) continue;
-
-      // Calculate selection score based on proximity to nodes and element type
-      let score = 0;
-
-      // Check if click is close to any node of this element
-      let closestNodeDistance = Infinity;
-      if (Array.isArray(element.nodes)) {
-        for (const node of element.nodes) {
-          const distance = Math.hypot(worldX - node.x, worldY - node.y);
-          closestNodeDistance = Math.min(closestNodeDistance, distance);
-        }
-      }
-
-      // Higher score for elements with nodes close to click point
-      if (closestNodeDistance <= nodeProximityThreshold) {
-        score += 100 - closestNodeDistance; // Closer nodes get higher scores
-      }
-
-      // Prioritize non-wire elements over wires
-      if (element.type !== 'wire') {
-        score += 50;
-      }
-
-      // Update best element if this one has a higher score
-      if (score > bestScore) {
-        bestScore = score;
-        bestElement = element;
-      }
-    }
-
-    return bestElement;
+    // Delegate to renderer hit-test (rotation-aware, element-over-wire priority).
+    return this.circuitRenderer.findElementAtPosition(worldX, worldY);
   }
 
   /**

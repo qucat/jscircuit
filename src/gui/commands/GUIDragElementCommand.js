@@ -67,10 +67,17 @@ export class DragElementCommand extends GUICommand {
     this.actuallyMoved = false;
     this.elementStartPos.clear();
     
-    // Get currently selected elements (if circuitRenderer is available)
-    const selectedElements = this.circuitRenderer ? this.circuitRenderer.getSelectedElements() : [];
-    
+    // Only consider currently-selected elements for dragging.
+    // This enforces the contract: non-selected elements cannot be dragged.
+    // When no renderer is available (tests / backwards compat), allow all elements.
+    const selectedElements = this.circuitRenderer
+        ? this.circuitRenderer.getSelectedElements()
+        : [];
+    const hasRenderer = !!this.circuitRenderer;
+
     for (const element of this.circuitService.getElements()) {
+      // If the renderer is available, skip elements that are not selected.
+      if (hasRenderer && !selectedElements.includes(element)) continue;
       // Case 1: Check if user clicked on a wire node
       if (element.type === "wire") {
         const nodeIndex = this.findClosestNodeIndex(element, mouseX, mouseY);

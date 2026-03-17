@@ -375,30 +375,25 @@ export class CircuitRenderer {
         const elements = this.circuitService.getElements();
         if (!elements) return null;
 
-        // Check elements in reverse order (top-most first)
+        // Two-pass: non-wire elements first so components always win over wires.
         for (let i = elements.length - 1; i >= 0; i--) {
             const element = elements[i];
+            if (element.type === 'wire') continue;
             const renderer = this.renderers.get(element.type);
-            
-            if (renderer) {
-                let isHit = false;
-                
-                // Special handling for wires which need different hover detection
-                if (element.type === 'wire' && renderer.checkHover) {
-                    isHit = renderer.checkHover(element, x, y);
-                } else if (renderer.isPointInBounds) {
-                    const [start, end] = element.nodes;
-                    const midX = (start.x + end.x) / 2;
-                    const midY = (start.y + end.y) / 2;
-                    isHit = renderer.isPointInBounds(x, y, midX, midY);
-                }
-                
-                if (isHit) {
-                    return element;
-                }
+            if (renderer?.isPointInBounds) {
+                const [start, end] = element.nodes;
+                const midX = (start.x + end.x) / 2;
+                const midY = (start.y + end.y) / 2;
+                if (renderer.isPointInBounds(x, y, midX, midY, element)) return element;
             }
         }
-        
+        for (let i = elements.length - 1; i >= 0; i--) {
+            const element = elements[i];
+            if (element.type !== 'wire') continue;
+            const renderer = this.renderers.get(element.type);
+            if (renderer?.checkHover && renderer.checkHover(element, x, y)) return element;
+        }
+
         return null;
     }
 
@@ -461,7 +456,7 @@ export class CircuitRenderer {
                         const [start, end] = element.nodes;
                         const midX = (start.x + end.x) / 2;
                         const midY = (start.y + end.y) / 2;
-                        isHovered = renderer.isPointInBounds(mouseX, mouseY, midX, midY);
+                        isHovered = renderer.isPointInBounds(mouseX, mouseY, midX, midY, element);
                     }
                     
                     if (isHovered) {
