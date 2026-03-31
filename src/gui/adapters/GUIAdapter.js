@@ -559,8 +559,8 @@ export class GUIAdapter {
 
       // If placing an element, finalize its position on left click
       if (event.button === 0 && this.placingElement) {
-        const snappedX = GRID_CONFIG.snapToGrid(offsetX);
-        const snappedY = GRID_CONFIG.snapToGrid(offsetY);
+        const snappedX = GRID_CONFIG.snapToVisualGrid(offsetX);
+        const snappedY = GRID_CONFIG.snapToVisualGrid(offsetY);
 
         // Get current orientation from element properties (preserve rotation)
         const currentOrientation = this.placingElement.properties?.values?.orientation || 0;
@@ -662,8 +662,8 @@ export class GUIAdapter {
 
       // Live update for placing element
       if (this.placingElement) {
-        const snappedX = GRID_CONFIG.snapToGrid(offsetX);
-        const snappedY = GRID_CONFIG.snapToGrid(offsetY);
+        const snappedX = GRID_CONFIG.snapToVisualGrid(offsetX);
+        const snappedY = GRID_CONFIG.snapToVisualGrid(offsetY);
 
         // Get current orientation from element properties (preserve rotation)
         const currentOrientation = this.placingElement.properties?.values?.orientation || 0;
@@ -768,8 +768,8 @@ export class GUIAdapter {
       
       // Immediately position the element at the current mouse position
       // This prevents the element from staying at default coordinates until mouse movement
-      const snappedX = GRID_CONFIG.snapToGrid(this.currentMousePos.x);
-      const snappedY = GRID_CONFIG.snapToGrid(this.currentMousePos.y);
+      const snappedX = GRID_CONFIG.snapToVisualGrid(this.currentMousePos.x);
+      const snappedY = GRID_CONFIG.snapToVisualGrid(this.currentMousePos.y);
 
       // Get current orientation from element properties (preserve rotation)
       const currentOrientation = element.properties?.values?.orientation || 0;

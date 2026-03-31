@@ -40,8 +40,8 @@ export class DrawWireCommand extends GUICommand {
     let snappedX = mouseX;
     let snappedY = mouseY;
     if (this.enableSnapping) {
-      snappedX = GRID_CONFIG.snapToGrid(mouseX);
-      snappedY = GRID_CONFIG.snapToGrid(mouseY);
+      snappedX = GRID_CONFIG.snapToVisualGrid(mouseX);
+      snappedY = GRID_CONFIG.snapToVisualGrid(mouseY);
     }
 
     // 2) Create a new wire with both nodes at the same place
@@ -71,12 +71,12 @@ export class DrawWireCommand extends GUICommand {
   move(mouseX, mouseY) {
     if (!this.drawing || !this.wireElement) return;
 
-    // 1) Snap to grid if enabled
+    // 1) Snap to visual grid if enabled
     let snappedX = mouseX;
     let snappedY = mouseY;
     if (this.enableSnapping) {
-      snappedX = GRID_CONFIG.snapToGrid(mouseX);
-      snappedY = GRID_CONFIG.snapToGrid(mouseY);
+      snappedX = GRID_CONFIG.snapToVisualGrid(mouseX);
+      snappedY = GRID_CONFIG.snapToVisualGrid(mouseY);
     }
 
     // 2) Compare how far we've moved from the start node

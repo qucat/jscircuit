@@ -200,8 +200,8 @@ move(mouseX, mouseY) {
     let intendedX = mouseX - this.offset.x;
     let intendedY = mouseY - this.offset.y;
     if (this.enableSnapping) {
-      intendedX = GRID_CONFIG.snapToGrid(intendedX);
-      intendedY = GRID_CONFIG.snapToGrid(intendedY);
+      intendedX = GRID_CONFIG.snapToVisualGrid(intendedX);
+      intendedY = GRID_CONFIG.snapToVisualGrid(intendedY);
     }
 
     // Step 4: lock axis if dragging a 2-node wire
@@ -244,8 +244,8 @@ move(mouseX, mouseY) {
       let intendedY = mouseY - this.offset.y;
 
       if (this.enableSnapping) {
-        intendedX = GRID_CONFIG.snapToGrid(intendedX);
-        intendedY = GRID_CONFIG.snapToGrid(intendedY);
+        intendedX = GRID_CONFIG.snapToVisualGrid(intendedX);
+        intendedY = GRID_CONFIG.snapToVisualGrid(intendedY);
       }
 
       const deltaX = intendedX - firstNode.x;
@@ -287,8 +287,8 @@ moveMultipleElements(mouseX, mouseY) {
     let intendedY = mouseY - elementOffset.y;
 
     if (this.enableSnapping) {
-      intendedX = GRID_CONFIG.snapToGrid(intendedX);
-      intendedY = GRID_CONFIG.snapToGrid(intendedY);
+      intendedX = GRID_CONFIG.snapToVisualGrid(intendedX);
+      intendedY = GRID_CONFIG.snapToVisualGrid(intendedY);
     }
 
     const deltaX = intendedX - firstNode.x;

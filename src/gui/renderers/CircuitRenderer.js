@@ -102,8 +102,9 @@ export class CircuitRenderer {
         this.stopPan = this.stopPan.bind(this);
 
         // Grid settings: these are configurable.
-        // For example, gridSpacing is in logical (domain) coordinates.
-        this.gridSpacing = 10;        // Default grid spacing
+        // Visual grid displays at regular logical unit intervals
+        // This allows customizable visual grid independent of coordinate system
+        this.gridSpacing = 5;
         this.gridColor = 'gray';        // Color for the grid lines
         this.gridLineWidth = 0.5;         // Line width for grid lines
 

@@ -63,7 +63,10 @@ export class QucatNetlistAdapter {
     /**
      * Internal: Serialize elements into .qucat netlist lines.
      * Converts pixel coordinates to v1.0 grid coordinates for QuCat Python compatibility.
-     * Pipeline: pixel → v2.0 grid → v1.0 grid
+     * Pipeline: pixel → snapped grid → v2.0 grid → v1.0 grid (with rounding)
+     *
+     * This ensures exports are compatible with QuCat even when components are
+     * positioned on visual grid (non-integer logical coordinates).
      *
      * Ground convention for QuCat:
      * - pos1 = "minus" node (ground body / triple-line side)
@@ -83,12 +86,17 @@ export class QucatNetlistAdapter {
             const shortType = elementTypeToShortCode[type];
             if (!shortType) throw new Error(`Unknown element type: ${type}`);
 
-            // Convert pixel coordinates → v2.0 grid → v1.0 grid
+            // Convert pixel coordinates → logical grid (snap to nearest integer logical unit)
+            // → v2.0 grid → v1.0 grid
             const pixelPos1 = new Position(nodes[0].x, nodes[0].y);
             const pixelPos2 = new Position(nodes[1].x, nodes[1].y);
-            
-            const v2Grid1 = CoordinateAdapter.pixelToGrid(pixelPos1);
-            const v2Grid2 = CoordinateAdapter.pixelToGrid(pixelPos2);
+
+            // Snap to logical grid first to ensure integer coordinates
+            const snappedGrid1 = CoordinateAdapter.pixelToGrid(pixelPos1);
+            const snappedGrid2 = CoordinateAdapter.pixelToGrid(pixelPos2);
+
+            const v2Grid1 = snappedGrid1;
+            const v2Grid2 = snappedGrid2;
 
             let v1Grid1 = CoordinateAdapter.v2ToV1Grid(v2Grid1);
             let v1Grid2 = CoordinateAdapter.v2ToV1Grid(v2Grid2);
