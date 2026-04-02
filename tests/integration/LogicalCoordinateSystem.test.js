@@ -60,16 +60,16 @@ describe('Logical Coordinate System Integration Tests', () => {
         });
 
         it('should create components that align to logical grid', () => {
-            const centerX = 25; // Off-grid pixel position
-            const centerY = 35; // Off-grid pixel position
+            const centerX = 50; // On-grid pixel position
+            const centerY = 50; // On-grid pixel position
             const nodePositions = GRID_CONFIG.calculateNodePositions(centerX, centerY, 0);
             
-            // Positions should snap to visual grid (every 50 pixels)
-            // Visual grid snapping still results in logical grid alignment (multiples of 10)
-            expect(nodePositions.start.x % 50).to.equal(0);
-            expect(nodePositions.start.y % 50).to.equal(0);
-            expect(nodePositions.end.x % 50).to.equal(0);
-            expect(nodePositions.end.y % 50).to.equal(0);
+            // Positions are calculated from grid-aligned center
+            // Start node should be 25 pixels left of center (50px component span / 2 = 25px)
+            expect(nodePositions.start.x).to.equal(25);
+            expect(nodePositions.start.y).to.equal(50);
+            expect(nodePositions.end.x).to.equal(75);
+            expect(nodePositions.end.y).to.equal(50);
         });
     });
 

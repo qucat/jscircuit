@@ -55,28 +55,28 @@ export const GRID_CONFIG = {
     
     
     // Calculate node positions for 2-node components using logical coordinates
-    // Returns snapped positions to visual grid for final placement
+    // Center position should follow mouse smoothly during preview, snapping happens on finalization
     calculateNodePositions: (centerX, centerY, angleRadians = 0) => {
         if (angleRadians === 0) {
-            // Horizontal orientation: calculate nodes
+            // Horizontal orientation: calculate nodes without snapping
             const halfSpanPixels = COMPONENT_SPAN_PIXELS / 2;
 
             const startX = centerX - halfSpanPixels;
             const endX = centerX + halfSpanPixels;
 
-            // Snap positions to visual grid
+            // Return unsnapped positions for smooth movement
             return {
                 start: {
-                    x: GRID_CONFIG.snapToVisualGrid(startX),
-                    y: GRID_CONFIG.snapToVisualGrid(centerY)
+                    x: startX,
+                    y: centerY
                 },
                 end: {
-                    x: GRID_CONFIG.snapToVisualGrid(endX),
-                    y: GRID_CONFIG.snapToVisualGrid(centerY)
+                    x: endX,
+                    y: centerY
                 }
             };
         } else {
-            // For other orientations, use trigonometry
+            // For other orientations, use trigonometry without snapping
             const halfSpanPixels = COMPONENT_SPAN_PIXELS / 2;
 
             const startX = centerX - halfSpanPixels * Math.cos(angleRadians);
@@ -84,15 +84,15 @@ export const GRID_CONFIG = {
             const endX = centerX + halfSpanPixels * Math.cos(angleRadians);
             const endY = centerY + halfSpanPixels * Math.sin(angleRadians);
 
-            // Snap positions to visual grid
+            // Return unsnapped positions for smooth movement
             return {
                 start: {
-                    x: GRID_CONFIG.snapToVisualGrid(startX),
-                    y: GRID_CONFIG.snapToVisualGrid(startY)
+                    x: startX,
+                    y: startY
                 },
                 end: {
-                    x: GRID_CONFIG.snapToVisualGrid(endX),
-                    y: GRID_CONFIG.snapToVisualGrid(endY)
+                    x: endX,
+                    y: endY
                 }
             };
         }
