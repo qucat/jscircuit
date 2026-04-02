@@ -68,11 +68,9 @@ export class AddElementCommand extends GUICommand {
       let centerX, centerY;
       
       if (this.currentMousePosition) {
-        // Snap mouse position to visual grid
-        const snappedX = GRID_CONFIG.snapToVisualGrid(this.currentMousePosition.x);
-        const snappedY = GRID_CONFIG.snapToVisualGrid(this.currentMousePosition.y);
-        centerX = snappedX;
-        centerY = snappedY;
+        // Use mouse position directly for smooth following (no snapping during preview)
+        centerX = this.currentMousePosition.x;
+        centerY = this.currentMousePosition.y;
       } else {
         // Use grid-aligned default position
         centerX = this.DEFAULT_X;

@@ -55,16 +55,16 @@ export const GRID_CONFIG = {
     
     
     // Calculate node positions for 2-node components using logical coordinates
-    // Center position should be pre-snapped to visual grid
+    // Returns snapped positions to visual grid for final placement
     calculateNodePositions: (centerX, centerY, angleRadians = 0) => {
         if (angleRadians === 0) {
-            // Horizontal orientation: calculate nodes and snap them to visual grid
+            // Horizontal orientation: calculate nodes
             const halfSpanPixels = COMPONENT_SPAN_PIXELS / 2;
 
             const startX = centerX - halfSpanPixels;
             const endX = centerX + halfSpanPixels;
 
-            // Snap nodes to visual grid to ensure they land on grid points
+            // Snap positions to visual grid
             return {
                 start: {
                     x: GRID_CONFIG.snapToVisualGrid(startX),
@@ -76,15 +76,15 @@ export const GRID_CONFIG = {
                 }
             };
         } else {
-            // For other orientations, use trigonometry but snap to visual grid
-            const halfSpanPixels = COMPONENT_SPAN_PIXELS / 2; // 25 pixels
+            // For other orientations, use trigonometry
+            const halfSpanPixels = COMPONENT_SPAN_PIXELS / 2;
 
             const startX = centerX - halfSpanPixels * Math.cos(angleRadians);
             const startY = centerY - halfSpanPixels * Math.sin(angleRadians);
             const endX = centerX + halfSpanPixels * Math.cos(angleRadians);
             const endY = centerY + halfSpanPixels * Math.sin(angleRadians);
 
-            // Snap both nodes to nearest visual grid points
+            // Snap positions to visual grid
             return {
                 start: {
                     x: GRID_CONFIG.snapToVisualGrid(startX),

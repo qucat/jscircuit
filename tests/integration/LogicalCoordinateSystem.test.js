@@ -64,11 +64,12 @@ describe('Logical Coordinate System Integration Tests', () => {
             const centerY = 35; // Off-grid pixel position
             const nodePositions = GRID_CONFIG.calculateNodePositions(centerX, centerY, 0);
             
-            // Positions should snap to logical grid (every 10 pixels)
-            expect(nodePositions.start.x % 10).to.equal(0);
-            expect(nodePositions.start.y % 10).to.equal(0);
-            expect(nodePositions.end.x % 10).to.equal(0);
-            expect(nodePositions.end.y % 10).to.equal(0);
+            // Positions should snap to visual grid (every 50 pixels)
+            // Visual grid snapping still results in logical grid alignment (multiples of 10)
+            expect(nodePositions.start.x % 50).to.equal(0);
+            expect(nodePositions.start.y % 50).to.equal(0);
+            expect(nodePositions.end.x % 50).to.equal(0);
+            expect(nodePositions.end.y % 50).to.equal(0);
         });
     });
 

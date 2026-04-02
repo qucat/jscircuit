@@ -196,13 +196,9 @@ move(mouseX, mouseY) {
     // Step 2: re-fetch the possibly cloned node
     const node = this.draggedElement.nodes[this.draggingNodeIndex];
 
-    // Step 3: apply snapping if enabled
+    // Step 3: calculate position following mouse (no snapping during drag)
     let intendedX = mouseX - this.offset.x;
     let intendedY = mouseY - this.offset.y;
-    if (this.enableSnapping) {
-      intendedX = GRID_CONFIG.snapToVisualGrid(intendedX);
-      intendedY = GRID_CONFIG.snapToVisualGrid(intendedY);
-    }
 
     // Step 4: lock axis if dragging a 2-node wire
     if (!this.dragAxis && this.draggedElement.nodes.length === 2) {
@@ -243,11 +239,6 @@ move(mouseX, mouseY) {
       let intendedX = mouseX - this.offset.x;
       let intendedY = mouseY - this.offset.y;
 
-      if (this.enableSnapping) {
-        intendedX = GRID_CONFIG.snapToVisualGrid(intendedX);
-        intendedY = GRID_CONFIG.snapToVisualGrid(intendedY);
-      }
-
       const deltaX = intendedX - firstNode.x;
       const deltaY = intendedY - firstNode.y;
 
@@ -286,11 +277,6 @@ moveMultipleElements(mouseX, mouseY) {
     let intendedX = mouseX - elementOffset.x;
     let intendedY = mouseY - elementOffset.y;
 
-    if (this.enableSnapping) {
-      intendedX = GRID_CONFIG.snapToVisualGrid(intendedX);
-      intendedY = GRID_CONFIG.snapToVisualGrid(intendedY);
-    }
-
     const deltaX = intendedX - firstNode.x;
     const deltaY = intendedY - firstNode.y;
 
@@ -310,10 +296,45 @@ moveMultipleElements(mouseX, mouseY) {
   /**
    * Called on mouseup to finalize drag and check for any split conditions.
    * Includes:
+   * - Snapping all dragged elements to the grid
    * - splitting a different wire body if a node touches it
    * - splitting the dragged wire if its body touches another node
    */
   stop() {
+    // Snap all dragged elements to the grid on release
+    if (this.enableSnapping) {
+      // Snap the main dragged element
+      if (this.draggedElement && Array.isArray(this.draggedElement.nodes)) {
+        this.draggedElement.nodes = this.draggedElement.nodes.map(
+          (n) => new Position(
+            GRID_CONFIG.snapToVisualGrid(n.x),
+            GRID_CONFIG.snapToVisualGrid(n.y)
+          )
+        );
+      }
+
+      // Snap all selected elements (in case of multi-element drag)
+      for (const element of this.selectedElements) {
+        if (element.id !== this.draggedElement?.id && Array.isArray(element.nodes)) {
+          element.nodes = element.nodes.map(
+            (n) => new Position(
+              GRID_CONFIG.snapToVisualGrid(n.x),
+              GRID_CONFIG.snapToVisualGrid(n.y)
+            )
+          );
+        }
+      }
+    }
+
+    // Emit update event to reflect snapped positions
+    if (this.draggedElement) {
+      this.circuitService.emit("update", {
+        type: "dragElement",
+        element: this.draggedElement,
+        selectedElements: this.selectedElements,
+      });
+    }
+
     // Only perform wire splitting checks if the element was actually moved
     if (
       this.actuallyMoved &&

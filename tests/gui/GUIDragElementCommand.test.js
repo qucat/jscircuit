@@ -151,20 +151,23 @@ describe("CircuitService Dragging Tests", function () {
     command.start(220, 200);
     expect(command.draggingNodeIndex).to.be.null;
 
-    // Move the entire shape from (220,200)->(250,250) - snaps to (250,250) on visual grid
-    command.move(250, 250);
+    // Move the entire shape smoothly (no snapping during move)
+    // From (220,200) to (280,250): intendedX = 280-20 = 260, intendedY = 250-0 = 250
+    // deltaX = 260-200 = 60, deltaY = 250-200 = 50
+    // Nodes move to (260,250) and (300,250)
+    // Then snap on stop(): (260,250)->(250,250), (300,250)->(300,250)
+    command.move(280, 250);
     command.stop();
 
     expect(updates.length).to.be.greaterThan(0);
     expect(updates[0].type).to.equal("dragElement");
 
-    // The first node was (200,200). Movement snapped to visual grid: (250,250)
-    // dx=50, dy=50
+    // After snapping on release: first node snaps to 250, second stays at 300
     expect(testWire.nodes[0].x).to.equal(250);
     expect(testWire.nodes[0].y).to.equal(250);
 
-    // The second node was (240,200). Movement is +50x, +50y => (290,250)
-    expect(testWire.nodes[1].x).to.equal(290);
+    // The second node was (240,200). With delta (60,50) => (300,250). Already snapped.
+    expect(testWire.nodes[1].x).to.equal(300);
     expect(testWire.nodes[1].y).to.equal(250);
   });
 
@@ -256,8 +259,7 @@ describe("CircuitService Dragging Tests", function () {
       id: "W_stationary",
       type: "wire",
       nodes: [new Position(180, 200), new Position(260, 200)],
-    };
-
+    };    circuitService.addElement(stationaryWire);
     // The wire we’ll drag — vertical wire at x = 220
     const movingWire = {
       id: "W_moving",

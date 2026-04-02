@@ -578,10 +578,12 @@ export class GUIAdapter {
 
         // Use grid configuration to calculate proper node positions that align to grid
         const nodePositions = GRID_CONFIG.calculateNodePositions(centerX, centerY, angleRad);
-        this.placingElement.nodes[0].x = nodePositions.start.x;
-        this.placingElement.nodes[0].y = nodePositions.start.y;
-        this.placingElement.nodes[1].x = nodePositions.end.x;
-        this.placingElement.nodes[1].y = nodePositions.end.y;
+        
+        // Snap node positions to visual grid when finalizing
+        this.placingElement.nodes[0].x = GRID_CONFIG.snapToVisualGrid(nodePositions.start.x);
+        this.placingElement.nodes[0].y = GRID_CONFIG.snapToVisualGrid(nodePositions.start.y);
+        this.placingElement.nodes[1].x = GRID_CONFIG.snapToVisualGrid(nodePositions.end.x);
+        this.placingElement.nodes[1].y = GRID_CONFIG.snapToVisualGrid(nodePositions.end.y);
 
         this.circuitService.emit("update", {
           type: "finalizePlacement",
@@ -662,16 +664,14 @@ export class GUIAdapter {
 
       // Live update for placing element
       if (this.placingElement) {
-        const snappedX = GRID_CONFIG.snapToVisualGrid(offsetX);
-        const snappedY = GRID_CONFIG.snapToVisualGrid(offsetY);
+        // Follow mouse smoothly without snapping during preview
+        let centerX = offsetX;
+        let centerY = offsetY;
 
         // Get current orientation from element properties (preserve rotation)
         const currentOrientation = this.placingElement.properties?.values?.orientation || 0;
         const angleRad = (currentOrientation * Math.PI) / 180;
 
-        // For ground: shift the center so the visual icon center follows the cursor.
-        let centerX = snappedX;
-        let centerY = snappedY;
         if (this.placingElement.type === 'ground') {
           const visualOffset = GRID_CONFIG.componentSpanPixels / 2 + 20;
           centerX += visualOffset * Math.cos(angleRad);
@@ -1117,15 +1117,16 @@ export class GUIAdapter {
     // node[0] is the fixed anchor; rotate node[1] around it (QuCat convention)
     const anchor = this.placingElement.nodes[0];
     const angleRad = (angle * Math.PI) / 180;
-    const cos = Math.round(Math.cos(angleRad));
-    const sin = Math.round(Math.sin(angleRad));
+    const cos = Math.cos(angleRad);
+    const sin = Math.sin(angleRad);
 
     for (let i = 1; i < this.placingElement.nodes.length; i++) {
       const relX = this.placingElement.nodes[i].x - anchor.x;
       const relY = this.placingElement.nodes[i].y - anchor.y;
 
-      this.placingElement.nodes[i].x = GRID_CONFIG.snapToGrid(anchor.x + relX * cos - relY * sin);
-      this.placingElement.nodes[i].y = GRID_CONFIG.snapToGrid(anchor.y + relX * sin + relY * cos);
+      // Rotate around anchor without snapping during preview
+      this.placingElement.nodes[i].x = anchor.x + relX * cos - relY * sin;
+      this.placingElement.nodes[i].y = anchor.y + relX * sin + relY * cos;
     }
     
     // Emit update event for rotation

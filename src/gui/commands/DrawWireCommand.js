@@ -71,18 +71,10 @@ export class DrawWireCommand extends GUICommand {
   move(mouseX, mouseY) {
     if (!this.drawing || !this.wireElement) return;
 
-    // 1) Snap to visual grid if enabled
-    let snappedX = mouseX;
-    let snappedY = mouseY;
-    if (this.enableSnapping) {
-      snappedX = GRID_CONFIG.snapToVisualGrid(mouseX);
-      snappedY = GRID_CONFIG.snapToVisualGrid(mouseY);
-    }
-
-    // 2) Compare how far we've moved from the start node
+    // Use mouse position directly for smooth following (no snapping during draw)
     const [startNode, endNode] = this.wireElement.nodes;
-    const dx = snappedX - startNode.x;
-    const dy = snappedY - startNode.y;
+    const dx = mouseX - startNode.x;
+    const dy = mouseY - startNode.y;
     const absDx = Math.abs(dx);
     const absDy = Math.abs(dy);
 
@@ -127,6 +119,16 @@ export class DrawWireCommand extends GUICommand {
    * Called on mouseup to finalize the wire.
    */
   stop() {
+    // Snap the wire nodes to the grid before finalizing
+    if (this.wireElement && this.enableSnapping) {
+      this.wireElement.nodes = this.wireElement.nodes.map(
+        (n) => new Position(
+          GRID_CONFIG.snapToVisualGrid(n.x),
+          GRID_CONFIG.snapToVisualGrid(n.y)
+        )
+      );
+    }
+
     this.drawing = false;
     this.direction = null;
 
