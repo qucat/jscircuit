@@ -681,10 +681,6 @@ export class GUIAdapter {
 
       // Live update for placing element
       if (this.placingElement) {
-        // Follow mouse smoothly without snapping during preview
-        const centerX = offsetX;
-        const centerY = offsetY;
-
         // Get current orientation from element properties (preserve rotation)
         const currentOrientation = this.placingElement.properties?.values?.orientation || 0;
         // Ground's base 180° orientation is rendering-only for geometry placement.
@@ -692,6 +688,17 @@ export class GUIAdapter {
           ? currentOrientation - 180
           : currentOrientation;
         const angleRad = (nodeAngle * Math.PI) / 180;
+
+        // Ground's visible content spans SCALED_WIDTH/2 = 20px from connectionNode in the
+        // body direction.  Its visual center is 10px (SCALED_WIDTH/4) from connectionNode.
+        // To place the cursor at the icon's visual center:
+        //   groundAdj = halfSpan - iconContentHalfWidth = 25 - 10 = 15
+        const GROUND_CONTENT_HALF = 10; // GroundRenderer SCALED_WIDTH / 4
+        const groundAdj = this.placingElement.type === 'ground'
+          ? GRID_CONFIG.componentSpanPixels / 2 - GROUND_CONTENT_HALF
+          : 0;
+        const centerX = offsetX + groundAdj * Math.cos(angleRad);
+        const centerY = offsetY + groundAdj * Math.sin(angleRad);
 
         // Use grid configuration to calculate proper node positions that align to grid
         const nodePositions = GRID_CONFIG.calculateNodePositions(centerX, centerY, angleRad);
@@ -780,33 +787,12 @@ export class GUIAdapter {
       // Clear existing selections and select only the placing element
       // This ensures rotation during placement only affects the placing element
       this.circuitRenderer.setSelectedElements([element]);
-      
-      // Immediately position the element at the current mouse position.
-      // Use raw (unsnapped) coords to match mousemove preview behaviour — no jump on first move.
-      const rawX = this.currentMousePos.x;
-      const rawY = this.currentMousePos.y;
 
-      // Get current orientation from element properties (preserve rotation)
-      const currentOrientation = element.properties?.values?.orientation || 0;
-      // Ground's base 180° orientation is rendering-only for geometry placement.
-      const nodeAngle = element.type === 'ground'
-        ? currentOrientation - 180
-        : currentOrientation;
-      const angleRad = (nodeAngle * Math.PI) / 180;
+      // Move nodes off-screen so the element is invisible until the first canvas
+      // mousemove positions it correctly.  This avoids a visible jump from the
+      // element's initial creation position (DEFAULT_X/Y) to the actual cursor.
+      element.nodes.forEach(node => { node.x = -10000; node.y = -10000; });
 
-      // Use raw cursor position directly as center — same formula as mousemove uses
-      const nodePositions = GRID_CONFIG.calculateNodePositions(rawX, rawY, angleRad);
-      element.nodes[0].x = nodePositions.start.x;
-      element.nodes[0].y = nodePositions.start.y;
-      element.nodes[1].x = nodePositions.end.x;
-      element.nodes[1].y = nodePositions.end.y;
-
-      // Emit update to immediately show the element at the correct position
-      this.circuitService.emit("update", {
-        type: "movePreview",
-        element: element,
-      });
-      
       // If user starts placing a non-wire element while in wire drawing mode, exit wire mode
       if (this.wireDrawingMode && element.type !== 'wire') {
         this.resetCursor();
