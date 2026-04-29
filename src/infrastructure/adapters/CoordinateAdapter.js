@@ -15,7 +15,7 @@ import { Position } from '../../domain/valueObjects/Position.js';
  * QuCat Format Compatibility:
  * - v1.0: Components span 2 logical grid points
  * - v2.0: Components span 6 logical grid points  
- * - Pixel grid spacing: 10 pixels per logical grid unit
+ * - Pixel grid spacing based on logical grid units
  */
 export class CoordinateAdapter {
     

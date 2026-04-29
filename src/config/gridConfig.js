@@ -6,82 +6,93 @@
 
 import { CoordinateAdapter } from '../infrastructure/adapters/CoordinateAdapter.js';
 
-// Use CoordinateAdapter as the single source of truth
-export const GRID_SPACING = CoordinateAdapter.CONFIG.PIXELS_PER_GRID_UNIT; // 10 pixels between logical grid units
-export const COMPONENT_GRID_POINTS = CoordinateAdapter.CONFIG.V2_COMPONENT_SPAN; // Components span 5 logical grid intervals (50 pixels)
-export const COMPONENT_SPAN_PIXELS = COMPONENT_GRID_POINTS * GRID_SPACING; // 60 pixels
+// Coordinate system constants
+const LOGICAL_PIXELS_PER_GRID_UNIT = CoordinateAdapter.CONFIG.PIXELS_PER_GRID_UNIT;
+
+// Visual grid display spacing (independent from coordinate system)
+// Wires snap and jump by this amount on screen
+const VISUAL_GRID_SPACING = 50; // Visual grid spacing for user interactions
+
+// Use CoordinateAdapter as the single source of truth for coordinates
+export const GRID_SPACING = LOGICAL_PIXELS_PER_GRID_UNIT; // Logical grid unit spacing
+export const COMPONENT_GRID_POINTS = CoordinateAdapter.CONFIG.V2_COMPONENT_SPAN; // Component span in logical grid intervals
+export const COMPONENT_SPAN_PIXELS = COMPONENT_GRID_POINTS * GRID_SPACING;
 
 /**
  * Central grid configuration object for component sizing
  */
 export const GRID_CONFIG = {
-    // Basic measurements
-    spacing: GRID_SPACING,                    // 10 pixels between points
-    componentGridPoints: COMPONENT_GRID_POINTS, // 5 grid points span
-    componentSpanPixels: COMPONENT_SPAN_PIXELS, // 50 pixels total
-    
+    // Visual grid display (for wire snapping and grid rendering)
+    visualGridSpacing: VISUAL_GRID_SPACING,   // Visual grid spacing for wire interactions
+
+    // Logical grid (coordinate system)
+    spacing: GRID_SPACING,                    // Logical grid unit spacing
+    componentGridPoints: COMPONENT_GRID_POINTS, // Component grid span
+    componentSpanPixels: COMPONENT_SPAN_PIXELS,
+
     // Integration test compatibility properties
-    pixelsPerGridUnit: GRID_SPACING,         // 10 pixels per grid unit
-    componentLogicalSpan: COMPONENT_GRID_POINTS, // 5 logical grid intervals
+    pixelsPerGridUnit: GRID_SPACING,
+    componentLogicalSpan: COMPONENT_GRID_POINTS,
     v1ComponentSpan: CoordinateAdapter.CONFIG.V1_COMPONENT_SPAN, // v1.0: 1 interval
-    
+
     // Component height (2 grid points for visual appeal)
     componentHeightPixels: 2 * GRID_SPACING,   // 20 pixels
-    
+
     // Legacy compatibility
     legacyComponentGridPoints: 5,               // Old system (migration)
-    
+
     // Grid snapping utility function
     snapToGrid: (value) => Math.round(value / GRID_SPACING) * GRID_SPACING,
-    
+
+    // Visual grid snapping - snaps to visual grid increments
+    snapToVisualGrid: (value) => Math.round(value / VISUAL_GRID_SPACING) * VISUAL_GRID_SPACING,
+
     // Logical grid snapping (pixels to logical grid units)
     snapToLogicalGrid: (pixelValue) => Math.round(pixelValue / GRID_SPACING),
-    
+
     // Convert logical grid units to pixels
     logicalToPixel: (logicalValue) => logicalValue * GRID_SPACING,
     
     
     // Calculate node positions for 2-node components using logical coordinates
-    // For v2.0: components span 5 logical grid intervals (50 pixels)
+    // Center position should follow mouse smoothly during preview, snapping happens on finalization
     calculateNodePositions: (centerX, centerY, angleRadians = 0) => {
         if (angleRadians === 0) {
-            // Horizontal orientation: ensure nodes land on grid points
-            // For 5-interval span, center must be at N+0.5 logical positions
-            const centerLogicalX = Math.round(centerX / GRID_SPACING);
-            const centerLogicalY = Math.round(centerY / GRID_SPACING);
-            
-            // Offset by ±2.5 intervals, then round to nearest grid points
-            const startLogicalX = Math.round(centerLogicalX - 2.5);
-            const endLogicalX = Math.round(centerLogicalX + 2.5);
-            
+            // Horizontal orientation: calculate nodes without snapping
+            const halfSpanPixels = COMPONENT_SPAN_PIXELS / 2;
+
+            const startX = centerX - halfSpanPixels;
+            const endX = centerX + halfSpanPixels;
+
+            // Return unsnapped positions for smooth movement
             return {
                 start: {
-                    x: startLogicalX * GRID_SPACING,
-                    y: centerLogicalY * GRID_SPACING
+                    x: startX,
+                    y: centerY
                 },
                 end: {
-                    x: endLogicalX * GRID_SPACING,
-                    y: centerLogicalY * GRID_SPACING
+                    x: endX,
+                    y: centerY
                 }
             };
         } else {
-            // For other orientations, use trigonometry but snap to grid
-            const halfSpanPixels = COMPONENT_SPAN_PIXELS / 2; // 30 pixels
-            
+            // For other orientations, use trigonometry without snapping
+            const halfSpanPixels = COMPONENT_SPAN_PIXELS / 2;
+
             const startX = centerX - halfSpanPixels * Math.cos(angleRadians);
             const startY = centerY - halfSpanPixels * Math.sin(angleRadians);
             const endX = centerX + halfSpanPixels * Math.cos(angleRadians);
             const endY = centerY + halfSpanPixels * Math.sin(angleRadians);
-            
-            // Snap both nodes to nearest grid points
+
+            // Return unsnapped positions for smooth movement
             return {
                 start: {
-                    x: Math.round(startX / GRID_SPACING) * GRID_SPACING,
-                    y: Math.round(startY / GRID_SPACING) * GRID_SPACING
+                    x: startX,
+                    y: startY
                 },
                 end: {
-                    x: Math.round(endX / GRID_SPACING) * GRID_SPACING,
-                    y: Math.round(endY / GRID_SPACING) * GRID_SPACING
+                    x: endX,
+                    y: endY
                 }
             };
         }

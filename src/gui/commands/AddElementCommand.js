@@ -23,11 +23,11 @@ export class AddElementCommand extends GUICommand {
     this.elementRegistry = elementRegistry;
     this.elementType = elementType;
 
-    // Defaults for positioning - ensure they're grid-aligned
+    // Defaults for positioning - ensure they're grid-aligned to visual grid
     const defaultPos = new Position(400, 300);
-    const snappedDefaults = CoordinateAdapter.snapToGrid(defaultPos);
-    this.DEFAULT_X = snappedDefaults.x;
-    this.DEFAULT_Y = snappedDefaults.y;
+    const snappedDefaults = GRID_CONFIG.snapToVisualGrid(defaultPos.x);
+    this.DEFAULT_X = snappedDefaults;
+    this.DEFAULT_Y = GRID_CONFIG.snapToVisualGrid(defaultPos.y);
     
     // Store current mouse position for placement mode
     this.currentMousePosition = null;
@@ -43,7 +43,7 @@ export class AddElementCommand extends GUICommand {
 
   /**
    * Executes the command, creating an element with proper grid-based sizing.
-   * For 2-node components, creates nodes that span exactly 5 grid intervals (50 pixels).
+   * For 2-node components, creates nodes that span based on configured grid intervals.
    * Mouse position is snapped to logical grid for proper alignment.
    *
    * @param {Array<{x: number, y: number}>} customNodes - Optional custom node positions (for testing)
@@ -68,10 +68,9 @@ export class AddElementCommand extends GUICommand {
       let centerX, centerY;
       
       if (this.currentMousePosition) {
-        // Snap mouse position to logical grid first
-        const snappedPixelPos = CoordinateAdapter.snapToGrid(this.currentMousePosition);
-        centerX = snappedPixelPos.x;
-        centerY = snappedPixelPos.y;
+        // Use mouse position directly for smooth following (no snapping during preview)
+        centerX = this.currentMousePosition.x;
+        centerY = this.currentMousePosition.y;
       } else {
         // Use grid-aligned default position
         centerX = this.DEFAULT_X;
@@ -79,7 +78,7 @@ export class AddElementCommand extends GUICommand {
       }
 
       // Calculate node positions using grid configuration
-      // This ensures 2-node components span exactly 5 grid intervals (50 pixels)
+      // This ensures 2-node components span based on configured grid intervals
       const nodePositions = GRID_CONFIG.calculateNodePositions(centerX, centerY, 0); // 0 degrees initially
       
       
@@ -89,8 +88,9 @@ export class AddElementCommand extends GUICommand {
       ];
     }
     
-    // Create Properties instance with default orientation for all elements
-    const properties = new Properties({ orientation: 0 });
+    // Ground starts at 180° so newly created grounds match imported QuCat grounds.
+    const defaultOrientation = this.elementType === "ground" ? 180 : 0;
+    const properties = new Properties({ orientation: defaultOrientation });
     
     // Normalize element type for registry lookup
     // Special case: "Wire" (capital) is used as a flag in GUIAdapter for wire drawing mode,

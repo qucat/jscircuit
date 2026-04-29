@@ -4,9 +4,8 @@ import { GRID_CONFIG } from "../../config/gridConfig.js";
 export class ResistorRenderer extends ImageRenderer {
     constructor(context) {
         // Use grid config for component dimensions
-        // Width: 5 grid points = 50 pixels, Height: 2 grid points = 20 pixels
-        const width = GRID_CONFIG.componentSpanPixels;   // 50 pixels (5 grid points)
-        const height = GRID_CONFIG.componentHeightPixels; // 20 pixels (2 grid points)
+        const width = GRID_CONFIG.componentSpanPixels;
+        const height = GRID_CONFIG.componentHeightPixels;
         super(context, "resistor", width, height);
     }
 

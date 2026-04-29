@@ -93,15 +93,14 @@ export class QucatNetlistAdapter {
             let v1Grid1 = CoordinateAdapter.v2ToV1Grid(v2Grid1);
             let v1Grid2 = CoordinateAdapter.v2ToV1Grid(v2Grid2);
 
-            // Ground export remapping (QuCat minus/plus convention)
-            // JSCircuit: nodes[0] = connection (circuit junction), nodes[1] = phantom (body/earth end)
-            // QuCat:     pos1 = minus (body/earth),                pos2 = plus (connection)
-            // The phantom node IS the body end, so simply swap the two positions.
+            // Ground export: swap to match QuCat convention
+            // JSCircuit: nodes[0] = connection (left), nodes[1] = body (right) - standard ordering
+            // QuCat: pos1 = body, pos2 = connection
+            // So swap: body (nodes[1]) → pos1, connection (nodes[0]) → pos2
             if (shortType === 'G') {
-                const body = v1Grid2;       // phantom end → QuCat body (pos1)
-                const connection = v1Grid1; // circuit node → QuCat connection (pos2)
-                v1Grid1 = body;
-                v1Grid2 = connection;
+                const temp = v1Grid1;
+                v1Grid1 = v1Grid2;  // body → pos1
+                v1Grid2 = temp;     // connection → pos2
             }
 
             const node1 = `${v1Grid1.x},${v1Grid1.y}`;
@@ -179,11 +178,11 @@ export class QucatNetlistAdapter {
                 pixelPos2 = CoordinateAdapter.gridToPixel(logicalPos2);
             }
             
-            // Ground import remapping (reverse of export convention)
-            // QuCat:     pos1 = minus (body/earth),  pos2 = plus (connection)
-            // JSCircuit: nodes[0] = connection,       nodes[1] = phantom (body/earth)
+            // Ground import: swap from QuCat convention to JSCircuit standard ordering
+            // QuCat: pos1 = body, pos2 = connection
+            // JSCircuit standard: nodes[0] = connection (left), nodes[1] = body (right)
             const nodes = (shortType === 'G')
-                ? [pixelPos2, pixelPos1]   // swap: connection first, body second
+                ? [pixelPos2, pixelPos1]   // connection (pos2), body (pos1)
                 : [pixelPos1, pixelPos2];
     
             // Parse the main property value
@@ -198,14 +197,12 @@ export class QucatNetlistAdapter {
                 propObj[propertyKey] = parsedValue; // undefined if no value was serialized
             }
 
-            // Compute ground orientation from netlist geometry
-            // GroundRenderer default (0°) draws body LEFT, connection RIGHT.
-            // body→connection direction at 0° is (1,0) with angle 0.
-            // So atan2(dy, dx) of body→connection vector gives orientation directly.
-            // Canvas rotate: 0°=body LEFT, 90°=body UP, 180°=body RIGHT, 270°=body DOWN.
+            // Compute ground orientation from netlist geometry (AFTER node swap)
+            // nodes[0] = connection, nodes[1] = body
+            // Orientation is based on body→connection direction
             if (shortType === 'G') {
-                const dx = pixelPos2.x - pixelPos1.x;
-                const dy = pixelPos2.y - pixelPos1.y;
+                const dx = nodes[0].x - nodes[1].x;  // connection - body
+                const dy = nodes[0].y - nodes[1].y;  // connection - body
                 const radians = Math.atan2(dy, dx);
                 let orientation = Math.round(radians * 180 / Math.PI);
                 if (orientation < 0) orientation += 360;
