@@ -88,8 +88,9 @@ export class AddElementCommand extends GUICommand {
       ];
     }
     
-    // Create Properties instance with default orientation for all elements
-    const properties = new Properties({ orientation: 0 });
+    // Ground starts at 180° so newly created grounds match imported QuCat grounds.
+    const defaultOrientation = this.elementType === "ground" ? 180 : 0;
+    const properties = new Properties({ orientation: defaultOrientation });
     
     // Normalize element type for registry lookup
     // Special case: "Wire" (capital) is used as a flag in GUIAdapter for wire drawing mode,

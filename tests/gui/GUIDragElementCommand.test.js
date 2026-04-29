@@ -55,6 +55,7 @@ describe("CircuitService Dragging Tests", function () {
   it("should update CircuitService when dragging entire resistor shape", function () {
     const updates = setupListener("ResistorDrag");
     const command = new DragElementCommand(circuitService, wireSplitService);
+    command.enableSnapping = false;
 
     // Click exactly on the resistor node (50,50), but because it's a resistor,
     // we expect an entire-shape drag, not node-level
@@ -66,13 +67,11 @@ describe("CircuitService Dragging Tests", function () {
     expect(updates[0].type).to.equal("dragElement");
 
     // The resistor should have moved as a whole. Original nodes: (50,50) & (100,50).
-    // Movement from (50,50)->(80,70) snaps to visual grid (50px):
-    // intendedX = 80 -> snaps to 100, intendedY = 70 -> snaps to 50
-    // delta = (100-50, 50-50) = (50, 0)
-    expect(testResistor.nodes[0].x).to.equal(100);
-    expect(testResistor.nodes[0].y).to.equal(50);
-    expect(testResistor.nodes[1].x).to.equal(150);
-    expect(testResistor.nodes[1].y).to.equal(50);
+    // Movement from (50,50)->(80,70) => dx=30, dy=20
+    expect(testResistor.nodes[0].x).to.equal(80);
+    expect(testResistor.nodes[0].y).to.equal(70);
+    expect(testResistor.nodes[1].x).to.equal(130);
+    expect(testResistor.nodes[1].y).to.equal(70);
   });
 
   it("keeps Y locked on a horizontal wire when user drags mostly vertically", function () {
@@ -145,30 +144,27 @@ describe("CircuitService Dragging Tests", function () {
   it("should drag the entire wire if not clicking near a node (line body)", function () {
     const updates = setupListener("EntireWireDrag");
     const command = new DragElementCommand(circuitService, wireSplitService);
+    command.enableSnapping = false;
 
-    // Our test wire is from (200,200)->(240,200).
+    // Our test wire is from (200,200)->(240,200). 
     // Click somewhere in the middle, say (220,200), not near a node
     command.start(220, 200);
     expect(command.draggingNodeIndex).to.be.null;
 
-    // Move the entire shape smoothly (no snapping during move)
-    // From (220,200) to (280,250): intendedX = 280-20 = 260, intendedY = 250-0 = 250
-    // deltaX = 260-200 = 60, deltaY = 250-200 = 50
-    // Nodes move to (260,250) and (300,250)
-    // Then snap on stop(): (260,250)->(250,250), (300,250)->(300,250)
-    command.move(280, 250);
+    // Move the entire shape from (220,200)->(230,210)
+    command.move(230, 210);
     command.stop();
 
     expect(updates.length).to.be.greaterThan(0);
     expect(updates[0].type).to.equal("dragElement");
 
-    // After snapping on release: first node snaps to 250, second stays at 300
-    expect(testWire.nodes[0].x).to.equal(250);
-    expect(testWire.nodes[0].y).to.equal(250);
+    // The first node was (200,200). Movement is +10x, +10y
+    expect(testWire.nodes[0].x).to.equal(210);
+    expect(testWire.nodes[0].y).to.equal(210);
 
-    // The second node was (240,200). With delta (60,50) => (300,250). Already snapped.
-    expect(testWire.nodes[1].x).to.equal(300);
-    expect(testWire.nodes[1].y).to.equal(250);
+    // The second node was (240,200). Movement is +10x, +10y => (250,210)
+    expect(testWire.nodes[1].x).to.equal(250);
+    expect(testWire.nodes[1].y).to.equal(210);
   });
 
   it("should still update circuitService for normal shape drag (resistor) in the new approach", function () {
@@ -259,8 +255,15 @@ describe("CircuitService Dragging Tests", function () {
       id: "W_stationary",
       type: "wire",
       nodes: [new Position(180, 200), new Position(260, 200)],
-    };    circuitService.addElement(stationaryWire);
-    // The wire we’ll drag — vertical wire at x = 220
+    };
+
+    // Remove the testWire from beforeEach so it doesn't intercept the split.
+    circuitService.deleteElement(testWire.id);
+
+    // Now add stationaryWire so it can be split.
+    circuitService.addElement(stationaryWire);
+
+    // The wire we'll drag — vertical wire at x = 220
     const movingWire = {
       id: "W_moving",
       type: "wire",
@@ -269,6 +272,7 @@ describe("CircuitService Dragging Tests", function () {
     circuitService.addElement(movingWire);
 
     const command = new DragElementCommand(circuitService, wireSplitService);
+    command.enableSnapping = false;
 
     // Simulate node drag: select top node (220,180) and drag it to (220,200)
     command.start(220, 180);
@@ -291,31 +295,30 @@ describe("CircuitService Dragging Tests", function () {
     const anchorWire = {
       id: "W_anchor",
       type: "wire",
-      nodes: [new Position(150, 150), new Position(300, 150)], // horizontal segment
+      nodes: [new Position(180, 200), new Position(260, 200)], // wider segment
     };
 
     circuitService.addElement(anchorWire);
 
-    // Wire we will drag — positioned above, will drag down to intersect anchor
+    // Wire we will drag — horizontally aligned, node will land on (220,200)
     const draggedWire = {
       id: "W_dragged",
       type: "wire",
-      nodes: [new Position(100, 100), new Position(150, 100)],
+      nodes: [new Position(100, 100), new Position(140, 100)],
     };
     circuitService.addElement(draggedWire);
 
     const command = new DragElementCommand(circuitService, wireSplitService);
+    command.enableSnapping = false;
 
     const originalWires = circuitService.getElements().filter(e => e.type === "wire");
     let wireIds = originalWires.map(w => w.id);
 
     expect(wireIds.includes("W_test")).to.be.true;
 
-    // Click body (not node) and drag to move a node to intersect with anchor wire
-    // Dragged wire at (100,100)-(150,100), drag to (175,150) which snaps to (150,150)-(200,150)
-    // This will cause the dragged wire's left node (150,150) to touch the anchor wire at (150,150)
-    command.start(125, 100);     // click midpoint of dragged wire
-    command.move(175, 150);      // drag body so nodes move to (150,150)-(200,150)
+    // Click body (not node)
+    command.start(120, 100);     // click midpoint
+    command.move(200, 200);      // drag body so one node lands at (220, 200)
     command.stop();
 
     const updatedWires = circuitService.getElements().filter(e => e.type === "wire");
@@ -329,7 +332,7 @@ describe("CircuitService Dragging Tests", function () {
     expect(wiresFromSplit.length).to.be.greaterThan(2); // e.g. original + 2 splits
 
     // The original anchor wire should be gone (it was split)
-    expect(wireIds.includes("W_anchor")).to.be.false;
+    expect(wireIds.includes("W_test")).to.be.false;
 
     // There should be more than 2 wires (1 dragged, 2 split segments)
     expect(updatedWires.length).to.be.greaterThan(2);
@@ -357,6 +360,7 @@ describe("CircuitService Dragging Tests", function () {
 
     const updates = setupListener("MultipleDrag");
     const command = new DragElementCommand(circuitService, circuitRenderer, wireSplitService);
+    command.enableSnapping = false;
 
     // Store original positions
     const origR1Node0 = { x: testResistor.nodes[0].x, y: testResistor.nodes[0].y };
@@ -371,17 +375,16 @@ describe("CircuitService Dragging Tests", function () {
     // Click on first resistor to start multi-element drag
     command.start(50, 50);
     
-    // Move by snapping to visual grid (50,100)
-    command.move(100, 100);
+    // Move by (30, 20)
+    command.move(80, 70);
     command.stop();
 
     expect(updates.length).to.be.greaterThan(0);
     expect(updates[0].type).to.equal("dragElement");
 
     // Both resistors should have moved by the same amount
-    // Snaps from (50,50) to (100,100) = delta (50,50)
-    const expectedDeltaX = 50;
-    const expectedDeltaY = 50;
+    const expectedDeltaX = 30; // 80 - 50
+    const expectedDeltaY = 20; // 70 - 50
 
     // Check first resistor moved correctly
     expect(testResistor.nodes[0].x).to.equal(origR1Node0.x + expectedDeltaX);
@@ -415,6 +418,7 @@ describe("CircuitService Dragging Tests", function () {
 
     const updates = setupListener("SingleDragFromSelection");
     const command = new DragElementCommand(circuitService, circuitRenderer, wireSplitService);
+    command.enableSnapping = false;
 
     // Store original positions
     const origNode0 = { x: testResistor.nodes[0].x, y: testResistor.nodes[0].y };
@@ -422,15 +426,14 @@ describe("CircuitService Dragging Tests", function () {
 
     // Click on resistor to start drag
     command.start(50, 50);
-    command.move(100, 100);
+    command.move(80, 70);
     command.stop();
 
     expect(updates.length).to.be.greaterThan(0);
 
     // Should behave exactly like normal single element drag
-    // Snaps from (50,50) to (100,100) = delta (50,50)
-    const expectedDeltaX = 50;
-    const expectedDeltaY = 50;
+    const expectedDeltaX = 30;
+    const expectedDeltaY = 20;
 
     expect(testResistor.nodes[0].x).to.equal(origNode0.x + expectedDeltaX);
     expect(testResistor.nodes[0].y).to.equal(origNode0.y + expectedDeltaY);

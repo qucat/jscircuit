@@ -564,21 +564,19 @@ export class GUIAdapter {
 
         // Get current orientation from element properties (preserve rotation)
         const currentOrientation = this.placingElement.properties?.values?.orientation || 0;
-        const angleRad = (currentOrientation * Math.PI) / 180;
-        
-        // For ground: shift the center so the visual icon center (not the
-        // node midpoint) lands under the mouse cursor.
-        let centerX = snappedX;
-        let centerY = snappedY;
-        if (this.placingElement.type === 'ground') {
-          const visualOffset = GRID_CONFIG.componentSpanPixels / 2 + 20; // halfSpan + SCALED_WIDTH/2
-          centerX += visualOffset * Math.cos(angleRad);
-          centerY += visualOffset * Math.sin(angleRad);
-        }
+        // Ground's base 180° orientation is rendering-only for geometry placement.
+        const nodeAngle = this.placingElement.type === 'ground'
+          ? currentOrientation - 180
+          : currentOrientation;
+        const angleRad = (nodeAngle * Math.PI) / 180;
+
+        // Use cursor position directly as center for all elements
+        const centerX = snappedX;
+        const centerY = snappedY;
 
         // Use grid configuration to calculate proper node positions that align to grid
         const nodePositions = GRID_CONFIG.calculateNodePositions(centerX, centerY, angleRad);
-        
+
         // Snap node positions to visual grid when finalizing
         this.placingElement.nodes[0].x = GRID_CONFIG.snapToVisualGrid(nodePositions.start.x);
         this.placingElement.nodes[0].y = GRID_CONFIG.snapToVisualGrid(nodePositions.start.y);
@@ -665,18 +663,16 @@ export class GUIAdapter {
       // Live update for placing element
       if (this.placingElement) {
         // Follow mouse smoothly without snapping during preview
-        let centerX = offsetX;
-        let centerY = offsetY;
+        const centerX = offsetX;
+        const centerY = offsetY;
 
         // Get current orientation from element properties (preserve rotation)
         const currentOrientation = this.placingElement.properties?.values?.orientation || 0;
-        const angleRad = (currentOrientation * Math.PI) / 180;
-
-        if (this.placingElement.type === 'ground') {
-          const visualOffset = GRID_CONFIG.componentSpanPixels / 2 + 20;
-          centerX += visualOffset * Math.cos(angleRad);
-          centerY += visualOffset * Math.sin(angleRad);
-        }
+        // Ground's base 180° orientation is rendering-only for geometry placement.
+        const nodeAngle = this.placingElement.type === 'ground'
+          ? currentOrientation - 180
+          : currentOrientation;
+        const angleRad = (nodeAngle * Math.PI) / 180;
 
         // Use grid configuration to calculate proper node positions that align to grid
         const nodePositions = GRID_CONFIG.calculateNodePositions(centerX, centerY, angleRad);
@@ -773,16 +769,15 @@ export class GUIAdapter {
 
       // Get current orientation from element properties (preserve rotation)
       const currentOrientation = element.properties?.values?.orientation || 0;
-      const angleRad = (currentOrientation * Math.PI) / 180;
+      // Ground's base 180° orientation is rendering-only for geometry placement.
+      const nodeAngle = element.type === 'ground'
+        ? currentOrientation - 180
+        : currentOrientation;
+      const angleRad = (nodeAngle * Math.PI) / 180;
 
-      // For ground: shift the center so the visual icon center appears at the cursor.
-      let centerX = snappedX;
-      let centerY = snappedY;
-      if (element.type === 'ground') {
-        const visualOffset = GRID_CONFIG.componentSpanPixels / 2 + 20;
-        centerX += visualOffset * Math.cos(angleRad);
-        centerY += visualOffset * Math.sin(angleRad);
-      }
+      // Use cursor position directly as center for all elements
+      const centerX = snappedX;
+      const centerY = snappedY;
 
       // Use grid configuration to calculate proper node positions that align to grid
       const nodePositions = GRID_CONFIG.calculateNodePositions(centerX, centerY, angleRad);
