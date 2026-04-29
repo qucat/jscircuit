@@ -180,6 +180,7 @@ export class GUIAdapter {
     /** @private */ this._onKeydown = null;
     /** @private */ this._onWheel = null;
     /** @private */ this._onImageLoaded = null;
+    /** @private */ this._onDocMouseMove = null;
   }
 
   /**
@@ -233,6 +234,7 @@ export class GUIAdapter {
     if (this._onKeydown) document.removeEventListener("keydown", this._onKeydown);
     if (this._onWheel) this.canvas.removeEventListener("wheel", this._onWheel);
     if (this._onImageLoaded) document.removeEventListener("renderer:imageLoaded", this._onImageLoaded);
+    if (this._onDocMouseMove) document.removeEventListener("mousemove", this._onDocMouseMove);
   }
 
   /* ---------------------------------------------------------------------- */
@@ -363,6 +365,23 @@ export class GUIAdapter {
       this.circuitRenderer.render();
     };
     document.addEventListener("renderer:imageLoaded", this._onImageLoaded);
+  }
+
+  /**
+   * Track mouse position globally so currentMousePos is always up-to-date
+   * when a toolbar button is clicked (mouse may be off-canvas at that moment).
+   */
+  bindGlobalMouseTracking() {
+    this._onDocMouseMove = (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      this.currentMousePos.x =
+        (e.clientX - rect.left - this.circuitRenderer.offsetX) /
+        this.circuitRenderer.scale;
+      this.currentMousePos.y =
+        (e.clientY - rect.top - this.circuitRenderer.offsetY) /
+        this.circuitRenderer.scale;
+    };
+    document.addEventListener("mousemove", this._onDocMouseMove);
   }
 
   /* ---------------------------------------------------------------------- */
@@ -762,10 +781,10 @@ export class GUIAdapter {
       // This ensures rotation during placement only affects the placing element
       this.circuitRenderer.setSelectedElements([element]);
       
-      // Immediately position the element at the current mouse position
-      // This prevents the element from staying at default coordinates until mouse movement
-      const snappedX = GRID_CONFIG.snapToVisualGrid(this.currentMousePos.x);
-      const snappedY = GRID_CONFIG.snapToVisualGrid(this.currentMousePos.y);
+      // Immediately position the element at the current mouse position.
+      // Use raw (unsnapped) coords to match mousemove preview behaviour — no jump on first move.
+      const rawX = this.currentMousePos.x;
+      const rawY = this.currentMousePos.y;
 
       // Get current orientation from element properties (preserve rotation)
       const currentOrientation = element.properties?.values?.orientation || 0;
@@ -775,12 +794,8 @@ export class GUIAdapter {
         : currentOrientation;
       const angleRad = (nodeAngle * Math.PI) / 180;
 
-      // Use cursor position directly as center for all elements
-      const centerX = snappedX;
-      const centerY = snappedY;
-
-      // Use grid configuration to calculate proper node positions that align to grid
-      const nodePositions = GRID_CONFIG.calculateNodePositions(centerX, centerY, angleRad);
+      // Use raw cursor position directly as center — same formula as mousemove uses
+      const nodePositions = GRID_CONFIG.calculateNodePositions(rawX, rawY, angleRad);
       element.nodes[0].x = nodePositions.start.x;
       element.nodes[0].y = nodePositions.start.y;
       element.nodes[1].x = nodePositions.end.x;
