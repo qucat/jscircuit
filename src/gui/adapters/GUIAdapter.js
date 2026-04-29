@@ -180,6 +180,7 @@ export class GUIAdapter {
     /** @private */ this._onKeydown = null;
     /** @private */ this._onWheel = null;
     /** @private */ this._onImageLoaded = null;
+    /** @private */ this._onDocMouseMove = null;
   }
 
   /**
@@ -233,6 +234,7 @@ export class GUIAdapter {
     if (this._onKeydown) document.removeEventListener("keydown", this._onKeydown);
     if (this._onWheel) this.canvas.removeEventListener("wheel", this._onWheel);
     if (this._onImageLoaded) document.removeEventListener("renderer:imageLoaded", this._onImageLoaded);
+    if (this._onDocMouseMove) document.removeEventListener("mousemove", this._onDocMouseMove);
   }
 
   /* ---------------------------------------------------------------------- */
@@ -363,6 +365,23 @@ export class GUIAdapter {
       this.circuitRenderer.render();
     };
     document.addEventListener("renderer:imageLoaded", this._onImageLoaded);
+  }
+
+  /**
+   * Track mouse position globally so currentMousePos is always up-to-date
+   * when a toolbar button is clicked (mouse may be off-canvas at that moment).
+   */
+  bindGlobalMouseTracking() {
+    this._onDocMouseMove = (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      this.currentMousePos.x =
+        (e.clientX - rect.left - this.circuitRenderer.offsetX) /
+        this.circuitRenderer.scale;
+      this.currentMousePos.y =
+        (e.clientY - rect.top - this.circuitRenderer.offsetY) /
+        this.circuitRenderer.scale;
+    };
+    document.addEventListener("mousemove", this._onDocMouseMove);
   }
 
   /* ---------------------------------------------------------------------- */
@@ -559,29 +578,29 @@ export class GUIAdapter {
 
       // If placing an element, finalize its position on left click
       if (event.button === 0 && this.placingElement) {
-        const snappedX = GRID_CONFIG.snapToGrid(offsetX);
-        const snappedY = GRID_CONFIG.snapToGrid(offsetY);
+        const snappedX = GRID_CONFIG.snapToVisualGrid(offsetX);
+        const snappedY = GRID_CONFIG.snapToVisualGrid(offsetY);
 
         // Get current orientation from element properties (preserve rotation)
         const currentOrientation = this.placingElement.properties?.values?.orientation || 0;
-        const angleRad = (currentOrientation * Math.PI) / 180;
-        
-        // For ground: shift the center so the visual icon center (not the
-        // node midpoint) lands under the mouse cursor.
-        let centerX = snappedX;
-        let centerY = snappedY;
-        if (this.placingElement.type === 'ground') {
-          const visualOffset = GRID_CONFIG.componentSpanPixels / 2 + 20; // halfSpan + SCALED_WIDTH/2
-          centerX += visualOffset * Math.cos(angleRad);
-          centerY += visualOffset * Math.sin(angleRad);
-        }
+        // Ground's base 180° orientation is rendering-only for geometry placement.
+        const nodeAngle = this.placingElement.type === 'ground'
+          ? currentOrientation - 180
+          : currentOrientation;
+        const angleRad = (nodeAngle * Math.PI) / 180;
+
+        // Use cursor position directly as center for all elements
+        const centerX = snappedX;
+        const centerY = snappedY;
 
         // Use grid configuration to calculate proper node positions that align to grid
         const nodePositions = GRID_CONFIG.calculateNodePositions(centerX, centerY, angleRad);
-        this.placingElement.nodes[0].x = nodePositions.start.x;
-        this.placingElement.nodes[0].y = nodePositions.start.y;
-        this.placingElement.nodes[1].x = nodePositions.end.x;
-        this.placingElement.nodes[1].y = nodePositions.end.y;
+
+        // Snap node positions to visual grid when finalizing
+        this.placingElement.nodes[0].x = GRID_CONFIG.snapToVisualGrid(nodePositions.start.x);
+        this.placingElement.nodes[0].y = GRID_CONFIG.snapToVisualGrid(nodePositions.start.y);
+        this.placingElement.nodes[1].x = GRID_CONFIG.snapToVisualGrid(nodePositions.end.x);
+        this.placingElement.nodes[1].y = GRID_CONFIG.snapToVisualGrid(nodePositions.end.y);
 
         this.circuitService.emit("update", {
           type: "finalizePlacement",
@@ -662,21 +681,24 @@ export class GUIAdapter {
 
       // Live update for placing element
       if (this.placingElement) {
-        const snappedX = GRID_CONFIG.snapToGrid(offsetX);
-        const snappedY = GRID_CONFIG.snapToGrid(offsetY);
-
         // Get current orientation from element properties (preserve rotation)
         const currentOrientation = this.placingElement.properties?.values?.orientation || 0;
-        const angleRad = (currentOrientation * Math.PI) / 180;
+        // Ground's base 180° orientation is rendering-only for geometry placement.
+        const nodeAngle = this.placingElement.type === 'ground'
+          ? currentOrientation - 180
+          : currentOrientation;
+        const angleRad = (nodeAngle * Math.PI) / 180;
 
-        // For ground: shift the center so the visual icon center follows the cursor.
-        let centerX = snappedX;
-        let centerY = snappedY;
-        if (this.placingElement.type === 'ground') {
-          const visualOffset = GRID_CONFIG.componentSpanPixels / 2 + 20;
-          centerX += visualOffset * Math.cos(angleRad);
-          centerY += visualOffset * Math.sin(angleRad);
-        }
+        // Ground's visible content spans SCALED_WIDTH/2 = 20px from connectionNode in the
+        // body direction.  Its visual center is 10px (SCALED_WIDTH/4) from connectionNode.
+        // To place the cursor at the icon's visual center:
+        //   groundAdj = halfSpan - iconContentHalfWidth = 25 - 10 = 15
+        const GROUND_CONTENT_HALF = 10; // GroundRenderer SCALED_WIDTH / 4
+        const groundAdj = this.placingElement.type === 'ground'
+          ? GRID_CONFIG.componentSpanPixels / 2 - GROUND_CONTENT_HALF
+          : 0;
+        const centerX = offsetX + groundAdj * Math.cos(angleRad);
+        const centerY = offsetY + groundAdj * Math.sin(angleRad);
 
         // Use grid configuration to calculate proper node positions that align to grid
         const nodePositions = GRID_CONFIG.calculateNodePositions(centerX, centerY, angleRad);
@@ -765,38 +787,12 @@ export class GUIAdapter {
       // Clear existing selections and select only the placing element
       // This ensures rotation during placement only affects the placing element
       this.circuitRenderer.setSelectedElements([element]);
-      
-      // Immediately position the element at the current mouse position
-      // This prevents the element from staying at default coordinates until mouse movement
-      const snappedX = GRID_CONFIG.snapToGrid(this.currentMousePos.x);
-      const snappedY = GRID_CONFIG.snapToGrid(this.currentMousePos.y);
 
-      // Get current orientation from element properties (preserve rotation)
-      const currentOrientation = element.properties?.values?.orientation || 0;
-      const angleRad = (currentOrientation * Math.PI) / 180;
+      // Move nodes off-screen so the element is invisible until the first canvas
+      // mousemove positions it correctly.  This avoids a visible jump from the
+      // element's initial creation position (DEFAULT_X/Y) to the actual cursor.
+      element.nodes.forEach(node => { node.x = -10000; node.y = -10000; });
 
-      // For ground: shift the center so the visual icon center appears at the cursor.
-      let centerX = snappedX;
-      let centerY = snappedY;
-      if (element.type === 'ground') {
-        const visualOffset = GRID_CONFIG.componentSpanPixels / 2 + 20;
-        centerX += visualOffset * Math.cos(angleRad);
-        centerY += visualOffset * Math.sin(angleRad);
-      }
-
-      // Use grid configuration to calculate proper node positions that align to grid
-      const nodePositions = GRID_CONFIG.calculateNodePositions(centerX, centerY, angleRad);
-      element.nodes[0].x = nodePositions.start.x;
-      element.nodes[0].y = nodePositions.start.y;
-      element.nodes[1].x = nodePositions.end.x;
-      element.nodes[1].y = nodePositions.end.y;
-
-      // Emit update to immediately show the element at the correct position
-      this.circuitService.emit("update", {
-        type: "movePreview",
-        element: element,
-      });
-      
       // If user starts placing a non-wire element while in wire drawing mode, exit wire mode
       if (this.wireDrawingMode && element.type !== 'wire') {
         this.resetCursor();
@@ -1117,15 +1113,16 @@ export class GUIAdapter {
     // node[0] is the fixed anchor; rotate node[1] around it (QuCat convention)
     const anchor = this.placingElement.nodes[0];
     const angleRad = (angle * Math.PI) / 180;
-    const cos = Math.round(Math.cos(angleRad));
-    const sin = Math.round(Math.sin(angleRad));
+    const cos = Math.cos(angleRad);
+    const sin = Math.sin(angleRad);
 
     for (let i = 1; i < this.placingElement.nodes.length; i++) {
       const relX = this.placingElement.nodes[i].x - anchor.x;
       const relY = this.placingElement.nodes[i].y - anchor.y;
 
-      this.placingElement.nodes[i].x = GRID_CONFIG.snapToGrid(anchor.x + relX * cos - relY * sin);
-      this.placingElement.nodes[i].y = GRID_CONFIG.snapToGrid(anchor.y + relX * sin + relY * cos);
+      // Rotate around anchor without snapping during preview
+      this.placingElement.nodes[i].x = anchor.x + relX * cos - relY * sin;
+      this.placingElement.nodes[i].y = anchor.y + relX * sin + relY * cos;
     }
     
     // Emit update event for rotation

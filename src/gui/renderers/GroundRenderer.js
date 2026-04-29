@@ -72,11 +72,11 @@ export class GroundRenderer extends ImageRenderer {
             this.initImageIfNeeded();
         }
 
-        const [connectionNode] = ground.nodes;
+        // JSCircuit standard: nodes[0]=connection (stick), nodes[1]=body (reference)
+        const [connectionNode, bodyNode] = ground.nodes;
         
         // Position the image so the connection node is at the RIGHT END of the ground image
-        // and aligned with the CENTER POINT of the image (using original position as reference)
-        // The connection node should be at the right edge, vertically centered
+        // The connection node is where the circuit connects
         const groundX = connectionNode.x - (this.SCALED_WIDTH / 2); // Move image left so node is at right edge
         const groundY = connectionNode.y; // Node Y aligns with image center Y
 
@@ -145,7 +145,7 @@ export class GroundRenderer extends ImageRenderer {
     /**
      * Rotation-aware hit-test for ground elements.
      *
-     * The ground image is anchored at the connection node (nodes[0]).
+     * The ground image is anchored at nodes[0].
      * At 0° the image center sits SCALED_WIDTH/2 to the LEFT of the anchor.
      * We inverse-rotate the mouse into local frame so a single axis-aligned
      * bounding box works at every orientation.
@@ -157,7 +157,7 @@ export class GroundRenderer extends ImageRenderer {
      * @param {Object} [element] - the ground element (for orientation + nodes)
      */
     isPointInBounds(mouseX, mouseY, midX, midY, element) {
-        // Anchor = connection node (nodes[0]).
+        // Anchor = nodes[0]
         const anchorX = element?.nodes?.[0]?.x ?? midX;
         const anchorY = element?.nodes?.[0]?.y ?? midY;
 

@@ -55,6 +55,7 @@ describe("CircuitService Dragging Tests", function () {
   it("should update CircuitService when dragging entire resistor shape", function () {
     const updates = setupListener("ResistorDrag");
     const command = new DragElementCommand(circuitService, wireSplitService);
+    command.enableSnapping = false;
 
     // Click exactly on the resistor node (50,50), but because it's a resistor,
     // we expect an entire-shape drag, not node-level
@@ -143,6 +144,7 @@ describe("CircuitService Dragging Tests", function () {
   it("should drag the entire wire if not clicking near a node (line body)", function () {
     const updates = setupListener("EntireWireDrag");
     const command = new DragElementCommand(circuitService, wireSplitService);
+    command.enableSnapping = false;
 
     // Our test wire is from (200,200)->(240,200). 
     // Click somewhere in the middle, say (220,200), not near a node
@@ -255,7 +257,13 @@ describe("CircuitService Dragging Tests", function () {
       nodes: [new Position(180, 200), new Position(260, 200)],
     };
 
-    // The wire we’ll drag — vertical wire at x = 220
+    // Remove the testWire from beforeEach so it doesn't intercept the split.
+    circuitService.deleteElement(testWire.id);
+
+    // Now add stationaryWire so it can be split.
+    circuitService.addElement(stationaryWire);
+
+    // The wire we'll drag — vertical wire at x = 220
     const movingWire = {
       id: "W_moving",
       type: "wire",
@@ -264,6 +272,7 @@ describe("CircuitService Dragging Tests", function () {
     circuitService.addElement(movingWire);
 
     const command = new DragElementCommand(circuitService, wireSplitService);
+    command.enableSnapping = false;
 
     // Simulate node drag: select top node (220,180) and drag it to (220,200)
     command.start(220, 180);
@@ -300,6 +309,7 @@ describe("CircuitService Dragging Tests", function () {
     circuitService.addElement(draggedWire);
 
     const command = new DragElementCommand(circuitService, wireSplitService);
+    command.enableSnapping = false;
 
     const originalWires = circuitService.getElements().filter(e => e.type === "wire");
     let wireIds = originalWires.map(w => w.id);
@@ -350,6 +360,7 @@ describe("CircuitService Dragging Tests", function () {
 
     const updates = setupListener("MultipleDrag");
     const command = new DragElementCommand(circuitService, circuitRenderer, wireSplitService);
+    command.enableSnapping = false;
 
     // Store original positions
     const origR1Node0 = { x: testResistor.nodes[0].x, y: testResistor.nodes[0].y };
@@ -407,6 +418,7 @@ describe("CircuitService Dragging Tests", function () {
 
     const updates = setupListener("SingleDragFromSelection");
     const command = new DragElementCommand(circuitService, circuitRenderer, wireSplitService);
+    command.enableSnapping = false;
 
     // Store original positions
     const origNode0 = { x: testResistor.nodes[0].x, y: testResistor.nodes[0].y };

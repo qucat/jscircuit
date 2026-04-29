@@ -4,9 +4,9 @@ import { GRID_CONFIG } from "../../config/gridConfig.js";
 export class InductorRenderer extends ImageRenderer {
     constructor(context) {
         // Use grid config for component dimensions
-        // Width: 5 grid points = 50 pixels, Height: 2.5 grid points = 25 pixels
-        const width = GRID_CONFIG.componentSpanPixels; // 50 pixels (5 grid points)
-        const height = GRID_CONFIG.spacing * 2.5; // 25 pixels (2.5 grid points)
+        // Calculate dimensions based on grid configuration
+        const width = GRID_CONFIG.componentSpanPixels;
+        const height = GRID_CONFIG.spacing * 2.5;
         super(context, "inductor", width, height);
     }
 
@@ -39,7 +39,7 @@ export class InductorRenderer extends ImageRenderer {
         // Restore rotation
         this.context.restore();
 
-        // Draw connections with constrained length to fit within 5 grid points
+        // Draw connections with constrained length
         this.renderConstrainedConnections(start, end, midX, midY);
 
         // Render properties (label and/or value) using the new system
@@ -73,7 +73,7 @@ export class InductorRenderer extends ImageRenderer {
         const angle = Math.atan2(end.y - start.y, end.x - start.x);
         
         // Use half the component width minus a small margin to stay within bounds
-        const maxConnectionLength = (this.SCALED_WIDTH / 2) - 5; // 5 pixel margin
+        const maxConnectionLength = (this.SCALED_WIDTH / 2) - 5; // Connection length margin
         
         // Calculate connection points on the inductor body edges
         const connectionStart = {
