@@ -19,6 +19,15 @@ export class WireSplitService {
   constructor(circuitService, elementRegistry) {
     this.circuitService = circuitService;
     this.elementRegistry = elementRegistry;
+
+    // Split any wire that a newly-placed component node lands on.
+    this.circuitService.on("update", (event) => {
+      if (event?.type === "finalizePlacement" && event.element) {
+        for (const node of event.element.nodes || []) {
+          this.trySplitAtNode(node);
+        }
+      }
+    });
   }
 
   /**

@@ -441,4 +441,67 @@ describe("CircuitService Dragging Tests", function () {
     expect(testResistor.nodes[1].y).to.equal(origNode1.y + expectedDeltaY);
   });
 
+  it("should split a wire when a dragged non-wire component node lands on the wire body", function () {
+    // A horizontal wire spanning x=100..200 at y=300
+    const targetWire = {
+      id: "W_target",
+      type: "wire",
+      nodes: [new Position(100, 300), new Position(200, 300)],
+    };
+    circuitService.addElement(targetWire);
+
+    // A resistor whose left node (50,50) will be dragged to (150,300) — on the wire body
+    const command = new DragElementCommand(circuitService, wireSplitService);
+    command.enableSnapping = false;
+
+    // Drag from node (50,50) to (150,300) so node[0] lands on the wire body
+    command.start(50, 50);
+    command.move(150, 300);
+    command.stop();
+
+    const allWires = circuitService.getElements().filter(e => e.type === "wire");
+    const wireIds = allWires.map(w => w.id);
+
+    // Original wire should be gone — replaced by two split segments
+    expect(wireIds.includes("W_target")).to.be.false;
+    // Two new wire segments should exist plus testWire from beforeEach
+    expect(allWires.length).to.be.greaterThan(1);
+    // Both new segments should touch the split point (150, 300)
+    const splitWires = allWires.filter(w =>
+      w.nodes.some(n => n.x === 150 && n.y === 300)
+    );
+    expect(splitWires.length).to.equal(2);
+  });
+
+  it("should split a wire when a placed component node lands on the wire body", function () {
+    // A horizontal wire spanning x=100..300 at y=200
+    const targetWire = {
+      id: "W_place_target",
+      type: "wire",
+      nodes: [new Position(100, 200), new Position(300, 200)],
+    };
+    circuitService.addElement(targetWire);
+
+    // Simulate finalizePlacement by emitting the event directly —
+    // this is the same event GUIAdapter emits when a component is placed
+    const placedResistor = {
+      id: "R_placed",
+      type: "resistor",
+      nodes: [new Position(200, 200), new Position(250, 200)], // node[0] at (200,200) — on the wire
+    };
+    circuitService.addElement(placedResistor);
+    circuitService.emit("update", { type: "finalizePlacement", element: placedResistor });
+
+    const allWires = circuitService.getElements().filter(e => e.type === "wire");
+    const wireIds = allWires.map(w => w.id);
+
+    // Original wire should be gone — split at (200,200) or (250,200)
+    expect(wireIds.includes("W_place_target")).to.be.false;
+    // Two new wire segments should exist
+    const splitWires = allWires.filter(w =>
+      w.nodes.some(n => (n.x === 200 && n.y === 200) || (n.x === 250 && n.y === 200))
+    );
+    expect(splitWires.length).to.be.greaterThan(0);
+  });
+
 });

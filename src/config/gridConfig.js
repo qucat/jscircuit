@@ -47,6 +47,22 @@ export const GRID_CONFIG = {
     // Visual grid snapping - snaps to visual grid increments
     snapToVisualGrid: (value) => Math.round(value / VISUAL_GRID_SPACING) * VISUAL_GRID_SPACING,
 
+    // Snap a component CENTER (x, y, angleRadians) so that both nodes
+    // (center ± halfSpan·[cos,sin]) land on visual-grid points.
+    //
+    // Along the component axis (projection ≠ 0) the centre must sit at
+    //   k·VS + halfSpan  so that  centre ± halfSpan  both hit k·VS multiples.
+    // Perpendicular to the axis the centre simply snaps to the regular grid.
+    snapComponentCenter: (x, y, angleRadians = 0) => {
+        const halfSpan = COMPONENT_SPAN_PIXELS / 2;
+        const vs = VISUAL_GRID_SPACING;
+        const projX = Math.abs(Math.cos(angleRadians));
+        const projY = Math.abs(Math.sin(angleRadians));
+        const snappedX = Math.round((x - halfSpan * projX) / vs) * vs + halfSpan * projX;
+        const snappedY = Math.round((y - halfSpan * projY) / vs) * vs + halfSpan * projY;
+        return { x: snappedX, y: snappedY };
+    },
+
     // Logical grid snapping (pixels to logical grid units)
     snapToLogicalGrid: (pixelValue) => Math.round(pixelValue / GRID_SPACING),
 

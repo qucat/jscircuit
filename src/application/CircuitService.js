@@ -17,7 +17,7 @@ import { Position } from "../domain/valueObjects/Position.js";
 import { Properties } from "../domain/valueObjects/Properties.js";
 import { Label } from "../domain/valueObjects/Label.js";
 import { Logger } from "../utils/Logger.js";
-import { GRID_SPACING } from "../config/gridConfig.js";
+import { GRID_SPACING, GRID_CONFIG } from "../config/gridConfig.js";
 
 /**
  * @class CircuitService
@@ -387,6 +387,10 @@ export class CircuitService extends EventEmitter {
       const el = elements[0];
       const anchor = el.nodes[0];                       // stays fixed
 
+      // Snap anchor to visual grid first to eliminate any floating-point placement error
+      anchor.x = GRID_CONFIG.snapToVisualGrid(anchor.x);
+      anchor.y = GRID_CONFIG.snapToVisualGrid(anchor.y);
+
       for (let i = 1; i < el.nodes.length; i++) {
         const relX = el.nodes[i].x - anchor.x;
         const relY = el.nodes[i].y - anchor.y;
@@ -394,9 +398,9 @@ export class CircuitService extends EventEmitter {
         const rotX = relX * cos - relY * sin;
         const rotY = relX * sin + relY * cos;
 
-        // Snap to grid
-        el.nodes[i].x = Math.round((anchor.x + rotX) / GRID_SPACING) * GRID_SPACING;
-        el.nodes[i].y = Math.round((anchor.y + rotY) / GRID_SPACING) * GRID_SPACING;
+        // Snap to visual grid so both nodes stay on the 50px grid after rotation
+        el.nodes[i].x = GRID_CONFIG.snapToVisualGrid(anchor.x + rotX);
+        el.nodes[i].y = GRID_CONFIG.snapToVisualGrid(anchor.y + rotY);
       }
     } else {
       // ── Multiple elements: rotate around bounding-box centre ──

@@ -27,8 +27,12 @@ export class DrawWireCommand extends GUICommand {
     // If the user never moves, we can remove the ephemeral wire in a cancel() method
     this.enableSnapping = true;
 
-    // If you want to wait for a bigger movement before locking, set this higher
-    this.THRESHOLD = 2;
+    // Minimum pixel difference between |dx| and |dy| required to lock a direction.
+    // Must be large enough to absorb mouse jitter when the start node is on the
+    // 50px visual grid but the mouse position is raw (unsnapped during move).
+    // Half of VISUAL_GRID_SPACING (25px) ensures direction only locks on a
+    // deliberate move, not on a 2-3px hand wobble.
+    this.THRESHOLD = Math.floor(GRID_CONFIG.visualGridSpacing / 2); // 25px
   }
 
   /**
@@ -100,9 +104,15 @@ export class DrawWireCommand extends GUICommand {
       endNode.x = startNode.x;
       endNode.y = startNode.y + dy;
     } else {
-      // No direction locked => let the user place the wire freely (diagonal)
-      endNode.x = startNode.x + dx;
-      endNode.y = startNode.y + dy;
+      // Not yet locked — preview along whichever axis currently has more movement.
+      // This prevents diagonal wires during the initial gesture.
+      if (absDx >= absDy) {
+        endNode.x = startNode.x + dx;
+        endNode.y = startNode.y;
+      } else {
+        endNode.x = startNode.x;
+        endNode.y = startNode.y + dy;
+      }
     }
 
     // If snapping is important after we fix an axis, you could re-snap endNode again

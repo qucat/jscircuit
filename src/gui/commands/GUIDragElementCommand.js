@@ -389,6 +389,17 @@ moveMultipleElements(mouseX, mouseY) {
       }
     }
 
+    // Case: a non-wire component was dragged and one of its nodes now lies on a wire body
+    if (this.actuallyMoved && this.wireSplitService && this.draggedElement?.type !== "wire") {
+      const allMoved = [this.draggedElement, ...this.selectedElements].filter(Boolean);
+      for (const element of allMoved) {
+        if (element.type === "wire") continue;
+        for (const node of element.nodes || []) {
+          this.wireSplitService.trySplitAtNode(node);
+        }
+      }
+    }
+
     this._resetState();
   }
 

@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2026-05-12
+
+### Fixed
+
+- **Component invisible on placement** — element now appears immediately when selected from toolbar without waiting for the first mouse move (`fe3099f`)
+- **Placement rotation tilt** — rotating a component during placement no longer tilts it; pivot logic removed in favour of orientation-only updates (`60f6d4a`)
+- **Placement double-snap jump** — finalising placement no longer causes a visible position jump from a second snap (`b98a472`)
+- **Wire direction lock** — wire direction no longer stays locked after drawing the first wire; each new wire picks direction freely (`b98a472`)
+- **Post-placement rotation tilt** — rotating an already-placed component no longer produces a ~15° visual tilt caused by floating-point residue in `Math.cos/sin`; nodes are now snapped to the visual grid after every rotation (`2582f35`)
+- **Wire auto-split for all node types** — placing or dragging any component (resistor, capacitor, inductor, etc.) whose node lands on a wire body now splits that wire, not just wire-to-wire intersections (`0906d9e`)
+
 ## [1.2.1] - 2026-03-17
 
 ### Fixed
