@@ -25,6 +25,7 @@ import { PropertyPanel } from "../property_panel/PropertyPanel.js";
 import { Logger } from "../../utils/Logger.js";
 import { throttle } from "../../utils/PerformanceUtils.js";
 import { GRID_CONFIG } from "../../config/gridConfig.js";
+import { LanguageDialog } from "../components/LanguageDialog.js";
 
 
 /**
@@ -512,6 +513,11 @@ export class GUIAdapter {
 
       case "disabled": {
         // No-op for disabled menu items
+        break;
+      }
+
+      case "localeDialog": {
+        LanguageDialog.show();
         break;
       }
 

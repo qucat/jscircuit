@@ -1,5 +1,6 @@
 import { GUICommand } from './GUICommand.js';
 import { QucatNetlistAdapter } from '../../infrastructure/adapters/QucatNetlistAdapter.js';
+import { tr } from '../i18n/i18n.js';
 
 /**
  * PasteNetlistFromClipboardCommand
@@ -46,7 +47,7 @@ export class PasteNetlistFromClipboardCommand extends GUICommand {
                         const elements = QucatNetlistAdapter.importFromString(netlistText);
 
                         if (!elements || elements.length === 0) {
-                            this._showErrorNotification('No valid circuit elements found in the pasted text.');
+                            this._showErrorNotification(tr('command.noValidElementsInPaste'));
                             resolve({ undo: () => {} });
                             return;
                         }
@@ -54,12 +55,12 @@ export class PasteNetlistFromClipboardCommand extends GUICommand {
                         this._loadElementsIntoCircuit(elements);
                         this.circuitService.emit('update');
                         this.circuitRenderer.render();
-                        this._showSuccessNotification(`Imported ${elements.length} element(s) from netlist.`);
+                        this._showSuccessNotification(tr('command.importSuccess', { count: elements.length }));
 
                         resolve({ undo: () => this.undo() });
                     } catch (error) {
                         console.error('[PasteNetlistFromClipboardCommand] Parse error:', error);
-                        this._showErrorNotification(`Invalid netlist: ${error.message}`);
+                        this._showErrorNotification(tr('command.invalidNetlist', { message: error.message }));
                         resolve({ undo: () => {} });
                     }
                 },
@@ -140,12 +141,12 @@ export class PasteNetlistFromClipboardCommand extends GUICommand {
 
         // Title
         const title = document.createElement('h3');
-        title.textContent = 'Paste Netlist';
+        title.textContent = tr('pasteDialog.title');
         title.style.cssText = 'margin: 0 0 8px; font-size: 16px; color: #2c3e50;';
 
         // Description
         const desc = document.createElement('p');
-        desc.textContent = 'Paste a QuCat netlist below (e.g. from a Jupyter cell) and click Import.';
+        desc.textContent = tr('pasteDialog.description');
         desc.style.cssText = 'margin: 0 0 12px; font-size: 13px; color: #666;';
 
         // Textarea
@@ -163,14 +164,14 @@ export class PasteNetlistFromClipboardCommand extends GUICommand {
         btnBar.style.cssText = 'display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;';
 
         const btnCancel = document.createElement('button');
-        btnCancel.textContent = 'Cancel';
+        btnCancel.textContent = tr('pasteDialog.cancel');
         btnCancel.style.cssText = `
             padding: 8px 18px; border: 1px solid #ccc; border-radius: 4px;
             background: #fff; cursor: pointer; font-size: 13px;
         `;
 
         const btnImport = document.createElement('button');
-        btnImport.textContent = 'Import';
+        btnImport.textContent = tr('pasteDialog.import');
         btnImport.style.cssText = `
             padding: 8px 18px; border: none; border-radius: 4px;
             background: #3498db; color: #fff; cursor: pointer; font-size: 13px;

@@ -1,5 +1,6 @@
 import { GUICommand } from './GUICommand.js';
 import { QucatNetlistAdapter } from '../../infrastructure/adapters/QucatNetlistAdapter.js';
+import { tr } from '../i18n/i18n.js';
 
 /**
  * SaveNetlistCommand
@@ -29,7 +30,7 @@ export class SaveNetlistCommand extends GUICommand {
             
             if (!circuit || circuit.elements.length === 0) {
                 console.warn('[SaveNetlistCommand] No circuit elements to save');
-                alert('No circuit elements to save. Please add some components first.');
+                alert(tr('command.noElementsToSave'));
                 return { undo: () => {} };
             }
 
@@ -45,7 +46,7 @@ export class SaveNetlistCommand extends GUICommand {
             
         } catch (error) {
             console.error('[SaveNetlistCommand] Error saving netlist:', error);
-            alert(`Error saving netlist: ${error.message}`);
+            alert(tr('command.saveError', { message: error.message }));
             return { undo: () => {} };
         }
     }
