@@ -166,4 +166,52 @@ describe('GUIAdapter (declarative actions)', () => {
     await nextTick();
     expect(true).to.equal(true); // no throw
   });
+
+  it('ignores insert shortcut while an element is being placed (#53)', async () => {
+    guiAdapter.initialize();
+
+    document.dispatchEvent(
+      new window.CustomEvent('ui:action', {
+        detail: { id: 'insert.resistor' },
+        bubbles: true,
+      })
+    );
+    await nextTick();
+
+    expect(guiAdapter.placingElement).to.exist;
+    const lenAfterFirst = circuitService.getElements().length;
+
+    document.dispatchEvent(
+      new window.KeyboardEvent('keydown', { key: 'r', bubbles: true })
+    );
+    await nextTick();
+
+    expect(circuitService.getElements().length).to.equal(lenAfterFirst);
+    expect(guiAdapter.placingElement).to.exist;
+  });
+
+  it('ignores insert action while property panel is open (#53)', async () => {
+    guiAdapter.initialize();
+
+    document.dispatchEvent(
+      new window.CustomEvent('ui:action', {
+        detail: { id: 'insert.resistor' },
+        bubbles: true,
+      })
+    );
+    await nextTick();
+
+    guiAdapter.propertyPanel = { isVisible: true };
+    const lenBefore = circuitService.getElements().length;
+
+    document.dispatchEvent(
+      new window.CustomEvent('ui:action', {
+        detail: { id: 'insert.capacitor' },
+        bubbles: true,
+      })
+    );
+    await nextTick();
+
+    expect(circuitService.getElements().length).to.equal(lenBefore);
+  });
 });
