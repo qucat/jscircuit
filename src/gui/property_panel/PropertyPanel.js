@@ -7,6 +7,7 @@ import { CircuitService } from '../../application/CircuitService.js';
 import { UpdateElementPropertiesCommand } from '../commands/UpdateElementPropertiesCommand.js';
 import { CommandHistory } from '../commands/CommandHistory.js';
 import guiConfig from '../../config/gui.config.js';
+import { localizeGuiConfig, tr } from '../i18n/i18n.js';
 
 /**
  * PropertyPanel class for displaying and editing element properties
@@ -29,7 +30,7 @@ export class PropertyPanel {
      * @private
      */
     getConfig() {
-        return guiConfig;
+        return localizeGuiConfig(guiConfig);
     }
 
     /**
@@ -141,7 +142,7 @@ export class PropertyPanel {
 
         return `
             <div class="property-panel-header">
-                <h3>Circuit Editor</h3>
+                <h3>${tr('propertyPanel.header')}</h3>
             </div>
             <div class="property-panel-content">
                 <div class="property-panel-title">
@@ -152,8 +153,8 @@ export class PropertyPanel {
                 ${propertyFields}
             </div>
             <div class="property-panel-actions">
-                <button type="button" class="cancel-btn">Cancel</button>
-                <button type="button" class="ok-btn">OK</button>
+                <button type="button" class="cancel-btn">${tr('propertyPanel.cancel')}</button>
+                <button type="button" class="ok-btn">${tr('propertyPanel.ok')}</button>
             </div>
         `;
     }
@@ -172,22 +173,22 @@ export class PropertyPanel {
         
         return `
             <div class="property-panel-header">
-                <h3>Circuit Editor</h3>
+                <h3>${tr('propertyPanel.header')}</h3>
             </div>
             <div class="property-panel-content">
                 <div class="property-panel-title">
-                    <em>Configure ${elementType} properties</em>
+                    <em>${tr('propertyPanel.fallbackTitle', { type: elementType })}</em>
                 </div>
                 <div class="property-field">
-                    <label for="label">Label</label>
+                    <label for="label">${tr('propertyPanel.labelField')}</label>
                     <input type="text" id="label" name="label" 
                            value="${currentLabel}" 
-                           placeholder="Enter element label">
+                           placeholder="${tr('propertyPanel.labelPlaceholder')}">
                 </div>
             </div>
             <div class="property-panel-actions">
-                <button type="button" class="cancel-btn">Cancel</button>
-                <button type="button" class="ok-btn">OK</button>
+                <button type="button" class="cancel-btn">${tr('propertyPanel.cancel')}</button>
+                <button type="button" class="ok-btn">${tr('propertyPanel.ok')}</button>
             </div>
         `;
     }
@@ -290,18 +291,18 @@ export class PropertyPanel {
         
         warningDialog.innerHTML = `
             <div class="warning-header">
-                <h4>⚠️ Incomplete Properties</h4>
+                <h4>${tr('propertyPanel.warning.title')}</h4>
             </div>
             <div class="warning-content">
-                <p>Please specify at least one of the following:</p>
+                <p>${tr('propertyPanel.warning.intro')}</p>
                 <ul>
-                    <li>A label for the component</li>
-                    <li>A property value (resistance, capacitance, etc.)</li>
+                    <li>${tr('propertyPanel.warning.labelItem')}</li>
+                    <li>${tr('propertyPanel.warning.propertyItem')}</li>
                 </ul>
-                <p>This ensures the component can be properly identified and used in the circuit.</p>
+                <p>${tr('propertyPanel.warning.footer')}</p>
             </div>
             <div class="warning-actions">
-                <button type="button" class="warning-ok-btn">OK</button>
+                <button type="button" class="warning-ok-btn">${tr('propertyPanel.warning.ok')}</button>
             </div>
         `;
         

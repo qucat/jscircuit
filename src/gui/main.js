@@ -57,6 +57,7 @@ import {
   setupCommands
 } from "../config/registry.js";
 import { initMenu } from "./menu/initMenu.js";
+import { initI18n } from "./i18n/i18n.js";
 import { Logger } from "../utils/Logger.js";
 import { globalPerformanceMonitor } from "../utils/PerformanceUtils.js";
 
@@ -148,7 +149,8 @@ const guiAdapter = new GUIAdapter(                // GUI: Primary adapter
   GUICommandRegistry
 );
 
-/* ---------- Menu (emits ui:action only) ---------- */
+/* ---------- i18n + Menu (emits ui:action only) ---------- */
+initI18n();
 initMenu();
 
 /* ---------- Commands, first render, reveal, THEN start resize observer ---------- */

@@ -1,5 +1,6 @@
 import { GUICommand } from './GUICommand.js';
 import { QucatNetlistAdapter } from '../../infrastructure/adapters/QucatNetlistAdapter.js';
+import { tr } from '../i18n/i18n.js';
 
 /**
  * OpenNetlistCommand
@@ -51,7 +52,7 @@ export class OpenNetlistCommand extends GUICommand {
                     
                     if (!elements || elements.length === 0) {
                         console.warn('[OpenNetlistCommand] No valid elements found in netlist');
-                        alert('No valid circuit elements found in the selected file.');
+                        alert(tr('command.noValidElementsInFile'));
                         resolve({ undo: () => {} });
                         return;
                     }
@@ -70,7 +71,7 @@ export class OpenNetlistCommand extends GUICommand {
                     
                 } catch (error) {
                     console.error('[OpenNetlistCommand] Error loading netlist:', error);
-                    alert(`Error loading netlist file: ${error.message}`);
+                    alert(tr('command.loadError', { message: error.message }));
                     resolve({ undo: () => {} });
                 } finally {
                     // Clean up file input

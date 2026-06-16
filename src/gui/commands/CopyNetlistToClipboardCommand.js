@@ -1,5 +1,6 @@
 import { GUICommand } from './GUICommand.js';
 import { QucatNetlistAdapter } from '../../infrastructure/adapters/QucatNetlistAdapter.js';
+import { tr } from '../i18n/i18n.js';
 
 /**
  * CopyNetlistToClipboardCommand
@@ -30,7 +31,7 @@ export class CopyNetlistToClipboardCommand extends GUICommand {
             
             if (!circuit || circuit.elements.length === 0) {
                 console.warn('[CopyNetlistToClipboardCommand] No circuit elements to copy');
-                alert('No circuit elements to copy. Please add some components first.');
+                alert(tr('command.noElementsToCopy'));
                 return { undo: () => {} };
             }
 
@@ -45,7 +46,7 @@ export class CopyNetlistToClipboardCommand extends GUICommand {
             
         } catch (error) {
             console.error('[CopyNetlistToClipboardCommand] Error copying netlist to clipboard:', error);
-            alert(`Error copying netlist to clipboard: ${error.message}`);
+            alert(tr('command.copyError', { message: error.message }));
             return { undo: () => {} };
         }
     }
@@ -62,11 +63,11 @@ export class CopyNetlistToClipboardCommand extends GUICommand {
             navigator.clipboard.writeText(content)
                 .then(() => {
                     console.log('[CopyNetlistToClipboardCommand] Netlist copied to clipboard');
-                    this._showSuccessNotification('Netlist copied to clipboard');
+                    this._showSuccessNotification(tr('command.netlistCopied'));
                 })
                 .catch(err => {
                     console.error('[CopyNetlistToClipboardCommand] Failed to copy to clipboard:', err);
-                    this._showErrorNotification('Failed to copy to clipboard');
+                    this._showErrorNotification(tr('command.copyFailed'));
                 });
         } else {
             // Fallback to older method for browsers that don't support Clipboard API
@@ -92,14 +93,14 @@ export class CopyNetlistToClipboardCommand extends GUICommand {
             const successful = document.execCommand('copy');
             if (successful) {
                 console.log('[CopyNetlistToClipboardCommand] Netlist copied to clipboard (fallback method)');
-                this._showSuccessNotification('Netlist copied to clipboard');
+                this._showSuccessNotification(tr('command.netlistCopied'));
             } else {
                 console.error('[CopyNetlistToClipboardCommand] execCommand failed');
-                this._showErrorNotification('Failed to copy to clipboard');
+                this._showErrorNotification(tr('command.copyFailed'));
             }
         } catch (err) {
             console.error('[CopyNetlistToClipboardCommand] Fallback copy failed:', err);
-            this._showErrorNotification('Failed to copy to clipboard');
+            this._showErrorNotification(tr('command.copyFailed'));
         } finally {
             document.body.removeChild(textArea);
         }

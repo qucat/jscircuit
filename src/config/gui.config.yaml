@@ -251,3 +251,9 @@ menus:
         label: Re-center
         shortcut: Ctrl+R
         action: { kind: renderer, op: recenter }
+
+      - type: separator
+
+      - id: view.language
+        label: Language
+        action: { kind: localeDialog }

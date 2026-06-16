@@ -1,6 +1,7 @@
 // static/initMenu.js
 import { MenuBar } from "./MenuBar.js";
 import guiConfig from "../../config/gui.config.js";
+import { localizeGuiConfig } from "../i18n/i18n.js";
 
 /**
  * Expands component references in menu items to full menu item definitions
@@ -38,17 +39,28 @@ function expandComponentReferences(guiConfig) {
   return { ...guiConfig, menus: expandedMenus };
 }
 
+function buildMenuConfig() {
+  const localized = localizeGuiConfig(guiConfig);
+  return expandComponentReferences(localized);
+}
+
+/** @type {MenuBar|null} */
+let menuInstance = null;
+
+function renderMenu() {
+  const config = buildMenuConfig();
+  if (!menuInstance) {
+    menuInstance = new MenuBar(document.getElementById("menubar"));
+  }
+  menuInstance.renderFromConfig(config);
+}
+
 export function initMenu() {
-  // Configuration is now statically imported at build time
-  // No runtime fetch needed - fully embedded in bundle
-  const expandedConfig = expandComponentReferences(guiConfig);
-  
-  const menu = new MenuBar(document.getElementById("menubar"));
-  menu.renderFromConfig(expandedConfig);
+  renderMenu();
+  document.addEventListener("locale:change", renderMenu);
 
   // Note: Keyboard shortcuts are handled by GUIAdapter.bindShortcuts()
   // to avoid double-binding. The menu only handles click events.
 
-  return menu; // so you can enable/disable items later: menu.update("edit.copy",{disabled:false})
+  return menuInstance; // so you can enable/disable items later: menu.update("edit.copy",{disabled:false})
 }
-
