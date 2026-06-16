@@ -438,6 +438,16 @@ export class GUIAdapter {
   }
 
   /**
+   * Whether insert/add-element actions should be ignored.
+   * Blocks shortcuts and menu actions while placing or editing properties.
+   * @return {boolean}
+   * @private
+   */
+  _isInsertBlocked() {
+    return !!(this.placingElement || this.propertyPanel?.isVisible);
+  }
+
+  /**
    * Execute a declarative action spec (from YAML/JSON).
    * @param {!ActionSpec} spec
    * @private
@@ -445,6 +455,10 @@ export class GUIAdapter {
   _exec(spec) {
     switch (spec.kind) {
       case "command": {
+        if (spec.name === "addElement" && this._isInsertBlocked()) {
+          return;
+        }
+
         // Special handling for wire drawing mode
         if (spec.name === "addElement" && spec.args && spec.args[0] === "Wire") {
           this.wireDrawingMode = true;
