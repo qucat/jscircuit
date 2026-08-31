@@ -33,6 +33,7 @@
  *
  * @typedef {{
  *   label: string,
+ *   hidden?: boolean,
  *   items: Array<MenuItem|MenuSeparator>
  * }} MenuGroup
  *
@@ -174,7 +175,9 @@ export class MenuBar {
       this.mount.appendChild(b);
     }
 
-    this.buttons = cfg.menus.map((menu, i) => this._addMenu(menu, i));
+    this.buttons = cfg.menus
+      .filter((menu) => !menu.hidden)
+      .map((menu, i) => this._addMenu(menu, i));
   }
 
   /**

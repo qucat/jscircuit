@@ -109,7 +109,8 @@ menus:
         label: "Save Netlist..."
         shortcut: Ctrl+S
         action: { kind: command, name: saveNetlist }
-
+  - label: Edit
+    items:
       - id: copyNetlistToClipboard
         label: "Copy Netlist"
         shortcut: Ctrl+Shift+C
@@ -174,6 +175,7 @@ menus:
         label: "Move with Arrow Keys"
         shortcut: "← ↑ → ↓"
         disabled: true
+        
       - id: rotateElementRight
         label: "Rotate Right"
         shortcut: Ctrl+Right
@@ -220,3 +222,27 @@ menus:
         label: Re-center
         shortcut: Ctrl+R
         action: { kind: renderer, op: recenter }
+
+  - label: Move
+    hidden: true
+    items:
+      - id: nudgeRight
+        label: "Move Right"
+        shortcut: Right
+        action: { kind: command, name: nudgeRight }
+
+      - id: nudgeLeft
+        label: "Move Left"
+        shortcut: Left
+        action: { kind: command, name: nudgeLeft }
+
+      - id: nudgeUp
+        label: "Move Up"
+        shortcut: Up
+        action: { kind: command, name: nudgeUp }
+        
+      - id: nudgeDown
+        label: "Move Down"
+        shortcut: Down
+        action: { kind: command, name: nudgeDown }
+      
