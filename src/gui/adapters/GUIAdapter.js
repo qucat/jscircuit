@@ -457,6 +457,11 @@ export class GUIAdapter {
           this.resetCursor();
         }
 
+        if (this.placingElement && (spec.name === "rotateRight" || spec.name === "rotateLeft")) {
+          this.rotatePlacingElement(spec.name === "rotateRight" ? 90 : -90);
+          break;
+        }
+
         const args = spec.args ?? [];
         const cmd = this.guiCommandRegistry.get(
           spec.name,
