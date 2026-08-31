@@ -170,31 +170,10 @@ menus:
         shortcut: Del
         action: { kind: command, name: deleteSelection }
 
-      - id: nudgeRight
-        label: "Move Right"
-        shortcut: Right
-        action: { kind: command, name: nudgeRight }
-
-      - id: nudgeLeft
-        label: "Move Left"
-        shortcut: Left
-        action: { kind: command, name: nudgeLeft }
-
-      - id: nudgeUp
-        label: "Move Up"
-        shortcut: Up
-        action: { kind: command, name: nudgeUp }
-
-      - id: nudgeDown
-        label: "Move Down"
-        shortcut: Down
-        action: { kind: command, name: nudgeDown }
-
-      - id: rotateElement
-        label: "Rotate Element"
-        shortcut: Ctrl+E
-        action: { kind: command, name: rotateElement }
-
+      - id: moveWithArrowKeys
+        label: "Move with Arrow Keys"
+        shortcut: "← ↑ → ↓"
+        disabled: true
       - id: rotateElementRight
         label: "Rotate Right"
         shortcut: Ctrl+Right
@@ -204,16 +183,6 @@ menus:
         label: "Rotate Left"
         shortcut: Ctrl+Left
         action: { kind: command, name: rotateLeft }
-
-      - id: rotateElementUp
-        label: "Rotate Up"
-        shortcut: Ctrl+Up
-        action: { kind: command, name: rotateUp }
-
-      - id: rotateElementDown
-        label: "Rotate Down"
-        shortcut: Ctrl+Down
-        action: { kind: command, name: rotateDown }
 
   - label: Insert
     items:
