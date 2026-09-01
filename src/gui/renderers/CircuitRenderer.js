@@ -106,7 +106,7 @@ export class CircuitRenderer {
         // Visual grid displays at regular logical unit intervals
         // This allows customizable visual grid independent of coordinate system
         this.gridSpacing = GRID_CONFIG.visualGridSpacing;
-        this.gridColor = 'gray';        // Color for the grid lines
+        this.gridColor = 'black';        // Color for the grid lines
         this.gridLineWidth = 0.5;         // Line width for grid lines
 
         // Grid visibility (on by default so the dot grid is always shown)
