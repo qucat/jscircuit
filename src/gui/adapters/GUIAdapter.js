@@ -583,9 +583,6 @@ export class GUIAdapter {
 
       // If placing an element, finalize its position on left click
       if (event.button === 0 && this.placingElement) {
-        const snappedX = GRID_CONFIG.snapToVisualGrid(offsetX);
-        const snappedY = GRID_CONFIG.snapToVisualGrid(offsetY);
-
         // Get current orientation from element properties (preserve rotation)
         const currentOrientation = this.placingElement.properties?.values?.orientation || 0;
         // Ground's base 180° orientation is rendering-only for geometry placement.
@@ -605,8 +602,10 @@ export class GUIAdapter {
           this.placingElement.nodes[1].x = this.placingElement.nodes[0].x + 2 * halfSpan * Math.cos(angleRad);
           this.placingElement.nodes[1].y = this.placingElement.nodes[0].y + 2 * halfSpan * Math.sin(angleRad);
         } else {
-          // Snap center so both nodes land on the visual grid (no double-snap).
-          const { x: centerX, y: centerY } = GRID_CONFIG.snapComponentCenter(snappedX, snappedY, angleRad);
+          // Snap the raw cursor position directly to the valid component-center
+          // lattice. Pre-snapping to a grid point would put the center halfway
+          // between two valid positions and bias Math.round() right/down.
+          const { x: centerX, y: centerY } = GRID_CONFIG.snapComponentCenter(offsetX, offsetY, angleRad);
 
           // Use grid configuration to calculate proper node positions that align to grid
           const nodePositions = GRID_CONFIG.calculateNodePositions(centerX, centerY, angleRad);

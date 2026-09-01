@@ -29,6 +29,25 @@ describe('Logical Coordinate System Integration Tests', () => {
             expect(GRID_CONFIG.snapToLogicalGrid(54)).to.equal(5);
             expect(GRID_CONFIG.logicalToPixel(5)).to.equal(50);
         });
+
+        it('should snap horizontal component centers to the nearest valid grid interval', () => {
+            const justBeforeBoundary = GRID_CONFIG.snapComponentCenter(99, 124, 0);
+            const justAfterBoundary = GRID_CONFIG.snapComponentCenter(101, 126, 0);
+
+            expect(justBeforeBoundary).to.deep.equal({ x: 75, y: 100 });
+            expect(justAfterBoundary).to.deep.equal({ x: 125, y: 150 });
+        });
+
+        it('should snap vertical component centers without a downward bias', () => {
+            const vertical = Math.PI / 2;
+            const justBeforeBoundary = GRID_CONFIG.snapComponentCenter(124, 99, vertical);
+            const justAfterBoundary = GRID_CONFIG.snapComponentCenter(126, 101, vertical);
+
+            expect(justBeforeBoundary.x).to.be.closeTo(100, 1e-12);
+            expect(justBeforeBoundary.y).to.be.closeTo(75, 1e-12);
+            expect(justAfterBoundary.x).to.be.closeTo(150, 1e-12);
+            expect(justAfterBoundary.y).to.be.closeTo(125, 1e-12);
+        });
     });
 
     describe('Component Positioning Integration', () => {
