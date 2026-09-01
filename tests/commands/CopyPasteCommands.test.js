@@ -122,7 +122,7 @@ describe('Copy-Paste Commands', () => {
   });
 
   describe('PasteElementsCommand', () => {
-    it('should paste elements from clipboard with new IDs and offset positions', () => {
+    it('should paste elements with new IDs and hand them to cursor placement', () => {
       // Create original element
       const originalResistor = ElementFactory.create('resistor', 'R1', 
         [new Position(100, 100), new Position(150, 100)], 
@@ -139,6 +139,9 @@ describe('Copy-Paste Commands', () => {
       // Verify circuit has 1 element
       expect(circuitService.circuit.elements).to.have.length(1);
 
+      let placementEvent;
+      circuitService.on('startPlacingGroup', event => { placementEvent = event; });
+
       // Paste the element
       pasteCommand.execute();
 
@@ -151,11 +154,12 @@ describe('Copy-Paste Commands', () => {
       expect(pastedElement.type).to.equal('resistor'); // Element.type is lowercase internally
       expect(pastedElement.label.value).to.equal('Original');
 
-      // Verify offset positioning
+      // Geometry is initially preserved; GUIAdapter owns cursor translation.
       const originalPos = originalResistor.nodes[0];
       const pastedPos = pastedElement.nodes[0];
-      expect(pastedPos.x).to.equal(originalPos.x + 20); // PASTE_OFFSET_X
-      expect(pastedPos.y).to.equal(originalPos.y + 20); // PASTE_OFFSET_Y
+      expect(pastedPos.x).to.equal(originalPos.x);
+      expect(pastedPos.y).to.equal(originalPos.y);
+      expect(placementEvent.elements).to.deep.equal([pastedElement]);
 
       // Verify properties are preserved
       expect(pastedElement.properties.values.resistance).to.equal(1000);

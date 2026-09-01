@@ -12,6 +12,8 @@ import {
 import { Circuit } from '../../src/domain/aggregates/Circuit.js';
 import { CircuitService } from '../../src/application/CircuitService.js';
 import { GUIAdapter } from '../../src/gui/adapters/GUIAdapter.js';
+import { ElementFactory } from '../../src/domain/factories/ElementFactory.js';
+import { Position } from '../../src/domain/valueObjects/Position.js';
 
 import { createMockCanvas } from './canvasFixture.js';
 import { setupJsdom } from '../setup/jsdomSetup.js';
@@ -165,5 +167,40 @@ describe('GUIAdapter (declarative actions)', () => {
 
     await nextTick();
     expect(true).to.equal(true); // no throw
+  });
+
+  it('moves and grid-finalizes a pasted group as one rigid selection', () => {
+    const resistor = ElementFactory.create('resistor', 'R1', [
+      new Position(100, 100),
+      new Position(150, 100),
+    ]);
+    const capacitor = ElementFactory.create('capacitor', 'C1', [
+      new Position(150, 100),
+      new Position(200, 100),
+    ]);
+
+    guiAdapter.currentMousePos = { x: 326, y: 224 };
+    guiAdapter._beginPlacingGroup([resistor, capacitor]);
+
+    expect(resistor.nodes.map(node => [node.x, node.y])).to.deep.equal([
+      [276, 224],
+      [326, 224],
+    ]);
+    expect(capacitor.nodes.map(node => [node.x, node.y])).to.deep.equal([
+      [326, 224],
+      [376, 224],
+    ]);
+
+    guiAdapter._finalizePlacingGroup();
+
+    expect(resistor.nodes.map(node => [node.x, node.y])).to.deep.equal([
+      [300, 200],
+      [350, 200],
+    ]);
+    expect(capacitor.nodes.map(node => [node.x, node.y])).to.deep.equal([
+      [350, 200],
+      [400, 200],
+    ]);
+    expect(guiAdapter.placingElements).to.be.empty;
   });
 });

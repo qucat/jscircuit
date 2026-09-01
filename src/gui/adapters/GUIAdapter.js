@@ -168,6 +168,8 @@ export class GUIAdapter {
     this.wireDrawingMode = false; // Wire drawing mode state
     /** @private */
     this.placingElement = null;
+    this.placingElements = [];
+    this.placingGroupOffsets = [];
     /** @private */
     this.selectionBox = null; // Selection box state: { startX, startY, endX, endY }
     /** @private */
@@ -289,6 +291,18 @@ export class GUIAdapter {
       // Handle Escape key to cancel wire drawing mode
       if (e.key === 'Escape' && this.wireDrawingMode) {
         this.resetCursor();
+        e.preventDefault();
+        return;
+      }
+
+      // Handle Escape key to cancel element placement
+      if (e.key === 'Escape' && this.placingElements.length > 0) {
+        for (const element of this.placingElements) {
+          this.circuitService.deleteElement(element.id);
+        }
+        this.placingElements = [];
+        this.placingGroupOffsets = [];
+        this.circuitRenderer.setSelectedElements([]);
         e.preventDefault();
         return;
       }
@@ -581,6 +595,13 @@ export class GUIAdapter {
 
       const { offsetX, offsetY } = this.getTransformedMousePosition(event);
 
+      // Finalize a pasted group with one grid-aligned translation. Snapping a
+      // single anchor preserves every relative node position in the group.
+      if (event.button === 0 && this.placingElements.length > 0) {
+        this._finalizePlacingGroup();
+        return;
+      }
+
       // If placing an element, finalize its position on left click
       if (event.button === 0 && this.placingElement) {
         // Get current orientation from element properties (preserve rotation)
@@ -696,6 +717,12 @@ export class GUIAdapter {
       this.currentMousePos.y = offsetY;
 
       // Live update for placing element
+      if (this.placingElements.length > 0) {
+        this._applyPlacingGroupPosition(offsetX, offsetY);
+        return;
+      }
+
+      // Live update for placing element
       if (this.placingElement) {
         this._applyPlacingPosition(offsetX, offsetY);
         return;
@@ -785,6 +812,10 @@ export class GUIAdapter {
       if (this.wireDrawingMode && element.type !== 'wire') {
         this.resetCursor();
       }
+    });
+
+    this.circuitService.on('startPlacingGroup', ({ elements }) => {
+      this._beginPlacingGroup(elements);
     });
 
     // Mouse leave → stop panning and clear hover highlights
@@ -1112,6 +1143,74 @@ export class GUIAdapter {
     this.placingElement.nodes[1].x = nodePositions.end.x;
     this.placingElement.nodes[1].y = nodePositions.end.y;
     this.circuitService.emit('update', { type: 'movePreview', element: this.placingElement });
+  }
+
+  /**
+   * Starts cursor placement for a pasted group while preserving its geometry.
+   * The cursor is attached to the center of the complete node bounds.
+   * @param {Array<Object>} elements
+   * @private
+   */
+  _beginPlacingGroup(elements) {
+    const validElements = Array.isArray(elements)
+      ? elements.filter(element => Array.isArray(element?.nodes) && element.nodes.length > 0)
+      : [];
+    if (validElements.length === 0) return;
+
+    const nodes = validElements.flatMap(element => element.nodes);
+    const minX = Math.min(...nodes.map(node => node.x));
+    const maxX = Math.max(...nodes.map(node => node.x));
+    const minY = Math.min(...nodes.map(node => node.y));
+    const maxY = Math.max(...nodes.map(node => node.y));
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+
+    this.placingElements = validElements;
+    this.placingGroupOffsets = validElements.map(element =>
+      element.nodes.map(node => ({ x: node.x - centerX, y: node.y - centerY }))
+    );
+    this.circuitRenderer.setSelectedElements(validElements);
+    this._applyPlacingGroupPosition(this.currentMousePos.x, this.currentMousePos.y);
+  }
+
+  /** Move a pasted group as one rigid preview attached to the cursor. */
+  _applyPlacingGroupPosition(x, y) {
+    for (let elementIndex = 0; elementIndex < this.placingElements.length; elementIndex++) {
+      const element = this.placingElements[elementIndex];
+      const offsets = this.placingGroupOffsets[elementIndex];
+      for (let nodeIndex = 0; nodeIndex < element.nodes.length; nodeIndex++) {
+        element.nodes[nodeIndex].x = x + offsets[nodeIndex].x;
+        element.nodes[nodeIndex].y = y + offsets[nodeIndex].y;
+      }
+    }
+    this.circuitService.emit('update', {
+      type: 'movePlacementGroupPreview',
+      elements: this.placingElements,
+    });
+  }
+
+  /** Finalize a pasted group using one grid-aligned translation. */
+  _finalizePlacingGroup() {
+    const anchor = this.placingElements[0]?.nodes?.[0];
+    if (anchor) {
+      const dx = GRID_CONFIG.snapToVisualGrid(anchor.x) - anchor.x;
+      const dy = GRID_CONFIG.snapToVisualGrid(anchor.y) - anchor.y;
+      for (const element of this.placingElements) {
+        for (const node of element.nodes || []) {
+          node.x += dx;
+          node.y += dy;
+        }
+      }
+    }
+
+    const placedElements = [...this.placingElements];
+    this.placingElements = [];
+    this.placingGroupOffsets = [];
+    this.circuitRenderer.setSelectedElements(placedElements);
+    this.circuitService.emit('update', {
+      type: 'finalizePlacementGroup',
+      elements: placedElements,
+    });
   }
 
   /**

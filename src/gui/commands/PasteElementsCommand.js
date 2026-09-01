@@ -6,7 +6,7 @@ import { Properties } from "../../domain/valueObjects/Properties.js";
 import { Label } from "../../domain/valueObjects/Label.js";
 
 /**
- * PasteElementsCommand: Pastes elements from clipboard with new IDs and offset positioning
+ * PasteElementsCommand: Pastes elements from clipboard and starts group placement
  * 
  * @param {CircuitService} circuitService - The circuit service to use
  * @param {CircuitRenderer} circuitRenderer - The circuit renderer to use
@@ -19,10 +19,6 @@ export class PasteElementsCommand extends GUICommand {
     this.circuitService = circuitService;
     this.circuitRenderer = circuitRenderer;
     this.pastedElements = [];
-    
-    // Offset for pasted elements to avoid exact overlap
-    this.PASTE_OFFSET_X = 20;
-    this.PASTE_OFFSET_Y = 20;
   }
 
   /**
@@ -41,9 +37,10 @@ export class PasteElementsCommand extends GUICommand {
     // Create new elements from clipboard content
     clipboardContent.forEach(originalElement => {
       try {
-        // Create offset nodes (paste slightly offset from original position)
-        const offsetNodes = originalElement.nodes.map(node => 
-          new Position(node.x + this.PASTE_OFFSET_X, node.y + this.PASTE_OFFSET_Y)
+        // Preserve the copied geometry. GUIAdapter translates the complete group
+        // to the cursor without changing the relative node positions.
+        const copiedNodes = originalElement.nodes.map(node =>
+          new Position(node.x, node.y)
         );
         
         // Create Properties instance preserving original properties
@@ -67,7 +64,7 @@ export class PasteElementsCommand extends GUICommand {
         const newElement = ElementFactory.create(
           originalElement.type,
           newId, // Use our generated unique ID
-          offsetNodes,
+          copiedNodes,
           properties,
           label
         );
@@ -84,7 +81,12 @@ export class PasteElementsCommand extends GUICommand {
     
     // Select all pasted elements
     this.circuitRenderer.setSelectedElements(this.pastedElements);
-    
+
+    // Hand the clones to GUI placement mode so they follow the cursor until
+    // the user clicks. A single translation keeps groups rigid and connected.
+    if (this.pastedElements.length > 0) {
+      this.circuitService.emit('startPlacingGroup', { elements: this.pastedElements });
+    }
   }
 
   /**
