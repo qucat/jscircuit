@@ -16,6 +16,7 @@ describe('Logical Coordinate System Integration Tests', () => {
             expect(GRID_CONFIG.pixelsPerGridUnit).to.equal(10);
             expect(GRID_CONFIG.componentLogicalSpan).to.equal(5);
             expect(GRID_CONFIG.componentSpanPixels).to.equal(50); // 5 * 10
+            expect(GRID_CONFIG.visualGridSpacing).to.equal(GRID_CONFIG.componentSpanPixels);
         });
 
         it('should maintain backwards compatibility with legacy spacing', () => {

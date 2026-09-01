@@ -1,6 +1,7 @@
 import { Logger } from "../../utils/Logger.js";
 import { throttle, globalRenderScheduler, globalPerformanceMonitor } from "../../utils/PerformanceUtils.js";
 import { AdaptiveSpatialIndex, BoundingBox } from "../../utils/SpatialIndex.js";
+import { GRID_CONFIG } from "../../config/gridConfig.js";
 
 /**
  * @class CircuitRenderer
@@ -104,12 +105,12 @@ export class CircuitRenderer {
         // Grid settings: these are configurable.
         // Visual grid displays at regular logical unit intervals
         // This allows customizable visual grid independent of coordinate system
-        this.gridSpacing = 5;
+        this.gridSpacing = GRID_CONFIG.visualGridSpacing;
         this.gridColor = 'gray';        // Color for the grid lines
         this.gridLineWidth = 0.5;         // Line width for grid lines
 
-        // Grid visibility (off by default for performance; toggle with setShowGrid)
-        this.showGrid = false;
+        // Grid visibility (on by default so the dot grid is always shown)
+        this.showGrid = true;
 
         // Stable reference for render scheduling (enables deduplication in RenderScheduler)
         this._boundPerformRender = () => this.performRender();
@@ -202,9 +203,13 @@ export class CircuitRenderer {
     */
     drawGrid() {
         const ctx = this.context;
+        // Grid positions live in the same world-coordinate system as elements.
+        // The context applies zoom below, so compensating spacing here would make
+        // the visible grid diverge from component nodes whenever scale !== 1.
         const spacing = this.gridSpacing;
-        const dotRadius = 0.8; // Radius of each grid dot
+        const dotRadius = 0.85 / this.scale; // Keep dots a stable on-screen size.
         ctx.fillStyle = this.gridColor;
+
 
         // The context is already transformed (translated & scaled)
         // Determine the visible logical area:

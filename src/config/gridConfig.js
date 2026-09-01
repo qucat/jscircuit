@@ -9,14 +9,15 @@ import { CoordinateAdapter } from '../infrastructure/adapters/CoordinateAdapter.
 // Coordinate system constants
 const LOGICAL_PIXELS_PER_GRID_UNIT = CoordinateAdapter.CONFIG.PIXELS_PER_GRID_UNIT;
 
-// Visual grid display spacing (independent from coordinate system)
-// Wires snap and jump by this amount on screen
-const VISUAL_GRID_SPACING = 50; // Visual grid spacing for user interactions
-
 // Use CoordinateAdapter as the single source of truth for coordinates
 export const GRID_SPACING = LOGICAL_PIXELS_PER_GRID_UNIT; // Logical grid unit spacing
 export const COMPONENT_GRID_POINTS = CoordinateAdapter.CONFIG.V2_COMPONENT_SPAN; // Component span in logical grid intervals
 export const COMPONENT_SPAN_PIXELS = COMPONENT_GRID_POINTS * GRID_SPACING;
+
+// One visible grid interval is exactly one terminal-to-terminal component span.
+// Deriving this value prevents rendering and snapping from drifting apart when
+// the logical component dimensions change.
+const VISUAL_GRID_SPACING = COMPONENT_SPAN_PIXELS;
 
 /**
  * Central grid configuration object for component sizing
