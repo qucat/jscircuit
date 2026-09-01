@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-09-01
+
+### Added
+
+- **Cursor-following paste placement** — copied elements and multi-element selections now attach to the cursor until placed; groups move rigidly, retain shared connections, and finalize on the visual grid (`ea88ee8`)
+
+### Changed
+
+- **Unified component and visual-grid spacing** — one visual interval now derives directly from the terminal-to-terminal component span and remains aligned at every zoom level (`d7db62e`)
+- **Grid-based keyboard movement** — element nudging now advances by the configured visual grid interval (`7d72ccf`)
+- **Placement rotation** — rotating a placement preview remains smooth until final grid snapping (`d596192`)
+- **Menu behavior** — hidden menu groups are supported and rotation actions are simplified (`90b09c2`, `38b1eaf`)
+- **Grid visibility** — grid dots now render in black for improved contrast (`4e167f9`)
+
+### Fixed
+
+- **Directional placement bias** — component finalization no longer double-snaps toward the next grid point to the right or below (`bb1fe97`)
+- **Zoom-dependent grid misalignment** — grid dots and component terminals now share the same world-coordinate spacing at all zoom levels (`d7db62e`)
+
 ## [1.3.1] - 2026-05-12
 
 ### Fixed
