@@ -178,12 +178,12 @@ menus:
         
       - id: rotateElementRight
         label: "Rotate Right"
-        shortcut: Ctrl+Right
+        shortcut: Ctrl+Shift+Right
         action: { kind: command, name: rotateRight }
 
       - id: rotateElementLeft
         label: "Rotate Left"
-        shortcut: Ctrl+Left
+        shortcut: Ctrl+Shift+Left
         action: { kind: command, name: rotateLeft }
 
   - label: Insert

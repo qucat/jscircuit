@@ -322,7 +322,7 @@ export class GUIAdapter {
       }
 
       // Handle rotation keys during element placement
-      if (this.placingElement && e.ctrlKey) {
+      if (this.placingElement && e.ctrlKey && e.shiftKey) {
         let rotationAngle = 0;
         
         if (e.key === 'ArrowRight') {
