@@ -5,6 +5,7 @@ import { CircuitService } from '../../src/application/CircuitService.js';
 import { Resistor } from '../../src/domain/entities/Resistor.js';
 import { Wire } from '../../src/domain/entities/Wire.js';
 import { Ground } from '../../src/domain/entities/Ground.js';
+import { NonLinearInductor } from '../../src/domain/entities/NonLinearInductor.js';
 import { Position } from '../../src/domain/valueObjects/Position.js';
 import { Properties } from '../../src/domain/valueObjects/Properties.js';
 import { QucatNetlistAdapter } from '../../src/infrastructure/adapters/QucatNetlistAdapter.js';
@@ -248,5 +249,81 @@ describe('QucatNetlistAdapter roundtrip test with CircuitService', () => {
 
             assert.deepStrictEqual(actual, expected, `Property mismatch for element with nodes ${roundtripped.nodes.map(n => `(${n.x},${n.y})`).join(', ')}`);
         }
+    });
+});
+
+describe('QucatNetlistAdapter NonLinearInductor support', () => {
+    before(() => {
+        if (!ElementRegistry.get('nonlinearinductor')) {
+            ElementRegistry.register('nonlinearinductor', (id, nodes, label = null, properties = new Properties({})) =>
+                new NonLinearInductor(id, nodes, label, properties instanceof Properties ? properties : new Properties(properties || {}))
+            );
+        }
+    });
+
+    it('Should import a fully-symbolic NonLinearInductor line (SNAIL tutorial style)', () => {
+        const netlist = 'NonLinearInductor;-1,-2;0,-2;,,;E2,E3,E4';
+        const [element] = QucatNetlistAdapter.importFromString(netlist);
+
+        assert.strictEqual(element.type, 'nonlinearinductor');
+        assert.strictEqual(element.properties.values.e2Label, 'E2');
+        assert.strictEqual(element.properties.values.e3Label, 'E3');
+        assert.strictEqual(element.properties.values.e4Label, 'E4');
+        assert.strictEqual(element.properties.values.e2, undefined);
+        assert.strictEqual(element.properties.values.e3, undefined);
+        assert.strictEqual(element.properties.values.e4, undefined);
+        assert.strictEqual(element.label, null, 'NonLinearInductor has no single overall label');
+    });
+
+    it('Should import a fully-numeric NonLinearInductor line for round-trip fidelity', () => {
+        const netlist = 'NonLinearInductor;-1,-1;0,-1;1.0e+00,2.0e+00,3.0e+00;,,';
+        const [element] = QucatNetlistAdapter.importFromString(netlist);
+
+        assert.strictEqual(element.properties.values.e2, 1);
+        assert.strictEqual(element.properties.values.e3, 2);
+        assert.strictEqual(element.properties.values.e4, 3);
+        assert.strictEqual(element.properties.values.e2Label, undefined);
+    });
+
+    it('Should export a NonLinearInductor with only labels set', () => {
+        const circuit = new Circuit();
+        const service = new CircuitService(circuit, ElementRegistry);
+
+        const nli = new NonLinearInductor(
+            'N1',
+            [new Position(0, 0), new Position(50, 0)],
+            null,
+            new Properties({ e2Label: 'E2', e3Label: 'E3', e4Label: 'E4' })
+        );
+        service.addElement(nli);
+
+        const netlist = QucatNetlistAdapter.exportToString(circuit);
+        const [line] = netlist.trim().split('\n');
+
+        assert.strictEqual(line, 'NonLinearInductor;0,0;1,0;,,;E2,E3,E4');
+    });
+
+    it('Should round-trip a labels-only NonLinearInductor through export and re-import', () => {
+        const circuit = new Circuit();
+        const service = new CircuitService(circuit, ElementRegistry);
+
+        const nli = new NonLinearInductor(
+            'N1',
+            [new Position(0, 0), new Position(50, 0)],
+            null,
+            new Properties({ e2Label: 'E2', e3Label: 'E3', e4Label: 'E4' })
+        );
+        service.addElement(nli);
+
+        const exported = QucatNetlistAdapter.exportToString(circuit);
+        const [reimported] = QucatNetlistAdapter.importFromString(exported);
+
+        assert.strictEqual(reimported.properties.values.e2Label, 'E2');
+        assert.strictEqual(reimported.properties.values.e3Label, 'E3');
+        assert.strictEqual(reimported.properties.values.e4Label, 'E4');
+        assert.deepStrictEqual(
+            reimported.nodes.map(n => [n.x, n.y]),
+            nli.nodes.map(n => [n.x, n.y])
+        );
     });
 });

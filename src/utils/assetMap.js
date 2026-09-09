@@ -34,6 +34,12 @@ import L_hover from '../../assets/L_hover.png';
 import L_selected from '../../assets/L_selected.png';
 import L_hover_selected from '../../assets/L_hover_selected.png';
 
+// ── Non-Linear Inductor ───────────────────────────────────
+import N from '../../assets/N.png';
+import N_hover from '../../assets/N_hover.png';
+import N_selected from '../../assets/N_selected.png';
+import N_hover_selected from '../../assets/N_hover_selected.png';
+
 // ── Resistor ───────────────────────────────────────────────
 import R from '../../assets/R.png';
 import R_hover from '../../assets/R_hover.png';
@@ -52,5 +58,6 @@ export const ASSET_MAP = {
     G: { default: G, hover: G_hover, selected: G_selected, hover_selected: G_hover_selected },
     J: { default: J, hover: J_hover, selected: J_selected, hover_selected: J_hover_selected },
     L: { default: L, hover: L_hover, selected: L_selected, hover_selected: L_hover_selected },
+    N: { default: N, hover: N_hover, selected: N_selected, hover_selected: N_hover_selected },
     R: { default: R, hover: R_hover, selected: R_selected, hover_selected: R_hover_selected },
 };

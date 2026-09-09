@@ -31,6 +31,20 @@ components:
           unit: ""
           placeholder: ""
 
+  nonlinearinductor:
+    menuLabel: Non Linear Inductor
+    shortcut: N
+    propertyPanel:
+      title: "Specify labels for the non-linear inductor"
+      description: "Comma-separated labels for the 2nd, 3rd and 4th order terms of the inductor's Hamiltonian (e.g. E2,E3,E4)"
+      helpText: "Values for these labels are provided later, in QuCAT"
+      fields:
+        - key: labels
+          label: Labels
+          type: text
+          unit: ""
+          placeholder: "E2,E3,E4"
+
   inductor:
     menuLabel: Inductor
     shortcut: L
@@ -196,6 +210,9 @@ menus:
 
       - id: insert.inductor
         component: inductor
+
+      - id: insert.nonlinearinductor
+        component: nonlinearinductor
 
       - id: insert.capacitor
         component: capacitor

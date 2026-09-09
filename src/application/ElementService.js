@@ -118,7 +118,7 @@ export class ElementService {
     static updateProperties(element, updates) {
         Object.entries(updates).forEach(([key, value]) => {
             if (!element.properties.isValidValue(value)) {
-                throw new Error(`Invalid value for property "${key}". Must be a float, "variable", or "undefined".`);
+                throw new Error(`Invalid value for property "${key}". Must be a float, a string, or undefined.`);
             }
             element.properties.values[key] = value;
         });

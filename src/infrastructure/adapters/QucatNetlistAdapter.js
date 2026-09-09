@@ -16,7 +16,12 @@ const typeMap = {
     L: { fullType: 'inductor', propertyKey: 'inductance' },
     J: { fullType: 'junction', propertyKey: 'value' },
     G: { fullType: 'ground', propertyKey: 'value' },
-    W: { fullType: 'wire', propertyKey: 'value' }
+    W: { fullType: 'wire', propertyKey: 'value' },
+    // Unlike every other type, NonLinearInductor's short code is the full word,
+    // matching QuCAT's own `string_to_component`. It carries up to 3 independent
+    // (value, label) slots rather than a single one, so it has no `propertyKey`
+    // and is instead handled specially wherever `propertyKey` would be used.
+    NonLinearInductor: { fullType: 'nonlinearinductor' }
 };
 
 /**
@@ -28,8 +33,31 @@ const elementTypeToShortCode = {
     'inductor': 'L',
     'junction': 'J',
     'ground': 'G',
-    'wire': 'W'
+    'wire': 'W',
+    'nonlinearinductor': 'NonLinearInductor'
 };
+
+/**
+ * Property keys for NonLinearInductor's 3 (2nd/3rd/4th order) slots, in netlist order.
+ */
+const NON_LINEAR_INDUCTOR_VALUE_KEYS = ['e2', 'e3', 'e4'];
+const NON_LINEAR_INDUCTOR_LABEL_KEYS = ['e2Label', 'e3Label', 'e4Label'];
+
+/**
+ * Formats a number the same way QuCAT's netlist files do: the shortest
+ * scientific-notation string that round-trips back to the original value.
+ *
+ * @param {number} value
+ * @returns {string}
+ */
+function formatNetlistNumber(value) {
+    let decimals = 1, vString = '0';
+    while (parseFloat(vString) !== value && decimals < 15) {
+        vString = value.toExponential(decimals);
+        decimals += 1;
+    }
+    return vString;
+}
 
 /**
  * QucatNetlistAdapter
@@ -106,10 +134,26 @@ export class QucatNetlistAdapter {
             const node1 = `${v1Grid1.x},${v1Grid1.y}`;
             const node2 = `${v1Grid2.x},${v1Grid2.y}`;
 
+            // NonLinearInductor carries up to 3 independent (value, label) slots
+            // instead of a single one - serialize its 4th/5th fields as comma lists.
+            if (shortType === 'NonLinearInductor') {
+                const vFormatted = NON_LINEAR_INDUCTOR_VALUE_KEYS
+                    .map(key => {
+                        const v = properties[key];
+                        return typeof v === 'number' ? formatNetlistNumber(v) : '';
+                    })
+                    .join(',');
+                const labelStr = NON_LINEAR_INDUCTOR_LABEL_KEYS
+                    .map(key => properties[key] ?? '')
+                    .join(',');
+
+                return `${shortType};${node1};${node2};${vFormatted};${labelStr}`;
+            }
+
             // Get the main property for this element type
             const mapEntry = typeMap[shortType];
             const { propertyKey } = mapEntry;
-            
+
             // Extract the main value (resistance, capacitance, etc.)
             const value = propertyKey && properties[propertyKey] !== undefined ? properties[propertyKey] : '';
             const labelStr = label ?? '';
@@ -118,12 +162,7 @@ export class QucatNetlistAdapter {
 
             // Format number as scientific notation if needed
             if (typeof value === 'number') {
-                let decimals = 1, vString = '0';
-                while (parseFloat(vString) !== value && decimals < 15) {
-                    vString = value.toExponential(decimals);
-                    decimals += 1;
-                }
-                vFormatted = vString;
+                vFormatted = formatNetlistNumber(value);
             }
 
             return `${shortType};${node1};${node2};${vFormatted};${labelStr}`;
@@ -185,16 +224,36 @@ export class QucatNetlistAdapter {
                 ? [pixelPos2, pixelPos1]   // connection (pos2), body (pos1)
                 : [pixelPos1, pixelPos2];
     
-            // Parse the main property value
-            const raw = valueStr?.trim();
-            const parsedValue = raw === '' || raw === undefined ? undefined : parseFloat(raw);
-
-            const label = labelStr && labelStr.trim() !== '' ? new Label(labelStr.trim()) : null;
-
-            // Create minimal property object with the main property key always present
             const propObj = {};
-            if (propertyKey) {
-                propObj[propertyKey] = parsedValue; // undefined if no value was serialized
+            let label;
+
+            if (shortType === 'NonLinearInductor') {
+                // Up to 3 independent (value, label) slots instead of a single one.
+                // No single overall label - each slot's label lives in `propObj`.
+                const values = (valueStr ?? '').split(',');
+                const labels = (labelStr ?? '').split(',');
+
+                NON_LINEAR_INDUCTOR_VALUE_KEYS.forEach((key, i) => {
+                    const raw = values[i]?.trim();
+                    if (raw) propObj[key] = parseFloat(raw);
+                });
+                NON_LINEAR_INDUCTOR_LABEL_KEYS.forEach((key, i) => {
+                    const raw = labels[i]?.trim();
+                    if (raw) propObj[key] = raw;
+                });
+
+                label = null;
+            } else {
+                // Parse the main property value
+                const raw = valueStr?.trim();
+                const parsedValue = raw === '' || raw === undefined ? undefined : parseFloat(raw);
+
+                label = labelStr && labelStr.trim() !== '' ? new Label(labelStr.trim()) : null;
+
+                // Create minimal property object with the main property key always present
+                if (propertyKey) {
+                    propObj[propertyKey] = parsedValue; // undefined if no value was serialized
+                }
             }
 
             // Compute ground orientation from netlist geometry (AFTER node swap)
@@ -228,7 +287,7 @@ export class QucatNetlistAdapter {
      * @returns {Object} Detection result with version, confidence, and reasoning
      */
     static _detectFormatByComponentSpans(lines) {
-        const componentTypes = ['R', 'C', 'L']; // Resistor, Capacitor, Inductor have defined spans
+        const componentTypes = ['R', 'C', 'L', 'NonLinearInductor']; // Resistor, Capacitor, Inductor (linear and non-linear) have defined spans
         const spans = [];
         let componentCount = 0;
 

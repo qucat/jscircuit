@@ -16,7 +16,7 @@ export class Properties {
         // Validate each property value
         Object.entries(values).forEach(([key, value]) => {
             if (!this.isValidValue(value)) {
-                throw new Error(`Invalid value for property "${key}". Must be a float, "variable", or undefined.`);
+                throw new Error(`Invalid value for property "${key}". Must be a float, a string, or undefined.`);
             }
         });
 
@@ -25,12 +25,12 @@ export class Properties {
 
     /**
      * Checks if a value is valid.
-     * 
+     *
      * @param {*} value - The value to check.
      * @returns {boolean} True if the value is valid, otherwise false.
      */
     isValidValue(value) {
-        return typeof value === 'number' || value === "variable" || value === undefined;
+        return typeof value === 'number' || typeof value === 'string' || value === undefined;
     }
 
     /**
@@ -42,7 +42,7 @@ export class Properties {
      */
     updateProperty(key, value) {
         if (!this.isValidValue(value)) {
-            throw new Error(`Invalid value for property "${key}". Must be a float, "variable", or "undefined".`);
+            throw new Error(`Invalid value for property "${key}". Must be a float, a string, or undefined.`);
         }
         this.values[key] = value;
     }

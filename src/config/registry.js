@@ -43,12 +43,14 @@ import { Wire } from '../domain/entities/Wire.js';
 import { Capacitor } from '../domain/entities/Capacitor.js';
 import { Inductor } from '../domain/entities/Inductor.js';
 import { Junction } from '../domain/entities/Junction.js';
+import { NonLinearInductor } from '../domain/entities/NonLinearInductor.js';
 import { Ground } from '../domain/entities/Ground.js';
 import { ResistorRenderer } from '../gui/renderers/ResistorRenderer.js';
 import { WireRenderer } from '../gui/renderers/WireRenderer.js';
 import { CapacitorRenderer } from '../gui/renderers/CapacitorRenderer.js';
 import { InductorRenderer } from '../gui/renderers/InductorRenderer.js';
 import { JunctionRenderer } from '../gui/renderers/JunctionRenderer.js';
+import { NonLinearInductorRenderer } from '../gui/renderers/NonLinearInductorRenderer.js';
 import { GroundRenderer } from '../gui/renderers/GroundRenderer.js';
 import { generateId } from '../utils/idGenerator.js';
 import { Properties } from '../domain/valueObjects/Properties.js';
@@ -144,6 +146,15 @@ if (ElementRegistry.getTypes().length === 0) {
         return new Junction(id, nodes, label, finalProps);
     });
 
+    ElementRegistry.register('nonlinearinductor', (id = generateId('N'), nodes, label = null, properties = new Properties({})) => {
+        const finalProps = properties instanceof Properties ? properties : new Properties({ orientation: 0 });
+        // Ensure orientation is set
+        if (finalProps.values.orientation === undefined) {
+            finalProps.values.orientation = 0;
+        }
+        return new NonLinearInductor(id, nodes, label, finalProps);
+    });
+
     ElementRegistry.register('ground', (id = generateId('G'), nodes, label = null, properties = new Properties({})) => {
         const finalProps = properties instanceof Properties ? properties : new Properties({ orientation: 0 });
         // Ensure orientation is set
@@ -178,6 +189,7 @@ rendererFactory.register('wire', WireRenderer);
 rendererFactory.register('capacitor', CapacitorRenderer);
 rendererFactory.register('inductor', InductorRenderer);
 rendererFactory.register('junction', JunctionRenderer);
+rendererFactory.register('nonlinearinductor', NonLinearInductorRenderer);
 rendererFactory.register('ground', GroundRenderer);
 
 /**

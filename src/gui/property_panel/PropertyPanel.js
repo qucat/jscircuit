@@ -122,7 +122,13 @@ export class PropertyPanel {
 
         // Generate property fields from config
         const propertyFields = config.fields.map(field => {
-            const currentValue = field.key === 'label' ? currentLabel : (properties.values[field.key] || '');
+            // NonLinearInductor's "labels" field is a single comma-separated input
+            // backed by 3 independent properties (e2Label, e3Label, e4Label) rather
+            // than a single properties.values[field.key] entry.
+            const currentValue = field.key === 'labels'
+                ? [properties.values.e2Label, properties.values.e3Label, properties.values.e4Label]
+                    .map(v => v ?? '').join(',').replace(/,+$/, '')
+                : field.key === 'label' ? currentLabel : (properties.values[field.key] || '');
             const inputType = field.type === 'text' ? 'text' : 'number';
             const stepAttribute = inputType === 'number' ? 'step="any"' : '';
             
@@ -287,18 +293,27 @@ export class PropertyPanel {
         
         const warningDialog = document.createElement('div');
         warningDialog.className = 'property-panel-warning-dialog';
-        
+
+        // NonLinearInductor has no numeric fallback (unlike every other element
+        // type, which defaults to a sensible value), so its warning explains
+        // what's actually missing instead of the generic value/label bullet list.
+        const warningBody = this.currentElement.type === 'nonlinearinductor'
+            ? `<p>This element has no default values - enter at least one label
+                   (e.g. <code>E2,E3,E4</code>) for its 2nd/3rd/4th order energy terms
+                   before saving.</p>`
+            : `<p>Please specify at least one of the following:</p>
+                <ul>
+                    <li>A label for the component</li>
+                    <li>A property value (resistance, capacitance, etc.)</li>
+                </ul>
+                <p>This ensures the component can be properly identified and used in the circuit.</p>`;
+
         warningDialog.innerHTML = `
             <div class="warning-header">
                 <h4>⚠️ Incomplete Properties</h4>
             </div>
             <div class="warning-content">
-                <p>Please specify at least one of the following:</p>
-                <ul>
-                    <li>A label for the component</li>
-                    <li>A property value (resistance, capacitance, etc.)</li>
-                </ul>
-                <p>This ensures the component can be properly identified and used in the circuit.</p>
+                ${warningBody}
             </div>
             <div class="warning-actions">
                 <button type="button" class="warning-ok-btn">OK</button>
@@ -324,8 +339,11 @@ export class PropertyPanel {
         const okBtn = warningDialog.querySelector('.warning-ok-btn');
         okBtn.addEventListener('click', () => {
             document.body.removeChild(warningOverlay);
-            // Focus on the label input to guide user
-            const labelInput = this.panelElement.querySelector('#label');
+            // Focus the label input to guide the user - falling back to whatever
+            // input comes first for element types with no #label field (e.g.
+            // NonLinearInductor's "labels" field)
+            const labelInput = this.panelElement.querySelector('#label')
+                || this.panelElement.querySelector('.property-field input');
             if (labelInput) {
                 labelInput.focus();
             }
@@ -385,7 +403,17 @@ export class PropertyPanel {
         inputs.forEach(input => {
             const key = input.name;
             const value = input.value.trim();
-            
+
+            if (key === 'labels') {
+                // Comma-separated labels for NonLinearInductor's 3 (2nd/3rd/4th
+                // order) slots, expanded into their own properties.
+                const [e2Label, e3Label, e4Label] = value.split(',').map(v => v.trim());
+                if (e2Label) properties.e2Label = e2Label;
+                if (e3Label) properties.e3Label = e3Label;
+                if (e4Label) properties.e4Label = e4Label;
+                return;
+            }
+
             if (key && value !== '') {
                 if (input.type === 'number') {
                     const numValue = parseFloat(value);
@@ -409,16 +437,16 @@ export class PropertyPanel {
      * @private
      */
     focusFirstInput() {
-        // Focus the first property input if available, otherwise the label input
+        // Focus the first property input if available, otherwise the label input,
+        // otherwise whatever input comes first (e.g. NonLinearInductor's "labels" field)
         const firstPropertyInput = this.panelElement.querySelector('.property-field input[type="number"]');
         const labelInput = this.panelElement.querySelector('#label');
-        
-        if (firstPropertyInput) {
-            firstPropertyInput.focus();
-            firstPropertyInput.select();
-        } else if (labelInput) {
-            labelInput.focus();
-            labelInput.select();
+        const firstInput = this.panelElement.querySelector('.property-field input');
+
+        const toFocus = firstPropertyInput || labelInput || firstInput;
+        if (toFocus) {
+            toFocus.focus();
+            toFocus.select();
         }
     }
 
